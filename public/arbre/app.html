@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arbre de xoriguers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --blue: #1b7aae; --yellow: #e1a800;
+    --bg: #ffffff; --band: #e4f1f8; --surface: #ffffff; --ink: #0f3a54; --muted: #4f6f83;
+    --line: #bcd7e6; --edge: #86b2c9; --hover: #eef6fb;
+    --padri: var(--yellow); --padri-soft: #fdf3d0;
+    --fillol: var(--blue); --fillol-soft: #dcedf6;
+    --selected: var(--blue); --selected-ink: #ffffff;
+    --warn: #6b5000; --warn-soft: #fdf3d0;
+    --font-display: "Bricolage Grotesque", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    --font-text: "Figtree", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 15px/1.45 var(--font-text);
+    display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100dvh;
+  }
+  main { position: relative; min-width: 0; min-height: 0; }
+  #tree { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; user-select: none; }
+  #tree.dragging { cursor: grabbing; }
+  #tree.animate #viewport, #tree.animate .year { transition: transform .35s ease; }
+  @media (prefers-reduced-motion: reduce) {
+    #tree.animate #viewport, #tree.animate .year { transition: none; }
+  }
+
+  .band { fill: none; stroke: var(--band); stroke-opacity: .3; }
+  .year line { stroke: var(--line); stroke-width: 1.5; }
+  .year circle { fill: var(--yellow); stroke: var(--blue); stroke-width: 1.5; }
+  .year text {
+    fill: var(--blue); font: 700 13px var(--font-display); dominant-baseline: central;
+    stroke: var(--bg); stroke-width: 4px; paint-order: stroke; stroke-linejoin: round;
+  }
+
+  .edge { fill: none; stroke: var(--edge); stroke-width: 1.5; transition: opacity .12s; }
+  .node { cursor: grab; transition: opacity .12s; }
+  #tree.dragging .node { cursor: grabbing; }
+  .node rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .node text { fill: var(--ink); font: 600 14px var(--font-display); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .node:hover rect { stroke: var(--blue); }
+  .node:focus { outline: none; }
+  .node:focus-visible rect { stroke: var(--blue); stroke-width: 3; }
+
+  .focused .edge:not(.padri, .fillol) { opacity: .12; }
+  .focused .node:not(.padri, .fillol, .selected, .in-year) { opacity: .28; }
+  .edge.padri { stroke: var(--padri); stroke-width: 3; }
+  .edge.fillol { stroke: var(--fillol); stroke-width: 3; }
+  .node.padri rect { fill: var(--padri-soft); stroke: var(--padri); stroke-width: 2.5; }
+  .node.fillol rect { fill: var(--fillol-soft); stroke: var(--fillol); stroke-width: 2.5; }
+  .node.selected rect { fill: var(--selected); stroke: var(--selected); }
+  .node.selected text { fill: var(--selected-ink); font-weight: 700; }
+
+  .zoom { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 4px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .zoom button {
+    min-width: 36px; height: 36px; padding: 0 10px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  }
+  .zoom button { color: var(--blue); font-weight: 600; }
+  .zoom button:hover { background: var(--blue); border-color: var(--blue); color: #ffffff; }
+
+  .entering { animation: fade-in .45s ease; }
+  @keyframes fade-in { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .entering { animation: none; } }
+  .focus-bar {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    max-width: calc(100% - 24px); width: max-content;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px;
+    padding: 6px 6px 6px 16px; border-radius: 22px;
+    background: var(--blue); color: #ffffff; font-weight: 600; font-size: 14px;
+  }
+  .focus-bar[hidden] { display: none; }
+  .focus-bar button {
+    height: 32px; padding: 0 14px; border: 0; border-radius: 16px;
+    background: var(--yellow); color: var(--ink); font-weight: 600;
+  }
+
+  .year rect { fill: transparent; cursor: pointer; }
+  .year text { pointer-events: none; }
+  .year:focus { outline: none; }
+  .year:hover circle, .year:focus-visible circle { r: 6px; }
+  .year.active circle { r: 7px; fill: var(--blue); stroke: var(--yellow); stroke-width: 2.5; }
+  .node.in-year rect { fill: var(--yellow); stroke: var(--yellow); }
+
+  .card {
+    position: absolute; z-index: 2; width: 240px; max-height: min(320px, calc(100% - 16px)); overflow-y: auto;
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(15, 58, 84, .16); pointer-events: none;
+  }
+  .card[hidden] { display: none; }
+  .card.pinned { pointer-events: auto; }
+  .card.docked { left: 12px !important; right: 12px; top: auto !important; bottom: 60px; width: auto; max-height: 40%; }
+  .card-title { font: 700 18px/1.15 var(--font-display); margin: 0; overflow-wrap: anywhere; }
+  .card-year { color: var(--muted); font-size: 13px; }
+  .card h4 { font-size: 12px; font-weight: 600; color: var(--muted); margin: 0 0 4px; }
+  .card .none { font-size: 13px; color: var(--muted); margin: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip {
+    padding: 2px 9px; border-radius: 12px; border: 1px solid transparent; font-size: 13px; font-weight: 500;
+    background: var(--hover); color: var(--ink); overflow-wrap: anywhere; text-align: left;
+  }
+  .chip.padri { background: var(--padri-soft); border-color: var(--yellow); }
+  .chip.fillol { background: var(--fillol-soft); border-color: var(--blue); }
+  .chip:hover { border-color: var(--ink); }
+  .card-action {
+    align-self: flex-start; height: 34px; padding: 0 14px;
+    background: var(--blue); color: #ffffff; border: 0; border-radius: 17px; font-weight: 600; font-size: 14px;
+  }
+
+  .search-bar {
+    position: relative; display: flex; justify-content: center; align-items: center; gap: 8px;
+    padding: 10px 12px; background: var(--surface); border-top: 3px solid var(--yellow);
+  }
+  input[type=search] {
+    flex: 1 1 auto; min-width: 0; max-width: 460px; height: 40px; padding: 0 18px; font: inherit; color: inherit;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 20px;
+  }
+  input[type=search]:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
+  .popover { flex: none; font-size: 14px; font-weight: 600; }
+  .popover summary {
+    cursor: pointer; list-style: none; padding: 8px 14px; border-radius: 18px;
+    color: var(--blue); border: 1px solid var(--line); user-select: none;
+  }
+  .popover summary::-webkit-details-marker { display: none; }
+  .popover summary:hover, .popover[open] summary { background: var(--blue); border-color: var(--blue); color: #ffffff; }
+  .popover-body {
+    position: absolute; z-index: 3; right: 12px; bottom: calc(100% + 8px);
+    width: min(340px, calc(100vw - 24px)); max-height: 60dvh; overflow-y: auto;
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; font-weight: 400;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(15, 58, 84, .16);
+  }
+  .popover-body h4 { font: 700 15px var(--font-display); color: var(--blue); margin: 0 0 6px; }
+  .popover-body .note { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
+  .popover-body .action { padding: 8px 12px; background: none; border: 1px solid var(--line); border-radius: 10px; text-align: left; font-weight: 500; }
+  .popover-body .action:hover { background: var(--hover); border-color: var(--blue); }
+  .chain { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); }
+  .issues { color: var(--warn); font-size: 13px; font-weight: 600; flex: none; }
+  .issues summary { cursor: pointer; padding: 6px 12px; background: var(--warn-soft); border-radius: 16px; }
+  .issues ul {
+    position: absolute; right: 12px; bottom: calc(100% + 8px); margin: 0;
+    width: min(460px, calc(100vw - 24px)); max-height: 40dvh; overflow-y: auto;
+    padding: 10px 12px 10px 28px; background: var(--warn-soft); border-radius: 8px; font-weight: 400;
+  }
+  @media (max-width: 600px) {
+    .zoom { flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 24px); }
+    .popover summary { padding: 8px 10px; }
+    input[type=search] { padding: 0 12px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <svg id="tree" role="group" aria-label="Arbre d'apadrinatge, dels més antics als més joves">
+    <g id="viewport"><g id="bands"></g><g id="edges"></g><g id="nodes"></g></g>
+    <g id="years"></g>
+  </svg>
+  <div class="zoom">
+    <button id="zoom-in" aria-label="Apropa">+</button>
+    <button id="zoom-out" aria-label="Allunya">−</button>
+    <button id="zoom-fit">Encaixa</button>
+    <button id="reset-layout">Reordena</button>
+  </div>
+  <div id="focus-bar" class="focus-bar" role="status" hidden>
+    <span id="focus-label"></span>
+    <button id="focus-exit">Arbre complet</button>
+  </div>
+  <div id="card" class="card" aria-live="polite" hidden></div>
+</main>
+<footer class="search-bar">
+  <input id="search" type="search" list="names" placeholder="Cerca un xoriguer…" aria-label="Cerca un xoriguer" autocomplete="off">
+  <datalist id="names"></datalist>
+  <details class="popover">
+    <summary>Exporta</summary>
+    <div class="popover-body">
+      <button id="export-png" class="action">Imatge (PNG)</button>
+      <button id="export-pdf" class="action">PDF (per imprimir)</button>
+    </div>
+  </details>
+  <details class="popover">
+    <summary>Dades</summary>
+    <div id="stats" class="popover-body"></div>
+  </details>
+  <details id="issues" class="issues" hidden></details>
+</footer>
+
+<script type="module">
+const DATA = {"people": [{"name": "Barba", "year": 24}, {"name": "Alco", "year": 25}, {"name": "Adala", "year": 25}, {"name": "Casio", "year": 26}, {"name": "Happy", "year": 26}, {"name": "Murphy", "year": 26}, {"name": "Teta", "year": 26}, {"name": "Proteina", "year": 27}, {"name": "Testo", "year": 27}, {"name": "Terror", "year": 27}, {"name": "Twist", "year": 27}, {"name": "Chef", "year": 27}, {"name": "Arxi", "year": 27}, {"name": "Miau", "year": 27}, {"name": "Boig", "year": 27}, {"name": "Tubu", "year": 28}, {"name": "Super3", "year": 28}, {"name": "Txapote", "year": 28}, {"name": "Mina", "year": 28}, {"name": "Derrota", "year": 28}, {"name": "Pingu", "year": 28}, {"name": "Morat", "year": 27}, {"name": "Tida", "year": 26}, {"name": "Bini", "year": 23}, {"name": "Puça", "year": 26}, {"name": "Disco", "year": 27}, {"name": "Fusta", "year": 27}, {"name": "Bassa", "year": 27}, {"name": "Cuki", "year": 27}, {"name": "Flick", "year": 27}, {"name": "Hammer", "year": 27}, {"name": "Xampinyó", "year": 28}], "relations": [{"padri": "Barba", "fillol": "Casio"}, {"padri": "Barba", "fillol": "Proteina"}, {"padri": "Alco", "fillol": "Happy"}, {"padri": "Alco", "fillol": "Terror"}, {"padri": "Casio", "fillol": "Testo"}, {"padri": "Casio", "fillol": "Terror"}, {"padri": "Happy", "fillol": "Terror"}, {"padri": "Terror", "fillol": "Derrota"}, {"padri": "Terror", "fillol": "Pingu"}, {"padri": "Adala", "fillol": "Murphy"}, {"padri": "Adala", "fillol": "Teta"}, {"padri": "Adala", "fillol": "Boig"}, {"padri": "Murphy", "fillol": "Twist"}, {"padri": "Murphy", "fillol": "Chef"}, {"padri": "Murphy", "fillol": "Arxi"}, {"padri": "Murphy", "fillol": "Miau"}, {"padri": "Boig", "fillol": "Mina"}, {"padri": "Twist", "fillol": "Super3"}, {"padri": "Twist", "fillol": "Tubu"}, {"padri": "Chef", "fillol": "Txapote"}, {"padri": "Tida", "fillol": "Morat"}, {"padri": "Puça", "fillol": "Morat"}, {"padri": "Bini", "fillol": "Morat"}, {"padri": "Bini", "fillol": "Murphy"}, {"padri": "Tida", "fillol": "Disco"}, {"padri": "Tida", "fillol": "Fusta"}, {"padri": "Tida", "fillol": "Bassa"}, {"padri": "Bini", "fillol": "Cuki"}, {"padri": "Puça", "fillol": "Bassa"}, {"padri": "Puça", "fillol": "Flick"}, {"padri": "Puça", "fillol": "Hammer"}, {"padri": "Bassa", "fillol": "Xampinyó"}], "issues": []};
+
+const NODE_H = 34, BAND_H = 116, LINE_H = 74, LINE_CAP = 7, NODE_GAP = 22, EDGE_GAP = 6, COMPONENT_GAP = 56, MARGIN_LEFT = 84, MARGIN = 28;
+const SVG_NS = "http://www.w3.org/2000/svg";
+const collator = new Intl.Collator("ca", { sensitivity: "base" });
+const byAge = (a, b) => a.year - b.year || collator.compare(a.name, b.name);
+
+// --------------------------
+// 1. Graph
+// --------------------------
+
+const people = new Map(DATA.people.map(p => [p.name, { ...p, padrins: [], fillols: [] }]));
+const relations = DATA.relations.map(r => ({ padri: people.get(r.padri), fillol: people.get(r.fillol) }));
+for (const { padri, fillol } of relations) {
+  padri.fillols.push(fillol);
+  fillol.padrins.push(padri);
+}
+for (const p of people.values()) {
+  p.padrins.sort(byAge);
+  p.fillols.sort(byAge);
+}
+const sortedPeople = [...people.values()].sort(byAge);
+
+// What is on screen: everyone, or one person's lineage in the focus view.
+let focusPerson = null;
+let shown = sortedPeople;
+let shownRelations = relations;
+
+let years, rankOf, yearLines, firstLevel, levelY, levelYear, yearY;
+
+// A crowded year is wrapped onto several lines, so new people add height rather
+// than width. Each line is a layout level; the same set is used by all families.
+function computeLevels() {
+  years = [...new Set(shown.map(p => p.year))];
+  rankOf = new Map(years.map((y, i) => [y, i]));
+  yearLines = years.map(y => Math.ceil(shown.filter(p => p.year === y).length / LINE_CAP));
+  firstLevel = [];
+  levelY = [];
+  levelYear = [];
+  years.forEach((_, yearIndex) => {
+    firstLevel.push(levelY.length);
+    for (let line = 0; line < yearLines[yearIndex]; line++) {
+      const previous = levelY[levelY.length - 1];
+      levelY.push(levelY.length === 0 ? BAND_H / 2 : previous + (line === 0 ? BAND_H : LINE_H));
+      levelYear.push(yearIndex);
+    }
+  });
+  yearY = years.map((_, i) => levelY[firstLevel[i]] + (yearLines[i] - 1) * LINE_H / 2);
+}
+
+function connectedComponents() {
+  const included = new Set(shown);
+  const seen = new Set(), components = [];
+  for (const start of shown) {
+    if (seen.has(start)) continue;
+    const members = [], stack = [start];
+    seen.add(start);
+    while (stack.length) {
+      const p = stack.pop();
+      members.push(p);
+      for (const n of [...p.padrins, ...p.fillols]) {
+        if (included.has(n) && !seen.has(n)) { seen.add(n); stack.push(n); }
+      }
+    }
+    components.push(members);
+  }
+  // People with no relations share one group, so they wrap like any family
+  // instead of each taking a column of their own.
+  const alone = components.filter(c => c.length === 1).flat();
+  return [...components.filter(c => c.length > 1), ...(alone.length ? [alone] : [])];
+}
+
+// --------------------------
+// 2. Layered layout: one row per year, oldest on top
+// --------------------------
+
+const measure = document.createElementNS(SVG_NS, "text");
+
+function nodeWidth(name) {
+  measure.textContent = name;
+  return Math.max(58, measure.getComputedTextLength() + 26);
+}
+
+// Long edges get an invisible vertex on each year they cross, so they take
+// part in the ordering and keep clear of the nodes.
+function buildVertices(members) {
+  const verts = [], chains = [], layers = new Map();
+  const add = (rank, person) => {
+    const v = { rank, person, up: [], down: [], edges: [], x: 0, dy: 0, w: person ? person.width : EDGE_GAP };
+    verts.push(v);
+    return v;
+  };
+  const vertexOf = new Map(members.map(p => [p, add(p.level, p)]));
+  for (const relation of shownRelations) {
+    if (!vertexOf.has(relation.padri)) continue;
+    const chain = [vertexOf.get(relation.padri)];
+    const end = vertexOf.get(relation.fillol);
+    for (let r = chain[0].rank + 1; r < end.rank; r++) chain.push(add(r, null));
+    chain.push(end);
+    for (let i = 1; i < chain.length; i++) {
+      chain[i - 1].down.push(chain[i]);
+      chain[i].up.push(chain[i - 1]);
+    }
+    chains.push({ ...relation, chain });
+  }
+  // Depth-first initial order keeps relatives next to each other.
+  const visited = new Set();
+  const visit = v => {
+    if (visited.has(v)) return;
+    visited.add(v);
+    if (!layers.has(v.rank)) layers.set(v.rank, []);
+    layers.get(v.rank).push(v);
+    v.down.forEach(visit);
+    v.up.forEach(visit);
+  };
+  verts.forEach(visit);
+  const ranks = [...layers.keys()].sort((a, b) => a - b);
+  return { verts, chains, layers, ranks };
+}
+
+function countCrossings({ layers, ranks }) {
+  let total = 0;
+  for (const rank of ranks) {
+    const segments = [];
+    const position = new Map((layers.get(rank + 1) || []).map((v, i) => [v, i]));
+    layers.get(rank).forEach((v, i) => v.down.forEach(d => segments.push([i, position.get(d)])));
+    for (let a = 0; a < segments.length; a++) {
+      for (let b = a + 1; b < segments.length; b++) {
+        if ((segments[a][0] - segments[b][0]) * (segments[a][1] - segments[b][1]) < 0) total++;
+      }
+    }
+  }
+  return total;
+}
+
+// Barycenter sweeps; keeps the ordering with the fewest crossings.
+function orderLayers(graph) {
+  const { layers, ranks } = graph;
+  const position = new Map();
+  const index = rank => layers.get(rank).forEach((v, i) => position.set(v, i));
+  ranks.forEach(index);
+  let best = new Map(ranks.map(r => [r, [...layers.get(r)]]));
+  let bestCrossings = countCrossings(graph);
+  for (let sweep = 0; sweep < 32 && bestCrossings > 0; sweep++) {
+    const downward = sweep % 2 === 0;
+    for (const rank of downward ? ranks : [...ranks].reverse()) {
+      const keys = new Map(layers.get(rank).map(v => {
+        const neighbours = downward ? v.up : v.down;
+        const key = neighbours.length
+          ? neighbours.reduce((sum, n) => sum + position.get(n), 0) / neighbours.length
+          : position.get(v);
+        return [v, key];
+      }));
+      layers.get(rank).sort((a, b) => keys.get(a) - keys.get(b));
+      index(rank);
+    }
+    const crossings = countCrossings(graph);
+    if (crossings < bestCrossings) {
+      bestCrossings = crossings;
+      best = new Map(ranks.map(r => [r, [...layers.get(r)]]));
+    }
+  }
+  graph.layers = best;
+}
+
+// Least-squares placement of a row at `targets`, keeping order and spacing
+// (pool-adjacent-violators on the positions minus the minimum offsets).
+function placeRow(row, targets) {
+  const offsets = [0];
+  for (let i = 1; i < row.length; i++) {
+    // Passing lines can run close together; only two real nodes need the full gap.
+    const gap = row[i - 1].person && row[i].person ? NODE_GAP : row[i - 1].person || row[i].person ? NODE_GAP / 2 : 2;
+    offsets.push(offsets[i - 1] + (row[i - 1].w + row[i].w) / 2 + gap);
+  }
+  const blocks = [];
+  targets.forEach((t, i) => {
+    blocks.push({ sum: t - offsets[i], count: 1 });
+    while (blocks.length > 1) {
+      const last = blocks[blocks.length - 1], prev = blocks[blocks.length - 2];
+      if (prev.sum / prev.count < last.sum / last.count) break;
+      prev.sum += last.sum;
+      prev.count += last.count;
+      blocks.pop();
+    }
+  });
+  let i = 0;
+  for (const block of blocks) {
+    for (let k = 0; k < block.count; k++, i++) row[i].x = block.sum / block.count + offsets[i];
+  }
+}
+
+function placeVertices({ layers, ranks }) {
+  const mean = (v, neighbours) =>
+    neighbours.length ? neighbours.reduce((sum, n) => sum + n.x, 0) / neighbours.length : v.x;
+  for (const rank of ranks) placeRow(layers.get(rank), layers.get(rank).map(() => 0));
+  for (let pass = 0; pass < 60; pass++) {
+    const downward = pass % 2 === 0, settling = pass >= 40;
+    for (const rank of downward ? ranks : [...ranks].reverse()) {
+      const row = layers.get(rank);
+      placeRow(row, row.map(v => mean(v, settling ? [...v.up, ...v.down] : downward ? v.up : v.down)));
+    }
+  }
+}
+
+// Pulls the invisible bends of long edges towards the straight line between
+// their two ends, moving aside only as much as the row's nodes require.
+function straightenEdges({ layers, ranks, chains }) {
+  const targets = new Map();
+  for (let pass = 0; pass < 8; pass++) {
+    for (const { chain } of chains) {
+      const first = chain[0], last = chain[chain.length - 1];
+      for (let i = 1; i < chain.length - 1; i++) {
+        targets.set(chain[i], first.x + (last.x - first.x) * i / (chain.length - 1));
+      }
+    }
+    for (const rank of ranks) {
+      const row = layers.get(rank);
+      placeRow(row, row.map(v => (v.person ? v.x : targets.get(v))));
+    }
+  }
+}
+
+// Splits one year of a family, given in left-to-right order, across the year's
+// lines. People sharing a godfather stay together; the next group goes on another
+// line, which is what keeps the wrapped year from looking like a grid.
+function assignLines(row, yearIndex) {
+  const available = yearLines[yearIndex];
+  const used = Math.min(available, Math.max(1, Math.ceil(row.length / 2)));
+  const perLine = Math.ceil(row.length / used);
+  const fill = new Array(used).fill(0);
+  let line = -1, runSize = 0;
+  row.forEach((person, i) => {
+    const previous = row[i - 1];
+    const sharesPadri = previous && person.padrins.some(p => previous.padrins.includes(p));
+    if (!sharesPadri || runSize >= perLine || fill[line] >= perLine) {
+      const candidates = fill.map((_, l) => l).filter(l => fill[l] < perLine);
+      const others = candidates.filter(l => l !== line);
+      line = (others.length ? others : candidates).reduce((best, l) => (fill[l] < fill[best] ? l : best));
+      runSize = 0;
+    }
+    fill[line]++;
+    runSize++;
+    // A family using fewer lines than the year has spreads over the whole year.
+    const spread = used > 1 ? Math.round(line * (available - 1) / (used - 1)) : Math.floor((available - 1) / 2);
+    person.level = firstLevel[yearIndex] + spread;
+  });
+}
+
+function wrapYears(members) {
+  for (const p of members) p.level = rankOf.get(p.year);
+  const draft = buildVertices(members);
+  orderLayers(draft);
+  for (const rank of draft.ranks) {
+    assignLines(draft.layers.get(rank).filter(v => v.person).map(v => v.person), rank);
+  }
+}
+
+function layoutAll() {
+  const all = { verts: [], chains: [] };
+  let offset = 0;
+  for (const members of connectedComponents()) {
+    wrapYears(members);
+    const graph = buildVertices(members);
+    orderLayers(graph);
+    placeVertices(graph);
+    straightenEdges(graph);
+    const left = Math.min(...graph.verts.map(v => v.x - v.w / 2));
+    const right = Math.max(...graph.verts.map(v => v.x + v.w / 2));
+    for (const v of graph.verts) v.x += offset - left;
+    offset += right - left + COMPONENT_GAP;
+    all.verts.push(...graph.verts);
+    all.chains.push(...graph.chains);
+  }
+  all.width = offset - COMPONENT_GAP;
+  all.height = levelY[levelY.length - 1] + BAND_H / 2;
+  return all;
+}
+
+const rowY = rank => levelY[rank];
+const vertexY = v => rowY(v.rank) + v.dy;
+
+// A single smooth curve through the whole chain: it leaves and arrives vertically,
+// and in between each bend's direction comes from its two neighbours.
+function edgePath(chain) {
+  const last = chain.length - 1;
+  const points = chain.map((v, i) => ({
+    x: v.x,
+    y: vertexY(v) + (i === 0 ? NODE_H / 2 : i === last ? -NODE_H / 2 : 0),
+  }));
+  const tangent = i => {
+    if (i === 0) return { x: 0, y: points[1].y - points[0].y };
+    if (i === last) return { x: 0, y: points[last].y - points[last - 1].y };
+    return { x: (points[i + 1].x - points[i - 1].x) / 2, y: (points[i + 1].y - points[i - 1].y) / 2 };
+  };
+  let d = `M${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < last; i++) {
+    const a = points[i], b = points[i + 1], ta = tangent(i), tb = tangent(i + 1);
+    d += ` C${a.x + ta.x / 2.5} ${a.y + ta.y / 2.5} ${b.x - tb.x / 2.5} ${b.y - tb.y / 2.5} ${b.x} ${b.y}`;
+  }
+  return d;
+}
+
+// --------------------------
+// 3. Drawing
+// --------------------------
+
+const svg = document.getElementById("tree");
+const viewport = document.getElementById("viewport");
+const edgesLayer = document.getElementById("edges");
+const yearsLayer = document.getElementById("years");
+
+function el(tag, attrs, parent) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+
+function setText(id, build) {
+  const target = document.getElementById(id);
+  target.replaceChildren();
+  build(target);
+}
+
+// Node widths depend on the font. Offline, it fails or times out and the
+// fallback font from the CSS is used instead.
+await Promise.race([
+  document.fonts.load('700 14px "Bricolage Grotesque"').catch(() => {}),
+  new Promise(resolve => setTimeout(resolve, 1500)),
+]);
+
+svg.appendChild(measure);
+measure.setAttribute("style", "font:700 14px var(--font-display);visibility:hidden");
+for (const p of people.values()) p.width = nodeWidth(p.name);
+measure.remove();
+
+const rowWave = (x, yearIndex) => Math.sin(x * 0.012 + yearIndex * 1.9) * 16;
+
+let layout;
+const nodeEls = new Map();
+let edgeEls = [];
+let yearEls = [];
+
+// Lays out and draws whatever `shown` currently holds.
+function draw() {
+  computeLevels();
+  layout = layoutAll();
+
+  // Nodes of a year sit around its lines, not on a ruler: a slow wave shared by the
+  // whole year plus a small zigzag between neighbours, so the order holds.
+  for (const rank of levelY.keys()) {
+    layout.verts
+      .filter(v => v.person && v.rank === rank)
+      .sort((a, b) => a.x - b.x)
+      .forEach((v, i) => {
+        v.homeDy = v.dy = rowWave(v.x, levelYear[rank]) + (i % 2 ? 11 : -11);
+        v.x += Math.sin(i * 2.4 + rank) * 6;
+      });
+  }
+
+  const bandsLayer = document.getElementById("bands");
+  const nodesLayer = document.getElementById("nodes");
+  for (const layer of [bandsLayer, nodesLayer, edgesLayer, yearsLayer]) layer.replaceChildren();
+  nodeEls.clear();
+  edgeEls = [];
+  yearEls = [];
+  for (const p of people.values()) p.vertex = null;
+
+  years.forEach((year, rank) => {
+    if (rank % 2 === 0) {
+      // Nested translucent strokes along the same wave as the nodes: a soft ribbon
+      // with no edge, cheap to pan compared with a blur filter.
+      let d = "";
+      for (let x = -4000; x <= layout.width + 4000; x += 40) {
+        d += `${d ? "L" : "M"}${x} ${yearY[rank] + rowWave(x, rank)}`;
+      }
+      const extra = (yearLines[rank] - 1) * LINE_H;
+      for (const width of [BAND_H * 1.1, BAND_H * 0.85, BAND_H * 0.6, BAND_H * 0.35]) {
+        el("path", { class: "band", d, "stroke-width": width + extra }, bandsLayer);
+      }
+    }
+    const label = el("g", { class: "year", tabindex: 0, role: "button", "data-year": year, "aria-label": `Any ${year}` }, yearsLayer);
+    const segment = rank < years.length - 1 ? el("line", { x1: 16, x2: 16, y1: 0, y2: 0 }, label) : null;
+    el("rect", { x: 4, y: -14, width: 104, height: 28 }, label);
+    el("circle", { cx: 16, cy: 0, r: 4 }, label);
+    const text = el("text", { x: 27, y: 0 }, label);
+    text.textContent = `Any ${year}`;
+    yearEls.push({ label, rank, segment, year, text });
+  });
+
+  for (const { padri, fillol, chain } of layout.chains) {
+    const edge = { padri, fillol, chain, el: el("path", { class: "edge", d: edgePath(chain) }, edgesLayer) };
+    edgeEls.push(edge);
+    chain[0].edges.push(edge);
+    chain[chain.length - 1].edges.push(edge);
+  }
+
+  for (const v of layout.verts) {
+    if (!v.person) continue;
+    const y = vertexY(v);
+    const g = el("g", {
+      class: "node", tabindex: 0, role: "button", "data-name": v.person.name,
+      "aria-label": `${v.person.name}, any ${v.person.year}`,
+      transform: `translate(${v.x} ${y})`,
+    }, nodesLayer);
+    el("rect", { x: -v.w / 2, y: -NODE_H / 2, width: v.w, height: NODE_H, rx: NODE_H / 2 }, g);
+    el("text", {}, g).textContent = v.person.name;
+    nodeEls.set(v.person, g);
+    v.person.vertex = v;
+    v.homeX = v.x;
+  }
+}
+
+// --------------------------
+// 4. Moving nodes: free sideways, but always inside their year's row
+// --------------------------
+
+const POSITIONS_KEY = "arbre-xoriguers-positions";
+const MAX_DY = (BAND_H - NODE_H) / 2 - 4;
+
+function moveNode(person, x, dy, unclamped = false) {
+  const v = person.vertex;
+  const dx = x - v.x;
+  v.x = x;
+  // Free within the year's block of lines, never across into another year.
+  const yearIndex = levelYear[v.rank];
+  const top = levelY[firstLevel[yearIndex]] - MAX_DY - rowY(v.rank);
+  const bottom = top + (yearLines[yearIndex] - 1) * LINE_H + 2 * MAX_DY;
+  v.dy = unclamped ? dy : Math.max(top, Math.min(bottom, dy));
+  nodeEls.get(person).setAttribute("transform", `translate(${v.x} ${vertexY(v)})`);
+  for (const edge of v.edges) {
+    // The invisible bends of a long edge follow in proportion to their distance.
+    const last = edge.chain.length - 1;
+    for (let i = 1; i < last; i++) {
+      edge.chain[i].x += dx * (edge.chain[0] === v ? 1 - i / last : i / last);
+    }
+    edge.el.setAttribute("d", edgePath(edge.chain));
+  }
+  if (person === (selected || hovered)) positionCard();
+}
+
+// Saved as offsets so that positions survive a rebuild with new data. Only the
+// full tree is saved: a focus view is laid out afresh each time.
+function savePositions() {
+  if (focusPerson) return;
+  const moved = {};
+  for (const p of people.values()) {
+    const v = p.vertex;
+    if (v.x !== v.homeX || v.dy !== v.homeDy) moved[p.name] = [v.x - v.homeX, v.dy - v.homeDy];
+  }
+  try { localStorage.setItem(POSITIONS_KEY, JSON.stringify(moved)); } catch {}
+}
+
+function restorePositions() {
+  let moved = {};
+  try { moved = JSON.parse(localStorage.getItem(POSITIONS_KEY)) || {}; } catch {}
+  for (const [name, [dx, dy]] of Object.entries(moved)) {
+    const person = people.get(name);
+    if (person) moveNode(person, person.vertex.homeX + dx, person.vertex.homeDy + dy);
+  }
+}
+
+function resetLayout() {
+  const starts = shown.map(p => ({ p, x: p.vertex.x, dy: p.vertex.dy }));
+  const duration = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 350;
+  const begin = performance.now();
+  const step = now => {
+    const t = duration ? Math.min(1, (now - begin) / duration) : 1;
+    const eased = 1 - (1 - t) ** 3;
+    for (const { p, x, dy } of starts) moveNode(p, x + (p.vertex.homeX - x) * eased, dy + (p.vertex.homeDy - dy) * eased);
+    if (t < 1) requestAnimationFrame(step);
+    else savePositions();
+  };
+  requestAnimationFrame(step);
+}
+
+// --------------------------
+// 5. Pan and zoom
+// --------------------------
+
+const view = { x: 0, y: 0, k: 1 };
+
+function applyView() {
+  viewport.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.k})`;
+  for (const { label, rank, segment } of yearEls) {
+    label.style.transform = `translateY(${view.y + yearY[rank] * view.k}px)`;
+    if (segment) segment.setAttribute("y2", (yearY[rank + 1] - yearY[rank]) * view.k);
+  }
+  positionCard();
+}
+
+function animated(change) {
+  svg.classList.add("animate");
+  change();
+  applyView();
+  setTimeout(() => svg.classList.remove("animate"), 400);
+}
+
+function fit() {
+  const { width, height } = svg.getBoundingClientRect();
+  const left = Math.min(...layout.verts.map(v => v.x - v.w / 2));
+  const treeWidth = Math.max(...layout.verts.map(v => v.x + v.w / 2)) - left;
+  // Always fit the width; fit the height too, unless that makes names too small to read.
+  const k = Math.min((width - MARGIN_LEFT - MARGIN) / treeWidth, Math.max((height - 2 * MARGIN) / layout.height, 0.6), 1.3);
+  // On a phone the whole tree would be unreadable: stay legible and let it pan.
+  view.k = Math.max(k, width < 600 ? 0.6 : 0.2);
+  view.x = MARGIN_LEFT + Math.max(0, (width - MARGIN_LEFT - MARGIN - treeWidth * view.k) / 2) - left * view.k;
+  // In the focus view, the top of the tree stays clear of the focus bar.
+  view.y = Math.max(focusPerson ? 64 : MARGIN, (height - layout.height * view.k) / 2);
+}
+
+function zoomAt(cx, cy, factor) {
+  const k = Math.min(3, Math.max(0.2, view.k * factor));
+  view.x = cx - (cx - view.x) * (k / view.k);
+  view.y = cy - (cy - view.y) * (k / view.k);
+  view.k = k;
+}
+
+function reveal(person) {
+  const { width, height } = svg.getBoundingClientRect();
+  const v = person.vertex;
+  const sx = view.x + v.x * view.k, sy = view.y + rowY(v.rank) * view.k;
+  const clear = 60;
+  if (sx > MARGIN_LEFT + clear && sx < width - clear && sy > clear && sy < height - clear) return;
+  animated(() => {
+    view.x = (width + MARGIN_LEFT) / 2 - v.x * view.k;
+    view.y = height / 2 - rowY(v.rank) * view.k;
+  });
+}
+
+svg.addEventListener("wheel", event => {
+  event.preventDefault();
+  // The tree grows downwards, so scrolling moves it; Ctrl+scroll and pinch zoom.
+  if (event.ctrlKey) {
+    const box = svg.getBoundingClientRect();
+    zoomAt(event.clientX - box.left, event.clientY - box.top, Math.exp(-event.deltaY * 0.0015));
+  } else {
+    view.x -= event.shiftKey ? event.deltaY : event.deltaX;
+    view.y -= event.shiftKey ? 0 : event.deltaY;
+  }
+  applyView();
+}, { passive: false });
+
+let drag = null;
+
+// Fingers on the screen, for pinch-to-zoom. A finger only ever pans: on a small
+// screen, moving nodes would keep getting in the way of moving the tree.
+const touches = new Map();
+
+function pinchState() {
+  const [a, b] = [...touches.values()];
+  return { distance: Math.hypot(a.x - b.x, a.y - b.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+
+svg.addEventListener("pointerdown", event => {
+  if (event.pointerType === "touch") {
+    touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (touches.size >= 2) {
+      // The id matches no finger: nothing pans, and lifting does not count as a tap.
+      drag = { id: -1, moved: true };
+      return;
+    }
+  }
+  const node = event.pointerType === "touch" ? null : event.target.closest(".node");
+  const person = node ? people.get(node.dataset.name) : null;
+  drag = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false, person };
+  if (person) Object.assign(drag, { startX: event.clientX, startY: event.clientY, nodeX: person.vertex.x, nodeDy: person.vertex.dy });
+});
+svg.addEventListener("pointermove", event => {
+  if (touches.has(event.pointerId) && touches.size >= 2) {
+    const before = pinchState();
+    touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const after = pinchState();
+    const box = svg.getBoundingClientRect();
+    zoomAt(after.x - box.left, after.y - box.top, after.distance / before.distance);
+    view.x += after.x - before.x;
+    view.y += after.y - before.y;
+    applyView();
+    return;
+  }
+  if (touches.has(event.pointerId)) touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  if (!drag || event.pointerId !== drag.id) return;
+  if (!event.buttons) { drag = null; svg.classList.remove("dragging"); return; }
+  const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+  if (!drag.moved) {
+    drag.moved = true;
+    svg.setPointerCapture(event.pointerId);
+    svg.classList.add("dragging");
+    // Painted last so the moving node stays above its neighbours.
+    if (drag.person) nodeEls.get(drag.person).parentNode.appendChild(nodeEls.get(drag.person));
+  }
+  if (drag.person) {
+    moveNode(
+      drag.person,
+      drag.nodeX + (event.clientX - drag.startX) / view.k,
+      drag.nodeDy + (event.clientY - drag.startY) / view.k,
+    );
+    return;
+  }
+  view.x += dx;
+  view.y += dy;
+  drag.x = event.clientX;
+  drag.y = event.clientY;
+  applyView();
+});
+function endDrag() {
+  svg.classList.remove("dragging");
+  if (drag && drag.moved && drag.person) savePositions();
+  if (drag && !drag.moved) drag = null;
+}
+svg.addEventListener("pointerup", event => { touches.delete(event.pointerId); endDrag(); });
+svg.addEventListener("pointercancel", event => { touches.delete(event.pointerId); endDrag(); drag = null; });
+
+function zoomFromButton(factor) {
+  const { width, height } = svg.getBoundingClientRect();
+  animated(() => zoomAt(width / 2, height / 2, factor));
+}
+document.getElementById("zoom-in").addEventListener("click", () => zoomFromButton(1.3));
+document.getElementById("zoom-out").addEventListener("click", () => zoomFromButton(1 / 1.3));
+document.getElementById("zoom-fit").addEventListener("click", () => animated(fit));
+document.getElementById("reset-layout").addEventListener("click", resetLayout);
+
+// --------------------------
+// 6. Selection
+// --------------------------
+
+let selected = null, hovered = null, yearFilter = null, tappedIntoFocusAt = -Infinity;
+
+function closure(start, step) {
+  const found = new Set(), stack = [...step(start)];
+  while (stack.length) {
+    const p = stack.pop();
+    if (!found.has(p)) { found.add(p); stack.push(...step(p)); }
+  }
+  return found;
+}
+
+function relatives(person) {
+  return person === focusPerson
+    ? { padrins: closure(person, p => p.padrins), fillols: closure(person, p => p.fillols) }
+    : { padrins: new Set(person.padrins), fillols: new Set(person.fillols) };
+}
+
+function renderHighlight() {
+  const focus = selected || hovered;
+  svg.classList.toggle("focused", Boolean(focus) || yearFilter !== null);
+  const { padrins, fillols } = focus ? relatives(focus) : { padrins: new Set(), fillols: new Set() };
+  for (const [person, g] of nodeEls) {
+    g.classList.toggle("selected", person === focus);
+    g.classList.toggle("padri", padrins.has(person));
+    g.classList.toggle("fillol", fillols.has(person));
+    g.classList.toggle("in-year", person.year === yearFilter);
+  }
+  for (const { label, text, year } of yearEls) {
+    const active = year === yearFilter;
+    label.classList.toggle("active", active);
+    text.textContent = active ? `Any ${year} · ${shown.filter(p => p.year === year).length}` : `Any ${year}`;
+  }
+  renderCard();
+  for (const edge of edgeEls) {
+    const isPadri = padrins.has(edge.padri) && (edge.fillol === focus || padrins.has(edge.fillol));
+    const isFillol = fillols.has(edge.fillol) && (edge.padri === focus || fillols.has(edge.padri));
+    edge.el.classList.toggle("padri", isPadri);
+    edge.el.classList.toggle("fillol", isFillol);
+    // Highlighted edges go last so they are painted above the rest.
+    if (isPadri || isFillol) edgesLayer.appendChild(edge.el);
+  }
+}
+
+function select(person) {
+  // Someone outside the current lineage: the focus moves to them.
+  if (person && !nodeEls.has(person)) {
+    setFocus(person);
+    return;
+  }
+  selected = person;
+  hovered = null;
+  yearFilter = null;
+  renderHighlight();
+  if (person) reveal(person);
+}
+
+function toggleYear(year) {
+  const next = year === yearFilter ? null : year;
+  select(null);
+  yearFilter = next;
+  renderHighlight();
+}
+
+// --------------------------
+// Person card: name, year and direct relations, beside the node
+// --------------------------
+
+const card = document.getElementById("card");
+
+function chip(person, kind) {
+  const button = document.createElement("button");
+  button.className = `chip ${kind}`;
+  button.textContent = person.name;
+  button.title = `Any ${person.year}`;
+  button.addEventListener("click", () => {
+    select(person);
+    document.querySelectorAll("details[open]").forEach(d => { d.open = false; });
+  });
+  return button;
+}
+
+function cardGroup(title, members, kind) {
+  const group = document.createElement("div");
+  const heading = document.createElement("h4");
+  heading.textContent = members.length ? `${title} (${members.length})` : title;
+  group.appendChild(heading);
+  if (members.length) {
+    const chips = document.createElement("div");
+    chips.className = "chips";
+    chips.append(...members.map(p => chip(p, kind)));
+    group.appendChild(chips);
+  } else {
+    const none = document.createElement("p");
+    none.className = "none";
+    none.textContent = "Cap";
+    group.appendChild(none);
+  }
+  return group;
+}
+
+// Only in the focus view: on the full tree it would cover the highlighted relatives.
+const cardPerson = () => (focusPerson ? selected || hovered : null);
+
+function renderCard() {
+  const person = cardPerson();
+  card.hidden = !person;
+  if (!person) return;
+  const name = document.createElement("p");
+  name.className = "card-title";
+  name.textContent = person.name;
+  const year = document.createElement("span");
+  year.className = "card-year";
+  year.textContent = `Any ${person.year}`;
+  const header = document.createElement("div");
+  header.append(name, year);
+  card.replaceChildren(header, cardGroup("Padrins", person.padrins, "padri"), cardGroup("Fillols", person.fillols, "fillol"));
+  card.classList.toggle("pinned", person === selected);
+  if (person === selected) {
+    const action = document.createElement("button");
+    action.className = "card-action";
+    action.textContent = person === focusPerson ? "Arbre complet" : "Enfoca el llinatge";
+    action.addEventListener("click", () => setFocus(person === focusPerson ? null : person));
+    card.appendChild(action);
+  }
+  positionCard();
+}
+
+function positionCard() {
+  const person = cardPerson();
+  if (!person || !person.vertex || card.hidden) return;
+  const { width, height } = svg.getBoundingClientRect();
+  const docked = width < 600;
+  card.classList.toggle("docked", docked);
+  if (docked) return;
+  const v = person.vertex;
+  const x = view.x + v.x * view.k, y = view.y + vertexY(v) * view.k, half = v.w * view.k / 2;
+  let left = x + half + 12;
+  if (left + card.offsetWidth > width - 8) left = x - half - 12 - card.offsetWidth;
+  card.style.left = `${Math.max(8, left)}px`;
+  card.style.top = `${Math.max(8, Math.min(height - card.offsetHeight - 8, y - card.offsetHeight / 2))}px`;
+}
+
+// --------------------------
+// 7. Focus view: only one person's ancestors and descendants, laid out afresh
+// --------------------------
+
+let transitionId = 0;
+
+// Nodes glide from where they were on screen; the ones that are new fade in.
+function glideFrom(previous) {
+  const moves = [];
+  for (const p of shown) {
+    const from = previous.get(p);
+    if (!from) {
+      nodeEls.get(p).classList.add("entering");
+      continue;
+    }
+    moves.push({
+      p, x: p.vertex.x, dy: p.vertex.dy,
+      fromX: (from.x - view.x) / view.k,
+      fromDy: (from.y - view.y) / view.k - rowY(p.vertex.rank),
+    });
+  }
+  for (const edge of edgeEls) {
+    if (!previous.has(edge.padri) || !previous.has(edge.fillol)) edge.el.classList.add("entering");
+  }
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for (const m of moves) moveNode(m.p, m.fromX, m.fromDy, true);
+  const id = ++transitionId;
+  const begin = performance.now();
+  const step = now => {
+    if (id !== transitionId) return;
+    const t = Math.min(1, (now - begin) / 450);
+    const eased = 1 - (1 - t) ** 3;
+    for (const m of moves) {
+      if (t < 1) moveNode(m.p, m.fromX + (m.x - m.fromX) * eased, m.fromDy + (m.dy - m.fromDy) * eased, true);
+      else moveNode(m.p, m.x, m.dy);
+    }
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function renderFocusBar() {
+  const bar = document.getElementById("focus-bar");
+  bar.hidden = !focusPerson;
+  if (focusPerson) {
+    document.getElementById("focus-label").textContent =
+      `Llinatge de ${focusPerson.name}: ${shown.length} de ${people.size} xoriguers`;
+  }
+}
+
+function setFocus(person) {
+  const previous = new Map(shown.map(p => {
+    const v = p.vertex;
+    return [p, { x: view.x + v.x * view.k, y: view.y + vertexY(v) * view.k }];
+  }));
+  focusPerson = person;
+  if (person) {
+    const lineage = new Set([person, ...closure(person, p => p.padrins), ...closure(person, p => p.fillols)]);
+    shown = sortedPeople.filter(p => lineage.has(p));
+    shownRelations = relations.filter(r => lineage.has(r.padri) && lineage.has(r.fillol));
+  } else {
+    shown = sortedPeople;
+    shownRelations = relations;
+  }
+  draw();
+  if (!person) restorePositions();
+  fit();
+  applyView();
+  glideFrom(previous);
+  renderFocusBar();
+  // Leaving the focus keeps the person selected, so it is clear where you were.
+  select(person || selected);
+}
+
+document.getElementById("focus-exit").addEventListener("click", () => setFocus(null));
+
+svg.addEventListener("click", event => {
+  const moved = drag && drag.moved;
+  drag = null;
+  if (moved) return;
+  const yearLabel = event.target.closest(".year");
+  if (yearLabel) {
+    toggleYear(Number(yearLabel.dataset.year));
+    return;
+  }
+  const node = event.target.closest(".node");
+  const person = node ? people.get(node.dataset.name) : null;
+  // On a touch screen, tapping the selected person again opens their focus view.
+  if (event.pointerType === "touch" && person && person === selected && person !== focusPerson) {
+    setFocus(person);
+    tappedIntoFocusAt = performance.now();
+    return;
+  }
+  select(person === selected ? null : person);
+});
+svg.addEventListener("dblclick", event => {
+  const node = event.target.closest(".node");
+  if (!node) return;
+  // A quick double-tap has already entered focus with its second tap.
+  if (performance.now() - tappedIntoFocusAt < 500) return;
+  // Double-clicking the person in focus leaves the focus view.
+  const person = people.get(node.dataset.name);
+  setFocus(person === focusPerson ? null : person);
+});
+svg.addEventListener("keydown", event => {
+  const yearLabel = event.target.closest(".year");
+  if (yearLabel && (event.key === "Enter" || event.key === " ")) {
+    event.preventDefault();
+    toggleYear(Number(yearLabel.dataset.year));
+    return;
+  }
+  const node = event.target.closest(".node");
+  if (node && (event.key === "Enter" || event.key === " ")) {
+    event.preventDefault();
+    select(people.get(node.dataset.name));
+  }
+  const arrow = { ArrowLeft: [-16, 0], ArrowRight: [16, 0], ArrowUp: [0, -8], ArrowDown: [0, 8] }[event.key];
+  if (node && arrow) {
+    event.preventDefault();
+    const person = people.get(node.dataset.name);
+    moveNode(person, person.vertex.x + arrow[0], person.vertex.dy + arrow[1]);
+    savePositions();
+  }
+});
+document.addEventListener("keydown", event => {
+  // Esc steps back: first the selection, then the focus view.
+  if (event.key !== "Escape") return;
+  if ((selected && selected !== focusPerson) || yearFilter !== null) select(null);
+  else if (focusPerson) setFocus(null);
+  else select(null);
+});
+svg.addEventListener("pointerover", event => {
+  if (event.pointerType !== "mouse" || selected || drag || yearFilter !== null) return;
+  const node = event.target.closest(".node");
+  const person = node ? people.get(node.dataset.name) : null;
+  if (person !== hovered) {
+    hovered = person;
+    renderHighlight();
+  }
+});
+
+// --------------------------
+// 8. Search and data warnings
+// --------------------------
+
+const search = document.getElementById("search");
+const normalize = text => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
+
+setText("names", target => {
+  for (const p of sortedPeople) {
+    const option = document.createElement("option");
+    option.value = p.name;
+    target.appendChild(option);
+  }
+});
+
+function findPerson(query, partial) {
+  const q = normalize(query);
+  if (!q) return null;
+  return sortedPeople.find(p => normalize(p.name) === q)
+    || (partial ? sortedPeople.find(p => normalize(p.name).startsWith(q)) || sortedPeople.find(p => normalize(p.name).includes(q)) : null);
+}
+search.addEventListener("input", () => {
+  const person = findPerson(search.value, false);
+  if (person) select(person);
+});
+search.addEventListener("keydown", event => {
+  if (event.key !== "Enter") return;
+  const person = findPerson(search.value, true);
+  if (person) {
+    select(person);
+    search.value = person.name;
+  }
+});
+
+// Open popovers close when clicking anywhere else.
+document.addEventListener("click", event => {
+  document.querySelectorAll("details[open]").forEach(d => {
+    if (!d.contains(event.target)) d.open = false;
+  });
+});
+
+// --------------------------
+// 9. Stats, always about the whole organization
+// --------------------------
+
+function longestLineage() {
+  const best = new Map();
+  for (const p of sortedPeople) {
+    const previous = p.padrins.map(padri => best.get(padri)).sort((a, b) => b.length - a.length)[0];
+    best.set(p, previous ? [...previous, p] : [p]);
+  }
+  return [...best.values()].sort((a, b) => b.length - a.length)[0] || [];
+}
+
+function statsSection(title, note, content) {
+  const section = document.createElement("section");
+  const heading = document.createElement("h4");
+  heading.textContent = title;
+  section.appendChild(heading);
+  if (note) {
+    const text = document.createElement("p");
+    text.className = "note";
+    text.textContent = note;
+    section.appendChild(text);
+  }
+  section.appendChild(content);
+  return section;
+}
+
+function chipList(members) {
+  const chips = document.createElement("div");
+  chips.className = "chips";
+  chips.append(...members);
+  return chips;
+}
+
+function renderStats() {
+  const stats = document.getElementById("stats");
+  const most = Math.max(0, ...sortedPeople.map(p => p.fillols.length));
+  const topPadrins = sortedPeople.filter(p => most > 0 && p.fillols.length === most);
+
+  const chain = document.createElement("div");
+  chain.className = "chain";
+  longestLineage().forEach((p, i) => {
+    if (i) chain.append("→");
+    chain.append(chip(p, ""));
+  });
+
+  // Nobody in the oldest year could have had a godfather, so they are not listed.
+  const oldest = sortedPeople.length ? sortedPeople[0].year : null;
+  const orphans = sortedPeople.filter(p => !p.padrins.length && p.year !== oldest);
+
+  stats.append(
+    statsSection("Més fillols", `${most} fillols`, chipList(topPadrins.map(p => chip(p, "")))),
+    statsSection("Llinatge més llarg", `${longestLineage().length} generacions`, chain),
+    statsSection(
+      `Sense padrí (${orphans.length})`,
+      orphans.length ? `Sense comptar l'any ${oldest}, que no en podia tenir.` : "Tothom en té.",
+      chipList(orphans.map(p => chip(p, ""))),
+    ),
+  );
+}
+
+// --------------------------
+// 10. Export: draws what is on screen, without the zoom or pan
+// --------------------------
+
+function exportCanvas() {
+  const PAD = 32, LABEL_W = 120, TITLE_H = 64;
+  const left = Math.min(...layout.verts.map(v => v.x - v.w / 2));
+  const right = Math.max(...layout.verts.map(v => v.x + v.w / 2));
+  const width = right - left + LABEL_W + 2 * PAD;
+  const height = layout.height + TITLE_H + PAD;
+  const scale = Math.min(2, 8000 / Math.max(width, height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.ceil(width * scale);
+  canvas.height = Math.ceil(height * scale);
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(scale, scale);
+
+  const display = getComputedStyle(document.documentElement).getPropertyValue("--font-display");
+  const stroked = (element, path) => {
+    const style = getComputedStyle(element);
+    ctx.globalAlpha = Number(style.opacity) * Number(style.strokeOpacity);
+    ctx.strokeStyle = style.stroke;
+    ctx.lineWidth = parseFloat(style.strokeWidth);
+    ctx.stroke(path);
+    ctx.globalAlpha = 1;
+  };
+
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--blue");
+  ctx.font = `800 24px ${display}`;
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(focusPerson ? `Llinatge de ${focusPerson.name}` : "Arbre de xoriguers", PAD, 38);
+
+  ctx.translate(PAD + LABEL_W - left, TITLE_H);
+  for (const band of document.querySelectorAll("#bands path")) stroked(band, new Path2D(band.getAttribute("d")));
+  for (const edge of edgesLayer.children) stroked(edge, new Path2D(edge.getAttribute("d")));
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (const [person, g] of nodeEls) {
+    const v = person.vertex, y = vertexY(v);
+    const rect = getComputedStyle(g.querySelector("rect")), text = getComputedStyle(g.querySelector("text"));
+    ctx.globalAlpha = Number(getComputedStyle(g).opacity);
+    ctx.beginPath();
+    ctx.roundRect(v.x - v.w / 2, y - NODE_H / 2, v.w, NODE_H, NODE_H / 2);
+    ctx.fillStyle = rect.fill;
+    ctx.fill();
+    ctx.strokeStyle = rect.stroke;
+    ctx.lineWidth = parseFloat(rect.strokeWidth);
+    ctx.stroke();
+    ctx.fillStyle = text.fill;
+    ctx.font = `${text.fontWeight} 14px ${display}`;
+    ctx.fillText(person.name, v.x, y);
+    ctx.globalAlpha = 1;
+  }
+
+  const axisX = left - LABEL_W + 8;
+  ctx.textAlign = "left";
+  ctx.font = `700 14px ${display}`;
+  yearEls.forEach(({ label, rank, text }) => {
+    const circle = getComputedStyle(label.querySelector("circle"));
+    if (rank < yearEls.length - 1) {
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--line");
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(axisX, yearY[rank]);
+      ctx.lineTo(axisX, yearY[rank + 1]);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(axisX, yearY[rank], 4, 0, Math.PI * 2);
+    ctx.fillStyle = circle.fill;
+    ctx.fill();
+    ctx.strokeStyle = circle.stroke;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = getComputedStyle(text).fill;
+    ctx.fillText(text.textContent, axisX + 11, yearY[rank]);
+  });
+  return canvas;
+}
+
+function exportName(extension) {
+  const slug = focusPerson
+    ? `-${focusPerson.name.normalize("NFD").replace(/\p{M}/gu, "").replace(/[^\p{L}\p{N}]+/gu, "-").toLowerCase()}`
+    : "";
+  return `arbre-xoriguers${slug}.${extension}`;
+}
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+// A one-page A4 PDF holding the picture, written by hand so that the page needs
+// no library: five objects and a cross-reference table.
+function pdfFromCanvas(canvas) {
+  const jpeg = atob(canvas.toDataURL("image/jpeg", 0.92).split(",")[1]);
+  const landscape = canvas.width > canvas.height;
+  const pageW = landscape ? 842 : 595, pageH = landscape ? 595 : 842, margin = 24;
+  const fit = Math.min((pageW - 2 * margin) / canvas.width, (pageH - 2 * margin) / canvas.height);
+  const w = canvas.width * fit, h = canvas.height * fit;
+  const x = (pageW - w) / 2, y = (pageH - h) / 2;
+  const content = `q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm /Im0 Do Q`;
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`,
+    `<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n${jpeg}\nendstream`,
+    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
+  ];
+  let out = "%PDF-1.4\n";
+  const offsets = objects.map((body, i) => {
+    const offset = out.length;
+    out += `${i + 1} 0 obj\n${body}\nendobj\n`;
+    return offset;
+  });
+  const xref = out.length;
+  out += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) out += `${String(offset).padStart(10, "0")} 00000 n \n`;
+  out += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return new Blob([Uint8Array.from(out, c => c.charCodeAt(0))], { type: "application/pdf" });
+}
+
+document.getElementById("export-png").addEventListener("click", () => {
+  exportCanvas().toBlob(blob => downloadBlob(blob, exportName("png")), "image/png");
+});
+document.getElementById("export-pdf").addEventListener("click", () => {
+  downloadBlob(pdfFromCanvas(exportCanvas()), exportName("pdf"));
+});
+
+if (DATA.issues.length) {
+  setText("issues", target => {
+    const title = document.createElement("summary");
+    title.textContent = `${DATA.issues.length} errors als CSV`;
+    const list = document.createElement("ul");
+    for (const issue of DATA.issues) {
+      const item = document.createElement("li");
+      item.textContent = issue;
+      list.appendChild(item);
+    }
+    target.append(title, list);
+    target.hidden = false;
+  });
+}
+
+draw();
+restorePositions();
+renderStats();
+fit();
+applyView();
+let lastWidth = svg.clientWidth;
+new ResizeObserver(() => {
+  if (svg.clientWidth === lastWidth) return;
+  lastWidth = svg.clientWidth;
+  fit();
+  applyView();
+}).observe(svg);
+</script>
+</body>
+</html>

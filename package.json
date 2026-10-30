@@ -14,7 +14,8 @@
     "cms": "decap-server",
     "dev:all": "concurrently -k \"npm:dev\" \"npm:cms\"",
     "test": "vitest run",
-    "import:calendar": "node scripts/import-calendar.mjs"
+    "import:calendar": "node scripts/import-calendar.mjs",
+    "build:arbre": "python3 arbre/build_tree.py arbre/xoriguers.csv arbre/apadrinatge.csv public/arbre/app.html"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

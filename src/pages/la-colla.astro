@@ -33,6 +33,11 @@ const assajos = (uneixTe?.data.assajos ?? []).filter((a) => a.text);
         </div>
       )}
     </div>
+    <a class="arbre-crida" href={`${base}arbre`}>
+      <span class="eyebrow">Qui ha apadrinat qui</span>
+      <span class="arbre-titol display">Arbre de xoriguers</span>
+      <span class="arbre-text">Els apadrinatges de la colla, dels més antics als més joves →</span>
+    </a>
     <a class="mes" href={`${base}uneix-te`}>Com venir a assajar →</a>
   </div>
 </Base>
@@ -45,4 +50,21 @@ const assajos = (uneixTe?.data.assajos ?? []).filter((a) => a.text);
   /* an assaig block's text can hold more than one line, as the rain fallback does */
   .card p { margin: 8px 0 0; font-size: 0.9375rem; white-space: pre-line; }
   .mes { font-size: 0.9375rem; font-weight: 600; }
+
+  /* the one thing on this page worth the yellow */
+  .arbre-crida {
+    display: block;
+    background: var(--yellow-bg);
+    border: 1px solid var(--yellow);
+    border-left: 4px solid var(--yellow);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .arbre-crida:hover { filter: brightness(0.98); }
+  .arbre-crida .eyebrow { color: var(--yellow-ink); }
+  .arbre-titol { display: block; font-size: 1.5rem; color: var(--yellow-ink); margin: 4px 0 6px; }
+  .arbre-text { font-size: 0.9375rem; color: var(--ink-soft); }
 </style>

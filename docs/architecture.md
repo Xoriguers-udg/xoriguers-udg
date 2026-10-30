@@ -127,6 +127,32 @@ Two operational notes, both learned the hard way:
   so `deploy.yml` listens for `workflow_run` on the sync rather than for the
   push it makes.
 
+## The arbre de xoriguers
+
+`/arbre` is the one page that is not built from a collection. The interactive
+apadrinatge tree is a self-contained HTML app generated from two CSVs by a
+Python script, committed to `public/arbre/app.html`, and framed by
+[`src/pages/arbre.astro`](../src/pages/arbre.astro) in an iframe.
+
+It is framed rather than inlined because it is a *page*, not a component: it
+styles `body`, `button` and `input`, and sets `height: 100dvh`. Inlining it
+would restyle the site around it and let the site's styles reach into the tree.
+
+Being same-origin, it keeps working normally in the frame: saved layouts
+(`localStorage`) and the PNG/PDF downloads both need the frame to carry **no
+`sandbox` attribute**, which is how the page is written. If you ever add one, it
+needs `allow-scripts allow-same-origin allow-downloads`.
+
+The one thing a frame costs is scrolling: the app's `wheel` handler is
+`passive: false` on its SVG, so a mouse wheel over the tree zooms instead of
+scrolling the page. The frame is therefore kept deliberately shorter than the
+viewport (`78vh`, capped at `760px`), and the page offers a button to open the
+app on its own — which matters most on a phone, where one finger pans the tree.
+
+Updating the data is `npm run build:arbre`, which needs Python 3. The generated
+file is committed, so the site build never runs the generator. See
+[`arbre/README.md`](../arbre/README.md).
+
 ## Build and deploy
 
 `astro.config.mjs` sets `base` to `/xoriguers-udg/` when `GITHUB_ACTIONS` is

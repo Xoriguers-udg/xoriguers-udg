@@ -54,6 +54,7 @@ src/
   lib/                the logic, with tests beside each file
   styles/global.css   design tokens and the handful of shared classes
 public/admin/         the CMS: config.yml is the form definitions
+arbre/                the apadrinatge tree's data and generator
 scripts/              the Google Calendar importer, and a spent migration
 .github/workflows/    deploy, and the nightly calendar sync
 docs/                 the longer explanations
@@ -83,6 +84,7 @@ what the notation means before you touch any of it.
 | Change a date, place or name | It is content: edit the markdown in `src/content/`, or use `/admin`. |
 | Change how a castell is scored | `src/lib/historial.ts`, with tests in `historial.test.ts`. Read `docs/castells.md` first. |
 | Pull in new calendar events by hand | `npm run import:calendar` (add `--dry` to see what it would do) |
+| Add somebody to the apadrinatge tree | Edit the CSVs in `arbre/`, run `npm run build:arbre`, commit both. See [arbre/README.md](arbre/README.md). |
 
 ## Three things that will cost you an hour
 
@@ -123,6 +125,8 @@ covers what it does and does not own.
 
 - [docs/architecture.md](docs/architecture.md) — the data model, the
   calendar → agenda → archive pipeline, the libraries, the deploy
+- [arbre/README.md](arbre/README.md) — the apadrinatge tree: how it is
+  generated, and why it is framed rather than built into the site
 - [docs/castells.md](docs/castells.md) — castell notation, folre and agulla,
   vanos, figueretes, and how points are worked out
 - [docs/cms.md](docs/cms.md) — what each collection is for and how the CMS is
