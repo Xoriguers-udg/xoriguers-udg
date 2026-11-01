@@ -6,3 +6,7 @@ npm-debug.log*
 
 # Windows writes these next to downloaded files
 *:Zone.Identifier
+
+# build_tree.py writes here when run with no arguments; the page that is served
+# is public/arbre/index.html, which npm run build:arbre produces
+arbre/arbre.html

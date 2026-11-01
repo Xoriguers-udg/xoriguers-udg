@@ -1,23 +1,37 @@
+/*
+ * The palette and the typography come from the arbre de xoriguers (see
+ * arbre/template.html), so the tree and the site read as one thing. Its own
+ * token names are noted against each, because that app is where a change to any
+ * of these should start.
+ */
 :root {
+  color-scheme: light;
+
   /* ---------- surfaces and text ---------- */
   --bg: #ffffff;
-  --bg-deep: #eaf6fc;
-  --ink: #16232c;
-  --ink-soft: #56707d;
-  /* for what is deliberately quiet: a season with no data, a chevron */
-  --ink-faint: #8aa3ae;
-  --line: #d7e8f0;
-  /* a line that has to hold its own against a tinted background */
-  --line-firm: #b9d7e5;
+  --bg-deep: #e4f1f8; /* the tree's --band */
+  --surface: #ffffff;
+  /* a deep blue rather than a near-black: the tree's --ink */
+  --ink: #0f3a54;
+  --ink-soft: #4f6f83; /* the tree's --muted */
+  /* for what is deliberately quiet: a season with no data, a chevron. A shade
+     darker than the tree's --edge, which is a stroke colour and too pale to
+     read as text */
+  --ink-faint: #6e93a8;
+  --line: #bcd7e6; /* the tree's --line */
+  /* a line that has to hold its own against a tinted background: its --edge */
+  --line-firm: #86b2c9;
+  --hover: #eef6fb; /* the tree's row/button hover */
 
   /* ---------- the colla's blue, and the yellow it is accented with ---------- */
-  --blue: #279cdb;
-  --blue-deep: #1b7aae;
-  /* paler than --bg-deep, for tinted pills and chips sitting on a pale ground */
-  --blue-wash: #d3e9f7;
-  --yellow: #f5b700;
-  --yellow-ink: #8a5f00;
-  --yellow-bg: #fff3cf;
+  --blue: #1b7aae; /* the tree's --blue */
+  /* one step darker, for links and anything that has to sit on --blue */
+  --blue-deep: #15658f;
+  /* paler than --bg-deep, for tinted pills and chips: its --fillol-soft */
+  --blue-wash: #dcedf6;
+  --yellow: #e1a800; /* the tree's --yellow */
+  --yellow-ink: #6b5000; /* its --warn */
+  --yellow-bg: #fdf3d0; /* its --warn-soft, and --padri-soft */
 
   /* ---------- outcomes: descarregat, carregat, intent, cancel·lada ---------- */
   --moss: #3f7d4a;
@@ -26,6 +40,11 @@
   --neutral-ink: #62727a;
   --danger: #b3261e;
   --danger-bg: #fbe4e2;
+
+  /* ---------- type ---------- */
+  /* both faces, and their fallbacks, exactly as the tree declares them */
+  --font-display: "Bricolage Grotesque", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --font-text: "Figtree", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
 
   /* ---------- content measures ---------- */
   /* grids and data get the full width; prose stays narrow enough to read */
@@ -42,7 +61,8 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  /* the tree's own body setting */
+  font: 15px/1.45 var(--font-text);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -51,24 +71,39 @@ h1, h2, h3, h4 {
   margin: 0;
 }
 
+/*
+ * Titles and names, castell notation among them. Bricolage Grotesque is a wide
+ * face and the tree never uppercases or tracks it out, so neither does the
+ * site: headings read as written, and only tighten a little at display sizes.
+ */
 .display {
-  font-family: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.015em;
 }
 
+/*
+ * Was a monospace class; the tree has no monospace, so this is now the small
+ * metadata voice — dates, counts, labels. Tabular figures keep the dense
+ * columns of the historial lined up, which is the one thing the mono was for.
+ */
 .mono {
-  font-family: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+  font-family: var(--font-text);
+  font-variant-numeric: tabular-nums;
 }
 
+/*
+ * The one place small caps survive. At 11px the tree's plain mixed case would
+ * be indistinguishable from body text, and these labels carry the hierarchy of
+ * a twenty-page site that a single-screen app does not need.
+ */
 .eyebrow {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
+  font-family: var(--font-text);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--blue-deep);
-  font-weight: 600;
+  color: var(--blue);
+  font-weight: 700;
 }
 
 a {
@@ -79,13 +114,13 @@ a:hover {
   color: var(--ink);
 }
 
+/* the tree's pills: a generous radius, no tracking */
 .pill {
   display: inline-block;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.03em;
-  border-radius: 99px;
-  padding: 3px 10px;
+  border-radius: 16px;
+  padding: 3px 11px;
 }
 
 .pill-moss { background: var(--moss-bg); color: var(--moss); }
@@ -109,28 +144,32 @@ a:hover {
   gap: 6px;
   background: var(--yellow);
   color: var(--ink);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--font-text);
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
   padding: 5px 12px;
-  border-radius: 5px;
+  border-radius: 16px;
 }
 
+/* the tree's buttons: a 10px radius, weight 500-600, mixed case */
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   border: none;
-  border-radius: 5px;
-  font-size: 0.8125rem;
+  border-radius: 10px;
+  font-family: var(--font-text);
+  font-size: 0.9375rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   padding: 11px 18px;
   text-decoration: none;
 }
 
-.btn-outline { background: transparent; border: 1px solid var(--ink); color: var(--ink); }
+.btn-outline {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.btn-outline:hover { background: var(--hover); border-color: var(--blue); color: var(--ink); }
 .btn-accent { background: var(--yellow); color: var(--ink); }
 .btn-accent:hover { filter: brightness(0.92); }

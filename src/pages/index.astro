@@ -206,7 +206,7 @@ const heroImatge = mediaUrl(base, inici?.data.imatge);
   .hero-photo {
     position: relative;
     overflow: hidden;
-    background: repeating-linear-gradient(135deg, var(--ink) 0px, var(--ink) 22px, #2c3e46 22px, #2c3e46 44px);
+    background: repeating-linear-gradient(135deg, var(--ink) 0px, var(--ink) 22px, #1d5676 22px, #1d5676 44px);
   }
   .hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .section { padding: 40px 28px 0; max-width: var(--ample); margin: 0 auto; }
@@ -253,7 +253,7 @@ const heroImatge = mediaUrl(base, inici?.data.imatge);
     display: flex; gap: 24px; align-items: center; justify-content: space-between; flex-wrap: wrap;
     background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; padding: 20px 24px; margin: 20px 0;
   }
-  .card-cartell { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; flex: none; }
+  .card-cartell { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex: none; }
   .card-row h2 { font-size: 1.05rem; margin: 4px 0 2px; }
   .meta { font-size: 0.8125rem; color: var(--ink-soft); }
   .card-link { font-size: 0.8125rem; font-weight: 600; display: flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; }
@@ -269,7 +269,7 @@ const heroImatge = mediaUrl(base, inici?.data.imatge);
     border-radius: 8px; padding: 18px 20px;
   }
   .activitat-foto {
-    width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 6px;
+    width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px;
     display: block; margin: -2px 0 12px;
   }
   .activitat h3 { font-size: 1.05rem; font-weight: 600; }
@@ -287,9 +287,10 @@ const heroImatge = mediaUrl(base, inici?.data.imatge);
   .noticia-row:hover { border-left-color: var(--blue-deep); }
   .noticia-row .card-link { color: var(--blue-deep); }
   .castells-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .castells-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin: 14px 0 32px; }
+  .castells-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 14px 0 32px; }
   .castell-tile { background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 8px; padding: 18px; text-align: center; }
-  .notation { font-size: 2.8rem; line-height: 1; }
+  /* the display face is wide, so a long canonic wraps rather than spilling */
+  .notation { font-size: 2rem; line-height: 1.05; overflow-wrap: anywhere; }
   @media (max-width: 860px) {
     .intro { grid-template-columns: 1fr; gap: 28px; }
   }

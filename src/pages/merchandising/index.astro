@@ -61,7 +61,7 @@ const productes = (await getCollection('productes')).sort((a, b) => a.data.ordre
   .tab-input { position: absolute; opacity: 0; pointer-events: none; }
   .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
   .tabs label {
-    cursor: pointer; padding: 8px 16px; border-radius: 99px;
+    cursor: pointer; padding: 8px 16px; border-radius: 16px;
     font-size: 0.8125rem; font-weight: 600; background: var(--bg-deep); color: var(--ink-soft);
   }
   #f-tots:checked ~ .tabs label[for="f-tots"],
@@ -99,11 +99,11 @@ const productes = (await getCollection('productes')).sort((a, b) => a.data.ordre
   .preu { font-weight: 700; padding: 6px 14px 0; }
   .veure {
     display: block; margin: 12px 14px 14px; text-align: center; padding: 9px;
-    background: var(--ink); color: #fff; border-radius: 5px; font-size: 0.8125rem; font-weight: 600;
+    background: var(--ink); color: #fff; border-radius: 16px; font-size: 0.8125rem; font-weight: 600;
   }
   .fora {
     display: block; margin: 12px 14px 14px; text-align: center; padding: 9px;
-    background: var(--neutral-bg); color: var(--neutral-ink); border-radius: 5px; font-size: 0.8125rem; font-weight: 600;
+    background: var(--neutral-bg); color: var(--neutral-ink); border-radius: 16px; font-size: 0.8125rem; font-weight: 600;
   }
   .empty { color: var(--ink-soft); grid-column: 1 / -1; }
 </style>

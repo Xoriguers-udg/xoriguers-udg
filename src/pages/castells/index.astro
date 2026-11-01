@@ -524,15 +524,15 @@ const pillClass: Record<string, string> = {
   .lens-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
   .search-wrap { display: flex; align-items: center; gap: 10px; }
   input[type='search'], select {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.8125rem; padding: 7px 11px;
-    border: 1px solid var(--line-firm); border-radius: 4px; background: var(--bg); color: var(--ink);
+    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.8125rem; padding: 7px 11px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
   }
   input[type='search'] { width: 220px; max-width: 46vw; }
   input[type='search']:focus-visible, select:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
   .hits { font-size: 0.75rem; color: var(--ink-soft); white-space: nowrap; }
   .sortbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 0 4px 14px; }
   .sortbar label {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.6875rem;
+    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.6875rem;
     letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft);
   }
 
@@ -541,12 +541,12 @@ const pillClass: Record<string, string> = {
   .cols-diades { grid-template-columns: 7rem 5.5rem minmax(0, 1fr) 4.5rem; }
   .col-head {
     display: grid; gap: 16px; padding: 0 4px 7px; border-bottom: 2px solid var(--blue);
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.625rem;
+    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.625rem;
     letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft);
   }
   .col-head .num { text-align: right; }
   .grouphead, .resum tr.gamma th {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.6875rem;
+    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.6875rem;
     letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue-deep); font-weight: 600;
     background: var(--bg-deep); border-bottom: 1px solid var(--line-firm); padding: 8px 4px;
   }
@@ -554,8 +554,9 @@ const pillClass: Record<string, string> = {
   .agrupada .ditem:not(:first-child) .grouphead:not([hidden]) { margin-top: 14px; }
 
   .c {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 500;
-    border-radius: 99px; padding: 2px 9px; white-space: nowrap;
+    font-family: var(--font-display); font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem; font-weight: 600;
+    border-radius: 16px; padding: 2px 10px; white-space: nowrap;
   }
   .c-descarregat { background: var(--moss-bg); color: var(--moss); }
   .c-carregat { background: var(--yellow-bg); color: var(--yellow-ink); }
@@ -563,7 +564,7 @@ const pillClass: Record<string, string> = {
   .castells-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
   .fita {
     font-size: 0.75rem; font-weight: 600; color: var(--yellow-ink); background: var(--yellow-bg);
-    border-radius: 99px; padding: 2px 9px; white-space: nowrap;
+    border-radius: 16px; padding: 2px 10px; white-space: nowrap;
   }
 
   /* ---------- per temporada ---------- */
@@ -575,11 +576,11 @@ const pillClass: Record<string, string> = {
   /* the season under way, so it reads as current rather than as one more row */
   .season.actual { border-left-color: var(--yellow); background: color-mix(in srgb, var(--yellow-bg) 40%, transparent); }
   .season-year {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.875rem; font-weight: 700;
+    font-family: var(--font-display); font-size: 0.875rem; font-weight: 700;
     font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--blue-deep);
   }
   .season-n {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.8125rem;
+    font-family: var(--font-text); font-size: 0.8125rem;
     color: var(--ink-soft); text-align: right; font-variant-numeric: tabular-nums;
   }
   .season-n.forta { color: var(--blue-deep); font-weight: 600; }
@@ -595,20 +596,20 @@ const pillClass: Record<string, string> = {
   .diada {
     display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: 16px; padding: 8px 6px;
     border-top: 1px solid var(--line); text-decoration: none; color: var(--ink);
-    border-radius: 4px; transition: background 0.12s;
+    border-radius: 10px; transition: background 0.12s;
   }
-  .diada:hover { background: var(--blue-wash); }
+  .diada:hover { background: var(--hover); }
   .diada:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
   .diada:hover .diada-name { color: var(--blue-deep); }
   .diada-date {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.75rem;
+    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.75rem;
     color: var(--ink-soft); white-space: nowrap;
   }
   .diada-name { font-size: 0.9375rem; }
   .obs { margin-top: 6px; font-size: 0.8125rem; color: var(--ink-soft); }
   .obs.is-fita { color: var(--yellow-ink); font-weight: 600; }
   .raw-note {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.75rem;
+    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.75rem;
     color: var(--ink-faint); margin-top: 5px;
   }
 
@@ -617,21 +618,22 @@ const pillClass: Record<string, string> = {
   table.resum { width: 100%; border-collapse: collapse; }
   .resum th, .resum td { text-align: left; padding: 7px 12px 7px 4px; }
   .resum thead th {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.625rem; letter-spacing: 0.1em;
+    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.625rem; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--ink-soft); font-weight: 400;
     border-bottom: 2px solid var(--blue); white-space: nowrap;
   }
   .resum tbody td { border-bottom: 1px solid var(--line); }
-  .not { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.9375rem; font-weight: 600; white-space: nowrap; }
+  /* the castell's name, so the display face, like the tree's own nodes */
+  .not { font-family: var(--font-display); font-variant-numeric: tabular-nums; font-size: 1rem; font-weight: 700; white-space: nowrap; }
   .tally {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.875rem;
+    font-family: var(--font-text); font-size: 0.875rem;
     white-space: nowrap; font-variant-numeric: tabular-nums;
   }
   .tally .desc { font-weight: 600; }
   .tally .carr { color: var(--yellow-ink); }
   .tally .int { color: var(--neutral-ink); }
   .when {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.75rem;
+    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.75rem;
     color: var(--ink-soft); white-space: nowrap;
   }
 
@@ -641,11 +643,11 @@ const pillClass: Record<string, string> = {
     border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink);
     transition: background 0.12s;
   }
-  .drow:hover { background: var(--blue-wash); }
+  .drow:hover { background: var(--hover); }
   .drow:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
   .drow:hover .diada-name { color: var(--blue-deep); }
   .pts {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.8125rem; color: var(--ink-soft);
+    font-family: var(--font-text); font-size: 0.8125rem; color: var(--ink-soft);
     text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;
   }
   .empty-state { padding: 34px 4px; color: var(--ink-soft); }

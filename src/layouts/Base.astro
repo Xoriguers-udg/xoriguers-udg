@@ -30,7 +30,8 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
   <link rel="canonical" href={canonicalUrl} />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  {/* the same two faces, at the same weights, as the arbre de xoriguers */}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
   <title>{pageTitle}</title>
   {metaDescription && <meta name="description" content={metaDescription} />}
   <meta property="og:type" content="website" />
@@ -66,7 +67,9 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
         <summary>La colla</summary>
         <div class="nav-dropdown-panel">
           <a href={`${base}la-colla`}>Qui som</a>
-          <a href={`${base}arbre`}>Arbre de xoriguers</a>
+          {/* the tree is a full-screen app with no nav of its own, so it opens
+              beside the site rather than replacing it */}
+          <a href={`${base}arbre/`} target="_blank" rel="noreferrer">Arbre de xoriguers ↗</a>
           <a href={`${base}xorimusics`}>Xorimúsics</a>
           <a href={`${base}mallarengues`}>Mallarengues</a>
           <a href={`${base}junta-tecnica`}>Junta Tècnica</a>
@@ -98,7 +101,7 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
       <div class="footer-col">
         <div class="footer-head mono">La colla</div>
         <a href={`${base}la-colla`}>Qui som</a>
-        <a href={`${base}arbre`}>Arbre de xoriguers</a>
+        <a href={`${base}arbre/`} target="_blank" rel="noreferrer">Arbre de xoriguers ↗</a>
         <a href={`${base}xorimusics`}>Xorimúsics</a>
         <a href={`${base}mallarengues`}>Mallarengues</a>
         <a href={`${base}junta-tecnica`}>Junta Tècnica</a>
@@ -153,24 +156,22 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
       text-decoration: none;
       color: var(--ink);
     }
-    .site-brand-name { font-size: 1.3rem; letter-spacing: 0.01em; }
+    .site-brand-name { font-size: 1.45rem; }
     .site-brand-tag {
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-family: var(--font-text);
       font-size: 0.6875rem;
       font-weight: 600;
       color: var(--bg);
-      background: var(--blue-deep);
-      border-radius: 4px;
-      padding: 3px 7px;
+      background: var(--blue);
+      border-radius: 8px;
+      padding: 3px 8px;
     }
     .site-links { display: flex; align-items: flex-start; gap: 30px; flex-wrap: wrap; }
     .site-links > a {
       position: relative;
       padding-bottom: 3px;
-      font-size: 0.8125rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
+      font-size: 0.9375rem;
+      font-weight: 600;
       color: var(--ink);
       text-decoration: none;
       background-image: linear-gradient(var(--blue), var(--blue));
@@ -189,10 +190,8 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
       align-items: center;
       gap: 5px;
       padding-bottom: 3px;
-      font-size: 0.8125rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
+      font-size: 0.9375rem;
+      font-weight: 600;
       color: var(--ink);
     }
     .nav-group summary::-webkit-details-marker { display: none; }
@@ -217,21 +216,21 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
       background: var(--bg);
       border: 1px solid var(--line);
       border-top: 3px solid var(--blue);
-      border-radius: 6px;
-      box-shadow: 0 12px 24px rgba(22, 35, 44, 0.12);
+      border-radius: 10px;
+      box-shadow: 0 12px 24px rgba(15, 58, 84, 0.14);
       padding: 8px;
       z-index: 20;
     }
     .nav-dropdown-panel a {
-      padding: 9px 10px;
-      border-radius: 4px;
-      font-size: 0.8125rem;
-      font-weight: 600;
+      padding: 9px 11px;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-weight: 500;
       color: var(--ink);
       text-decoration: none;
       white-space: nowrap;
     }
-    .nav-dropdown-panel a:hover { background: var(--bg-deep); color: var(--blue-deep); }
+    .nav-dropdown-panel a:hover { background: var(--hover); color: var(--blue-deep); }
 
     .page-hero {
       position: relative;
@@ -256,7 +255,7 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
       inset: 0;
       /* a darkened blue rather than neutral black, so the banner reads as part
          of the same palette as everything below it */
-      background: linear-gradient(180deg, rgba(10, 45, 64, 0) 40%, rgba(10, 45, 64, 0.78) 100%);
+      background: linear-gradient(180deg, rgba(15, 58, 84, 0) 40%, rgba(15, 58, 84, 0.8) 100%);
     }
     .page-hero-title {
       position: relative;
@@ -284,13 +283,14 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
     .footer-col { display: flex; flex-direction: column; gap: 9px; }
     .footer-head {
       font-size: 0.6875rem;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
+      font-weight: 700;
       color: var(--yellow);
       margin-bottom: 2px;
     }
     .footer-col a {
-      font-size: 0.875rem;
+      font-size: 0.9375rem;
       color: var(--bg-deep);
       text-decoration: none;
       width: fit-content;
@@ -300,7 +300,7 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
       max-width: var(--ample);
       margin: 0 auto;
       padding-top: 22px;
-      border-top: 1px solid rgba(234, 246, 252, 0.15);
+      border-top: 1px solid rgba(228, 241, 248, 0.18);
       display: flex;
       align-items: baseline;
       justify-content: space-between;
@@ -310,7 +310,7 @@ const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : u
     .footer-brand { font-size: 1.35rem; color: var(--bg); }
     .footer-note {
       font-size: 0.75rem;
-      color: rgba(234, 246, 252, 0.55);
+      color: rgba(228, 241, 248, 0.6);
     }
 
     /* the nav and the footer keep the same side margin as the pages between

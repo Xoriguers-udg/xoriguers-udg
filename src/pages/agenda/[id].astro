@@ -103,18 +103,18 @@ const tornarText = jaPassada ? '← Historial de castells' : '← Agenda';
   .meta { font-size: 0.9375rem; color: var(--ink-soft); }
   .cartell { width: 100%; aspect-ratio: 3/4; max-height: 420px; object-fit: cover; border-radius: 8px; margin-top: 20px; }
   .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
-  .chip { border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px; font-size: 0.8125rem; background: #fff; }
+  .chip { border: 1px solid var(--line); border-radius: 16px; padding: 5px 12px; font-size: 0.8125rem; background: #fff; }
   .body { margin-top: 28px; font-size: 1rem; line-height: 1.7; color: var(--ink); max-width: 65ch; }
   .observacio {
     margin: 20px 0 0; padding: 12px 16px; background: var(--yellow-bg); color: var(--yellow-ink);
     border-radius: 8px; font-size: 0.9375rem; font-weight: 600; max-width: 65ch;
   }
   .castells { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
-  .castells-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; margin-top: 14px; }
+  .castells-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; margin-top: 14px; }
   .facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
   .fact {
     display: flex; flex-direction: column; gap: 2px;
-    background: var(--bg-deep); border-radius: 6px; padding: 8px 14px;
+    background: var(--bg-deep); border-radius: 10px; padding: 8px 14px;
     text-decoration: none; color: var(--ink);
   }
   a.fact:hover { background: var(--blue-wash); }
@@ -122,10 +122,10 @@ const tornarText = jaPassada ? '← Historial de castells' : '← Agenda';
   .fact-value { font-size: 0.9375rem; font-weight: 600; color: var(--blue-deep); }
   .castell-tile { background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 8px; padding: 16px; text-align: center; }
   .castell-foto {
-    width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 6px;
+    width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;
     display: block; margin: -4px 0 12px;
   }
   .registre { margin: 18px 0 0; font-size: 0.8125rem; color: var(--ink-soft); }
-  .notation { font-size: 2rem; line-height: 1; }
+  .notation { font-size: 1.6rem; line-height: 1.05; overflow-wrap: anywhere; }
   .ronda { font-size: 0.6875rem; color: var(--ink-soft); margin-top: 8px; }
 </style>

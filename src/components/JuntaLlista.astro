@@ -49,7 +49,7 @@ const base = import.meta.env.BASE_URL;
   .junta-llista { display: flex; flex-direction: column; gap: 14px; }
   .temporada {
     background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--blue);
-    border-radius: 8px; overflow: hidden;
+    border-radius: 10px; overflow: hidden;
   }
   .temporada summary {
     list-style: none; cursor: pointer;
@@ -65,7 +65,8 @@ const base = import.meta.env.BASE_URL;
   .foto { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; display: block; }
   .foto.placeholder { background: var(--bg-deep); border: 1px solid var(--line); margin: 0 auto 10px; }
   .nom { font-weight: 600; font-size: 0.9375rem; }
-  .malnom { color: var(--blue-deep); font-weight: 800; text-transform: uppercase; font-size: 0.8125rem; letter-spacing: 0.02em; margin-top: 2px; }
+  /* a malnom is a name, and the tree writes names in the display face */
+  .malnom { font-family: var(--font-display); color: var(--blue-deep); font-weight: 700; font-size: 0.9375rem; margin-top: 2px; }
   .carrec { font-size: 0.75rem; color: var(--ink-soft); margin-top: 4px; }
   .empty { color: var(--ink-soft); font-size: 0.9375rem; padding: 0 22px 22px; }
 </style>

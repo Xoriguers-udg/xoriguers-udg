@@ -129,25 +129,21 @@ Two operational notes, both learned the hard way:
 
 ## The arbre de xoriguers
 
-`/arbre` is the one page that is not built from a collection. The interactive
-apadrinatge tree is a self-contained HTML app generated from two CSVs by a
-Python script, committed to `public/arbre/app.html`, and framed by
-[`src/pages/arbre.astro`](../src/pages/arbre.astro) in an iframe.
+`/arbre/` is the one page the site does not render. The interactive apadrinatge
+tree is a self-contained HTML app, generated from two CSVs by a Python script
+and committed to `public/arbre/index.html`, which Astro copies to `dist`
+verbatim. There is no Astro page for it and nothing frames it: the URL serves
+the app itself, full screen.
 
-It is framed rather than inlined because it is a *page*, not a component: it
-styles `body`, `button` and `input`, and sets `height: 100dvh`. Inlining it
-would restyle the site around it and let the site's styles reach into the tree.
+It is linked from the La colla menu, the footer index and a card on *Qui som*,
+all with `target="_blank"`, because the app has no navigation of its own — it
+opens beside the site rather than replacing it. If you would rather it opened in
+the same tab, put a link back to the site into `arbre/template.html` first.
 
-Being same-origin, it keeps working normally in the frame: saved layouts
-(`localStorage`) and the PNG/PDF downloads both need the frame to carry **no
-`sandbox` attribute**, which is how the page is written. If you ever add one, it
-needs `allow-scripts allow-same-origin allow-downloads`.
-
-The one thing a frame costs is scrolling: the app's `wheel` handler is
-`passive: false` on its SVG, so a mouse wheel over the tree zooms instead of
-scrolling the page. The frame is therefore kept deliberately shorter than the
-viewport (`78vh`, capped at `760px`), and the page offers a button to open the
-app on its own — which matters most on a phone, where one finger pans the tree.
+**The site's design system comes from this app.** Its two faces and its palette
+are the source for `src/styles/global.css`, so the tree and the site read as one
+thing. Changing a colour or a face should start in `arbre/template.html` and
+then be mirrored into `global.css`, where each token names its counterpart.
 
 Updating the data is `npm run build:arbre`, which needs Python 3. The generated
 file is committed, so the site build never runs the generator. See

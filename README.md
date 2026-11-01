@@ -80,6 +80,7 @@ what the notation means before you touch any of it.
 |---|---|
 | Add a field editors can fill in | Add it to `src/content.config.ts` **and** to `public/admin/config.yml`, then use it in the page. Both, always — see the hazard below. |
 | Change what a page looks like | Edit that page in `src/pages/`. Styles are scoped to the file; shared tokens are in `src/styles/global.css`. |
+| Change a colour or a typeface | Start in `arbre/template.html`: the site's palette and both its faces come from the tree, and `global.css` names each token's counterpart there. |
 | Add a page to the navigation | `src/layouts/Base.astro` — the nav and the footer index are both there. |
 | Change a date, place or name | It is content: edit the markdown in `src/content/`, or use `/admin`. |
 | Change how a castell is scored | `src/lib/historial.ts`, with tests in `historial.test.ts`. Read `docs/castells.md` first. |
@@ -126,7 +127,7 @@ covers what it does and does not own.
 - [docs/architecture.md](docs/architecture.md) — the data model, the
   calendar → agenda → archive pipeline, the libraries, the deploy
 - [arbre/README.md](arbre/README.md) — the apadrinatge tree: how it is
-  generated, and why it is framed rather than built into the site
+  generated, and why it is also the site's design system
 - [docs/castells.md](docs/castells.md) — castell notation, folre and agulla,
   vanos, figueretes, and how points are worked out
 - [docs/cms.md](docs/cms.md) — what each collection is for and how the CMS is

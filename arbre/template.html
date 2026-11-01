@@ -43,7 +43,8 @@
     stroke: var(--bg); stroke-width: 4px; paint-order: stroke; stroke-linejoin: round;
   }
 
-  .edge { fill: none; stroke: var(--edge); stroke-width: 1.5; transition: opacity .12s; }
+  .edge { fill: none; stroke: var(--edge); stroke-width: 1.4; stroke-opacity: .8; transition: opacity .12s; }
+  .edge.padri, .edge.fillol { stroke-opacity: 1; }
   .node { cursor: grab; transition: opacity .12s; }
   #tree.dragging .node { cursor: grabbing; }
   .node rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
@@ -52,12 +53,26 @@
   .node:focus { outline: none; }
   .node:focus-visible rect { stroke: var(--blue); stroke-width: 3; }
 
-  .focused .edge:not(.padri, .fillol) { opacity: .12; }
-  .focused .node:not(.padri, .fillol, .selected, .in-year) { opacity: .28; }
-  .edge.padri { stroke: var(--padri); stroke-width: 3; }
-  .edge.fillol { stroke: var(--fillol); stroke-width: 3; }
-  .node.padri rect { fill: var(--padri-soft); stroke: var(--padri); stroke-width: 2.5; }
-  .node.fillol rect { fill: var(--fillol-soft); stroke: var(--fillol); stroke-width: 2.5; }
+  .focused .edge:not(.padri, .fillol, .kin) { opacity: .12; }
+  .focused .node:not(.padri, .fillol, .selected, .in-year, .kin) { opacity: .28; }
+  /* Relatives go gently from bright to darker with distance: line, node fill. */
+  .padri[data-depth="1"] { --line-shade: #f0b800; --fill-shade: #fff4cc; }
+  .padri[data-depth="2"] { --line-shade: #e1a800; --fill-shade: #ffeba8; }
+  .padri[data-depth="3"] { --line-shade: #cc9a0a; --fill-shade: #fae08a; }
+  .padri[data-depth="4"] { --line-shade: #b58a12; --fill-shade: #f0d274; }
+  .fillol[data-depth="1"] { --line-shade: #2a93cc; --fill-shade: #e3f3fb; }
+  .fillol[data-depth="2"] { --line-shade: #1f84bb; --fill-shade: #cfe8f6; }
+  .fillol[data-depth="3"] { --line-shade: #1b7aae; --fill-shade: #b8dcf0; }
+  .fillol[data-depth="4"] { --line-shade: #1a6b9a; --fill-shade: #a2d0ea; }
+  /* Extended family, by order: a third colour, so it never reads as lineage. */
+  .kin[data-order="1"] { --line-shade: #3f9d6d; --fill-shade: #e4f5ec; }
+  .kin[data-order="2"] { --line-shade: #2f8a5c; --fill-shade: #bfe6d0; }
+  .kin[data-order="3"] { --line-shade: #277a50; --fill-shade: #98d6b4; }
+  .kin[data-order="4"] { --line-shade: #1f6a44; --fill-shade: #78c49c; }
+  .edge.kin[data-order] { stroke: var(--line-shade); stroke-width: 2; stroke-opacity: 1; }
+  .node.kin[data-order] rect { fill: var(--fill-shade); stroke: var(--line-shade); stroke-width: 2; }
+  .edge.padri, .edge.fillol { stroke: var(--line-shade); stroke-width: 3; }
+  .node.padri rect, .node.fillol rect { fill: var(--fill-shade); stroke: var(--line-shade); stroke-width: 2.5; }
   .node.selected rect { fill: var(--selected); stroke: var(--selected); }
   .node.selected text { fill: var(--selected-ink); font-weight: 700; }
 
@@ -81,6 +96,16 @@
     background: var(--blue); color: #ffffff; font-weight: 600; font-size: 14px;
   }
   .focus-bar[hidden] { display: none; }
+  .family { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .family[hidden] { display: none; }
+  .family input { width: 110px; margin: 0; accent-color: var(--yellow); cursor: pointer; }
+  .family span { min-width: 175px; }
+  .focus-legend { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 12px; font-size: 12px; font-weight: 500; }
+  .legend-chip { display: inline-flex; align-items: center; gap: 5px; }
+  .legend-chip::before {
+    content: ""; width: 12px; height: 12px; border-radius: 6px;
+    background: var(--fill-shade); border: 2px solid var(--line-shade);
+  }
   .focus-bar button {
     height: 32px; padding: 0 14px; border: 0; border-radius: 16px;
     background: var(--yellow); color: var(--ink); font-weight: 600;
@@ -100,7 +125,9 @@
     box-shadow: 0 6px 20px rgba(15, 58, 84, .16); pointer-events: none;
   }
   .card[hidden] { display: none; }
-  .card.pinned { pointer-events: auto; }
+  .card.pinned { pointer-events: auto; cursor: grab; user-select: none; }
+  .card.dragging { cursor: grabbing; }
+  .card-header { touch-action: none; }
   .card.docked { left: 12px !important; right: 12px; top: auto !important; bottom: 60px; width: auto; max-height: 40%; }
   .card-title { font: 700 18px/1.15 var(--font-display); margin: 0; overflow-wrap: anywhere; }
   .card-year { color: var(--muted); font-size: 13px; }
@@ -120,11 +147,12 @@
   }
 
   .search-bar {
-    position: relative; display: flex; justify-content: center; align-items: center; gap: 8px;
-    padding: 10px 12px; background: var(--surface); border-top: 3px solid var(--yellow);
+    position: relative; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px;
+    padding: 10px 12px 6px; background: var(--surface); border-top: 3px solid var(--yellow);
   }
+  .hints { flex-basis: 100%; margin: 0; text-align: center; font-size: 12px; line-height: 1.3; color: var(--muted); white-space: pre-wrap; }
   input[type=search] {
-    flex: 1 1 auto; min-width: 0; max-width: 460px; height: 40px; padding: 0 18px; font: inherit; color: inherit;
+    flex: 1 1 0; min-width: 0; max-width: 460px; height: 40px; padding: 0 18px; font: inherit; color: inherit;
     background: var(--bg); border: 1px solid var(--line); border-radius: 20px;
   }
   input[type=search]:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
@@ -173,9 +201,14 @@
     <button id="zoom-fit">Encaixa</button>
     <button id="reset-layout">Reordena</button>
   </div>
-  <div id="focus-bar" class="focus-bar" role="status" hidden>
-    <span id="focus-label"></span>
+  <div id="focus-bar" class="focus-bar" hidden>
+    <span id="focus-label" role="status"></span>
+    <label id="family" class="family">
+      <input id="family-level" type="range" min="0" max="0" step="1" value="0" aria-label="Família extensa">
+      <span id="family-name"></span>
+    </label>
     <button id="focus-exit">Arbre complet</button>
+    <div id="focus-legend" class="focus-legend"></div>
   </div>
   <div id="card" class="card" aria-live="polite" hidden></div>
 </main>
@@ -194,12 +227,13 @@
     <div id="stats" class="popover-body"></div>
   </details>
   <details id="issues" class="issues" hidden></details>
+  <p id="hints" class="hints"></p>
 </footer>
 
 <script type="module">
 const DATA = /*__DATA__*/null;
 
-const NODE_H = 34, BAND_H = 116, LINE_H = 74, LINE_CAP = 7, NODE_GAP = 22, EDGE_GAP = 6, COMPONENT_GAP = 56, MARGIN_LEFT = 84, MARGIN = 28;
+const NODE_H = 34, BAND_H = 116, LINE_H = 74, WIDTH_FACTOR = 2, MIN_LINE_CAP = 6, NODE_GAP = 22, EDGE_GAP = 6, COMPONENT_GAP = 30, EDGE_ROOM = 20, CARD_COLUMN = 264, CARD_STRIP = 290, MARGIN_LEFT = 84, MARGIN = 28;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const collator = new Intl.Collator("ca", { sensitivity: "base" });
 const byAge = (a, b) => a.year - b.year || collator.compare(a.name, b.name);
@@ -227,12 +261,16 @@ let shownRelations = relations;
 
 let years, rankOf, yearLines, firstLevel, levelY, levelYear, yearY;
 
-// A crowded year is wrapped onto several lines, so new people add height rather
-// than width. Each line is a layout level; the same set is used by all families.
+// A crowded year is wrapped onto several lines. How many people fit on a line comes
+// from the biggest year: width and height grow together as √people, and each year
+// is as tall as its share of people. A higher WIDTH_FACTOR makes the tree wider.
+// Each line is a layout level; the same set is used by all families.
 function computeLevels() {
   years = [...new Set(shown.map(p => p.year))];
   rankOf = new Map(years.map((y, i) => [y, i]));
-  yearLines = years.map(y => Math.ceil(shown.filter(p => p.year === y).length / LINE_CAP));
+  const counts = years.map(y => shown.filter(p => p.year === y).length);
+  const lineCap = Math.max(MIN_LINE_CAP, Math.round(Math.sqrt(Math.max(...counts)) * WIDTH_FACTOR));
+  yearLines = counts.map(count => Math.ceil(count / lineCap));
   firstLevel = [];
   levelY = [];
   levelYear = [];
@@ -332,6 +370,34 @@ function countCrossings({ layers, ranks }) {
   return total;
 }
 
+// Swaps neighbours in a row whenever that alone removes crossings.
+function transpose({ layers, ranks }, position) {
+  const crossingsBetween = (a, b, neighbours) => {
+    let total = 0;
+    for (const u of neighbours(a)) {
+      for (const w of neighbours(b)) {
+        if (position.get(u) > position.get(w)) total++;
+      }
+    }
+    return total;
+  };
+  const cost = (a, b) => crossingsBetween(a, b, v => v.up) + crossingsBetween(a, b, v => v.down);
+  for (let improved = true, pass = 0; improved && pass < 6; pass++) {
+    improved = false;
+    for (const rank of ranks) {
+      const row = layers.get(rank);
+      for (let i = 0; i < row.length - 1; i++) {
+        if (cost(row[i], row[i + 1]) > cost(row[i + 1], row[i])) {
+          [row[i], row[i + 1]] = [row[i + 1], row[i]];
+          position.set(row[i], i);
+          position.set(row[i + 1], i + 1);
+          improved = true;
+        }
+      }
+    }
+  }
+}
+
 // Barycenter sweeps; keeps the ordering with the fewest crossings.
 function orderLayers(graph) {
   const { layers, ranks } = graph;
@@ -353,6 +419,7 @@ function orderLayers(graph) {
       layers.get(rank).sort((a, b) => keys.get(a) - keys.get(b));
       index(rank);
     }
+    transpose(graph, position);
     const crossings = countCrossings(graph);
     if (crossings < bestCrossings) {
       bestCrossings = crossings;
@@ -367,9 +434,7 @@ function orderLayers(graph) {
 function placeRow(row, targets) {
   const offsets = [0];
   for (let i = 1; i < row.length; i++) {
-    // Passing lines can run close together; only two real nodes need the full gap.
-    const gap = row[i - 1].person && row[i].person ? NODE_GAP : row[i - 1].person || row[i].person ? NODE_GAP / 2 : 2;
-    offsets.push(offsets[i - 1] + (row[i - 1].w + row[i].w) / 2 + gap);
+    offsets.push(offsets[i - 1] + (row[i - 1].w + row[i].w) / 2 + NODE_GAP);
   }
   const blocks = [];
   targets.forEach((t, i) => {
@@ -401,22 +466,22 @@ function placeVertices({ layers, ranks }) {
   }
 }
 
-// Pulls the invisible bends of long edges towards the straight line between
-// their two ends, moving aside only as much as the row's nodes require.
-function straightenEdges({ layers, ranks, chains }) {
-  const targets = new Map();
-  for (let pass = 0; pass < 8; pass++) {
-    for (const { chain } of chains) {
-      const first = chain[0], last = chain[chain.length - 1];
-      for (let i = 1; i < chain.length - 1; i++) {
-        targets.set(chain[i], first.x + (last.x - first.x) * i / (chain.length - 1));
-      }
-    }
-    for (const rank of ranks) {
-      const row = layers.get(rank);
-      placeRow(row, row.map(v => (v.person ? v.x : targets.get(v))));
-    }
+// The invisible vertices only help to find a good order. They are dropped before
+// placing nodes, so passing lines take up no room and each node sits by its relatives.
+function dropBends(graph) {
+  graph.verts = graph.verts.filter(v => v.person);
+  for (const v of graph.verts) {
+    v.up = [];
+    v.down = [];
   }
+  for (const relation of graph.chains) {
+    const from = relation.chain[0], to = relation.chain[relation.chain.length - 1];
+    from.down.push(to);
+    to.up.push(from);
+    relation.chain = [from, to];
+  }
+  for (const rank of graph.ranks) graph.layers.set(rank, graph.layers.get(rank).filter(v => v.person));
+  graph.ranks = graph.ranks.filter(rank => graph.layers.get(rank).length);
 }
 
 // Splits one year of a family, given in left-to-right order, across the year's
@@ -454,23 +519,141 @@ function wrapYears(members) {
   }
 }
 
+// Greedy clean-up on the real positions: two people of the same year trade places
+// whenever that removes crossings, or shortens lines without adding any.
+function untangle(graph) {
+  const links = graph.chains.map(c => c.chain);
+  const segmentsCross = ([a, b], [c, d]) => {
+    if (a === c || a === d || b === c || b === d) return false;
+    const side = (p, q, r) => (q.x - p.x) * (rowY(r.rank) - rowY(p.rank)) - (rowY(q.rank) - rowY(p.rank)) * (r.x - p.x);
+    return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0;
+  };
+  const cost = (u, v) => {
+    let total = 0;
+    for (const link of links) {
+      if (link[0] !== u && link[1] !== u && link[0] !== v && link[1] !== v) continue;
+      total += Math.hypot(link[0].x - link[1].x, rowY(link[0].rank) - rowY(link[1].rank));
+      for (const other of links) {
+        if (other !== link && segmentsCross(link, other)) total += 400;
+      }
+    }
+    return total;
+  };
+  const byYear = new Map();
+  for (const v of graph.verts) {
+    if (!byYear.has(v.person.year)) byYear.set(v.person.year, []);
+    byYear.get(v.person.year).push(v);
+  }
+  const trade = (u, v) => {
+    [u.x, v.x] = [v.x, u.x];
+    [u.rank, v.rank] = [v.rank, u.rank];
+  };
+  for (let pass = 0; pass < 3; pass++) {
+    for (const group of byYear.values()) {
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const before = cost(group[i], group[j]);
+          trade(group[i], group[j]);
+          if (cost(group[i], group[j]) >= before) trade(group[i], group[j]);
+        }
+      }
+    }
+  }
+  // Names differ in width, so each row is spaced out again in its new order.
+  graph.ranks = [...new Set(graph.verts.map(v => v.rank))].sort((a, b) => a - b);
+  graph.layers = new Map(graph.ranks.map(rank => [rank, graph.verts.filter(v => v.rank === rank).sort((a, b) => a.x - b.x)]));
+  for (const rank of graph.ranks) placeRow(graph.layers.get(rank), graph.layers.get(rank).map(v => v.x));
+}
+
+// How far left and right a family reaches on each line, counting its nodes and the
+// lines passing through (with room for them to swing).
+function rowExtents({ verts, chains }) {
+  const rows = new Map();
+  const extend = (rank, left, right) => {
+    const row = rows.get(rank) || { left: Infinity, right: -Infinity };
+    rows.set(rank, { left: Math.min(row.left, left), right: Math.max(row.right, right) });
+  };
+  for (const v of verts) extend(v.rank, v.x - v.w / 2, v.x + v.w / 2);
+  for (const { chain: [from, to] } of chains) {
+    for (let rank = from.rank + 1; rank < to.rank; rank++) {
+      const x = from.x + (to.x - from.x) * (rowY(rank) - rowY(from.rank)) / (rowY(to.rank) - rowY(from.rank));
+      extend(rank, x - EDGE_ROOM, x + EDGE_ROOM);
+    }
+  }
+  return rows;
+}
+
+// Focus view with extended family: the lineage stays in the middle of each row and
+// each branch goes out to the side it hangs from, nearest orders closest to the
+// lineage. So distance from the centre means distance in the family.
+function arrangeFamily(graph) {
+  if (!familyOrder.size) return;
+  const vertexOf = new Map(graph.verts.map(v => [v.person, v]));
+  const centre = vertexOf.get(focusPerson).x;
+  const side = new Map(), parentOf = new Map();
+  const counts = { [-1]: 0, 1: 0 };
+  for (const step of familySteps.slice(0, familyLevel)) {
+    for (const person of step.added) {
+      const parent = person.padrins.find(p => vertexOf.has(p) && (side.has(p) || !familyOrder.has(p)));
+      const parentV = vertexOf.get(parent);
+      let chosen = side.get(parent);
+      if (chosen === undefined) {
+        const offset = parentV.x - centre;
+        chosen = Math.abs(offset) > 1 ? Math.sign(offset) : counts[-1] <= counts[1] ? -1 : 1;
+      }
+      side.set(person, chosen);
+      parentOf.set(person, parentV);
+      counts[chosen]++;
+    }
+  }
+  const target = v => {
+    const parent = parentOf.get(v.person);
+    return parent ? parent.x + side.get(v.person) * familyOrder.get(v.person) * 70 : v.x;
+  };
+  const rowKey = v => {
+    const order = familyOrder.get(v.person) || 0;
+    return [order ? side.get(v.person) * (1000 + order * 10) : 0, order ? target(v) : v.x];
+  };
+  for (let pass = 0; pass < 2; pass++) {
+    for (const rank of graph.ranks) {
+      const row = graph.layers.get(rank);
+      row.sort((a, b) => {
+        const [groupA, xA] = rowKey(a), [groupB, xB] = rowKey(b);
+        return groupA - groupB || xA - xB;
+      });
+      placeRow(row, row.map(target));
+    }
+  }
+}
+
 function layoutAll() {
   const all = { verts: [], chains: [] };
-  let offset = 0;
-  for (const members of connectedComponents()) {
+  const graphs = connectedComponents().map(members => {
     wrapYears(members);
     const graph = buildVertices(members);
     orderLayers(graph);
+    dropBends(graph);
     placeVertices(graph);
-    straightenEdges(graph);
-    const left = Math.min(...graph.verts.map(v => v.x - v.w / 2));
-    const right = Math.max(...graph.verts.map(v => v.x + v.w / 2));
-    for (const v of graph.verts) v.x += offset - left;
-    offset += right - left + COMPONENT_GAP;
+    untangle(graph);
+    arrangeFamily(graph);
+    return graph;
+  });
+  // Biggest family first; each smaller one then slides left until it meets what is
+  // already on its lines, so it can sit in free space beside the main tree.
+  graphs.sort((a, b) => b.verts.length - a.verts.length);
+  const reached = new Map();
+  for (const graph of graphs) {
+    const rows = rowExtents(graph);
+    let shift = -Math.min(...[...rows.values()].map(row => row.left));
+    for (const [rank, row] of rows) {
+      if (reached.has(rank)) shift = Math.max(shift, reached.get(rank) + COMPONENT_GAP - row.left);
+    }
+    for (const v of graph.verts) v.x += shift;
+    for (const [rank, row] of rows) reached.set(rank, Math.max(reached.get(rank) ?? -Infinity, row.right + shift));
     all.verts.push(...graph.verts);
     all.chains.push(...graph.chains);
   }
-  all.width = offset - COMPONENT_GAP;
+  all.width = Math.max(...reached.values());
   all.height = levelY[levelY.length - 1] + BAND_H / 2;
   return all;
 }
@@ -478,25 +661,68 @@ function layoutAll() {
 const rowY = rank => levelY[rank];
 const vertexY = v => rowY(v.rank) + v.dy;
 
-// A single smooth curve through the whole chain: it leaves and arrives vertically,
-// and in between each bend's direction comes from its two neighbours.
-function edgePath(chain) {
-  const last = chain.length - 1;
-  const points = chain.map((v, i) => ({
-    x: v.x,
-    y: vertexY(v) + (i === 0 ? NODE_H / 2 : i === last ? -NODE_H / 2 : 0),
-  }));
-  const tangent = i => {
-    if (i === 0) return { x: 0, y: points[1].y - points[0].y };
-    if (i === last) return { x: 0, y: points[last].y - points[last - 1].y };
-    return { x: (points[i + 1].x - points[i - 1].x) / 2, y: (points[i + 1].y - points[i - 1].y) / 2 };
-  };
-  let d = `M${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < last; i++) {
-    const a = points[i], b = points[i + 1], ta = tangent(i), tb = tangent(i + 1);
-    d += ` C${a.x + ta.x / 2.5} ${a.y + ta.y / 2.5} ${b.x - tb.x / 2.5} ${b.y - tb.y / 2.5} ${b.x} ${b.y}`;
+// One curve from godfather to godchild, leaving and arriving vertically. A relation
+// has its own spot along each node's edge (fromOffset, toOffset) and may swing
+// sideways (bulge) to go around the nodes in its way.
+function edgeCurve({ chain: [from, to], fromOffset = 0, toOffset = 0 }, bulge) {
+  const x0 = from.x + fromOffset, x3 = to.x + toOffset;
+  const y0 = vertexY(from) + NODE_H / 2, y3 = vertexY(to) - NODE_H / 2;
+  const bend = (y3 - y0) * 0.55;
+  return [x0, y0, x0 + bulge, y0 + bend, x3 + bulge, y3 - bend, x3, y3];
+}
+
+function edgePath(edge) {
+  const [x0, y0, x1, y1, x2, y2, x3, y3] = edgeCurve(edge, edge.bulge || 0);
+  return `M${x0} ${y0} C${x1} ${y1} ${x2} ${y2} ${x3} ${y3}`;
+}
+
+function nodesInTheWay(edge, bulge, boxes) {
+  const [x0, y0, x1, y1, x2, y2, x3, y3] = edgeCurve(edge, bulge);
+  let hits = 0;
+  for (const box of boxes) {
+    if (box.v === edge.chain[0] || box.v === edge.chain[1] || box.y + NODE_H < y0 || box.y - NODE_H > y3) continue;
+    for (let i = 1; i < 16; i++) {
+      const t = i / 16, s = 1 - t;
+      const x = s * s * s * x0 + 3 * s * s * t * x1 + 3 * s * t * t * x2 + t * t * t * x3;
+      const y = s * s * s * y0 + 3 * s * s * t * y1 + 3 * s * t * t * y2 + t * t * t * y3;
+      if (Math.abs(x - box.x) < box.halfW && Math.abs(y - box.y) < NODE_H / 2 + 4) {
+        hits++;
+        break;
+      }
+    }
   }
-  return d;
+  return hits;
+}
+
+const BULGES = [0, 20, -20, 40, -40, 60, -60];
+
+// Works out how every line runs for the current node positions: lines fan out in
+// the order of where they go, so they don't start on top of each other, and each
+// takes the smallest swing that gets it past the most nodes.
+function routeEdges() {
+  const fan = (edges, width, assign) => {
+    const step = edges.length > 1 ? Math.min(8, (width - NODE_H) / (edges.length - 1)) : 0;
+    edges.forEach((edge, i) => assign(edge, (i - (edges.length - 1) / 2) * step));
+  };
+  const boxes = layout.verts.map(v => ({ v, x: v.x, y: vertexY(v), halfW: v.w / 2 + 4 }));
+  for (const v of layout.verts) {
+    const out = v.edges.filter(e => e.chain[0] === v).sort((a, b) => a.chain[1].x - b.chain[1].x);
+    const into = v.edges.filter(e => e.chain[1] === v).sort((a, b) => a.chain[0].x - b.chain[0].x);
+    fan(out, v.w, (edge, offset) => { edge.fromOffset = offset; });
+    fan(into, v.w, (edge, offset) => { edge.toOffset = offset; });
+  }
+  for (const edge of edgeEls) {
+    let best = Infinity;
+    for (const bulge of BULGES) {
+      const hits = nodesInTheWay(edge, bulge, boxes);
+      if (hits < best) {
+        best = hits;
+        edge.bulge = bulge;
+      }
+      if (hits === 0) break;
+    }
+    edge.el.setAttribute("d", edgePath(edge));
+  }
 }
 
 // --------------------------
@@ -588,7 +814,7 @@ function draw() {
   });
 
   for (const { padri, fillol, chain } of layout.chains) {
-    const edge = { padri, fillol, chain, el: el("path", { class: "edge", d: edgePath(chain) }, edgesLayer) };
+    const edge = { padri, fillol, chain, el: el("path", { class: "edge" }, edgesLayer) };
     edgeEls.push(edge);
     chain[0].edges.push(edge);
     chain[chain.length - 1].edges.push(edge);
@@ -608,6 +834,7 @@ function draw() {
     v.person.vertex = v;
     v.homeX = v.x;
   }
+  routeEdges();
 }
 
 // --------------------------
@@ -619,7 +846,6 @@ const MAX_DY = (BAND_H - NODE_H) / 2 - 4;
 
 function moveNode(person, x, dy, unclamped = false) {
   const v = person.vertex;
-  const dx = x - v.x;
   v.x = x;
   // Free within the year's block of lines, never across into another year.
   const yearIndex = levelYear[v.rank];
@@ -627,14 +853,7 @@ function moveNode(person, x, dy, unclamped = false) {
   const bottom = top + (yearLines[yearIndex] - 1) * LINE_H + 2 * MAX_DY;
   v.dy = unclamped ? dy : Math.max(top, Math.min(bottom, dy));
   nodeEls.get(person).setAttribute("transform", `translate(${v.x} ${vertexY(v)})`);
-  for (const edge of v.edges) {
-    // The invisible bends of a long edge follow in proportion to their distance.
-    const last = edge.chain.length - 1;
-    for (let i = 1; i < last; i++) {
-      edge.chain[i].x += dx * (edge.chain[0] === v ? 1 - i / last : i / last);
-    }
-    edge.el.setAttribute("d", edgePath(edge.chain));
-  }
+  for (const edge of v.edges) edge.el.setAttribute("d", edgePath(edge));
   if (person === (selected || hovered)) positionCard();
 }
 
@@ -657,6 +876,7 @@ function restorePositions() {
     const person = people.get(name);
     if (person) moveNode(person, person.vertex.homeX + dx, person.vertex.homeDy + dy);
   }
+  routeEdges();
 }
 
 function resetLayout() {
@@ -668,7 +888,10 @@ function resetLayout() {
     const eased = 1 - (1 - t) ** 3;
     for (const { p, x, dy } of starts) moveNode(p, x + (p.vertex.homeX - x) * eased, dy + (p.vertex.homeDy - dy) * eased);
     if (t < 1) requestAnimationFrame(step);
-    else savePositions();
+    else {
+      savePositions();
+      routeEdges();
+    }
   };
   requestAnimationFrame(step);
 }
@@ -699,13 +922,22 @@ function fit() {
   const { width, height } = svg.getBoundingClientRect();
   const left = Math.min(...layout.verts.map(v => v.x - v.w / 2));
   const treeWidth = Math.max(...layout.verts.map(v => v.x + v.w / 2)) - left;
+  // The focus view keeps room for the card: a column beside the tree, or on a
+  // narrow screen a strip below it. The tree also stays clear of the focus bar.
+  const narrow = width < 600;
+  const freeRight = focusPerson && !narrow ? CARD_COLUMN : 0;
+  const freeBottom = focusPerson && narrow ? CARD_STRIP : 0;
+  const top = focusPerson ? document.getElementById("focus-bar").offsetHeight + 24 : MARGIN;
+  const availableW = width - MARGIN_LEFT - MARGIN - freeRight;
+  const availableH = height - top - MARGIN - freeBottom;
   // Always fit the width; fit the height too, unless that makes names too small to read.
-  const k = Math.min((width - MARGIN_LEFT - MARGIN) / treeWidth, Math.max((height - 2 * MARGIN) / layout.height, 0.6), 1.3);
+  const readable = focusPerson && narrow ? 0 : 0.6;
+  const k = Math.min(availableW / treeWidth, Math.max(availableH / layout.height, readable), 1.3);
   // On a phone the whole tree would be unreadable: stay legible and let it pan.
-  view.k = Math.max(k, width < 600 ? 0.6 : 0.2);
-  view.x = MARGIN_LEFT + Math.max(0, (width - MARGIN_LEFT - MARGIN - treeWidth * view.k) / 2) - left * view.k;
-  // In the focus view, the top of the tree stays clear of the focus bar.
-  view.y = Math.max(focusPerson ? 64 : MARGIN, (height - layout.height * view.k) / 2);
+  // A lineage is small enough to fit a little further.
+  view.k = Math.max(k, narrow ? (focusPerson ? 0.4 : 0.6) : 0.2);
+  view.x = MARGIN_LEFT + Math.max(0, (availableW - treeWidth * view.k) / 2) - left * view.k;
+  view.y = top + Math.max(0, (availableH - layout.height * view.k) / 2);
 }
 
 function zoomAt(cx, cy, factor) {
@@ -805,7 +1037,10 @@ svg.addEventListener("pointermove", event => {
 });
 function endDrag() {
   svg.classList.remove("dragging");
-  if (drag && drag.moved && drag.person) savePositions();
+  if (drag && drag.moved && drag.person) {
+    savePositions();
+    routeEdges();
+  }
   if (drag && !drag.moved) drag = null;
 }
 svg.addEventListener("pointerup", event => { touches.delete(event.pointerId); endDrag(); });
@@ -835,21 +1070,46 @@ function closure(start, step) {
   return found;
 }
 
-function relatives(person) {
-  return person === focusPerson
-    ? { padrins: closure(person, p => p.padrins), fillols: closure(person, p => p.fillols) }
-    : { padrins: new Set(person.padrins), fillols: new Set(person.fillols) };
+// Everyone reachable by `step`, with how many steps away they are at the closest.
+function distances(start, step) {
+  const found = new Map();
+  let current = step(start), depth = 1;
+  while (current.length) {
+    const next = [];
+    for (const p of current) {
+      if (found.has(p)) continue;
+      found.set(p, depth);
+      next.push(...step(p));
+    }
+    current = next;
+    depth++;
+  }
+  return found;
 }
 
+function relatives(person) {
+  return { padrins: distances(person, p => p.padrins), fillols: distances(person, p => p.fillols) };
+}
+
+// Shades stop getting darker after this many steps.
+const shade = depth => String(Math.min(depth, 4));
+
 function renderHighlight() {
-  const focus = selected || hovered;
+  // In a focus view the colours stay on its person until someone else is picked.
+  const focus = selected || hovered || (yearFilter === null ? focusPerson : null);
   svg.classList.toggle("focused", Boolean(focus) || yearFilter !== null);
-  const { padrins, fillols } = focus ? relatives(focus) : { padrins: new Set(), fillols: new Set() };
+  const { padrins, fillols } = focus ? relatives(focus) : { padrins: new Map(), fillols: new Map() };
   for (const [person, g] of nodeEls) {
     g.classList.toggle("selected", person === focus);
     g.classList.toggle("padri", padrins.has(person));
     g.classList.toggle("fillol", fillols.has(person));
+    g.dataset.depth = shade(padrins.get(person) || fillols.get(person) || 0);
     g.classList.toggle("in-year", person.year === yearFilter);
+    // Extended family of the person in focus, coloured by order.
+    const isKin = focus === focusPerson && focus !== null && familyOrder.has(person);
+    g.classList.toggle("kin", isKin);
+    if (isKin) g.dataset.order = String(Math.min(familyOrder.get(person), 4));
+    else delete g.dataset.order;
   }
   for (const { label, text, year } of yearEls) {
     const active = year === yearFilter;
@@ -857,17 +1117,28 @@ function renderHighlight() {
     text.textContent = active ? `Any ${year} · ${shown.filter(p => p.year === year).length}` : `Any ${year}`;
   }
   renderCard();
+  const highlighted = [];
   for (const edge of edgeEls) {
     const isPadri = padrins.has(edge.padri) && (edge.fillol === focus || padrins.has(edge.fillol));
     const isFillol = fillols.has(edge.fillol) && (edge.padri === focus || fillols.has(edge.padri));
     edge.el.classList.toggle("padri", isPadri);
     edge.el.classList.toggle("fillol", isFillol);
-    // Highlighted edges go last so they are painted above the rest.
-    if (isPadri || isFillol) edgesLayer.appendChild(edge.el);
+    const edgeOrder = Math.max(familyOrder.get(edge.padri) || 0, familyOrder.get(edge.fillol) || 0);
+    edge.el.classList.toggle("kin", focus === focusPerson && focus !== null && !isPadri && !isFillol);
+    if (focus === focusPerson && edgeOrder && !isPadri && !isFillol) edge.el.dataset.order = String(Math.min(edgeOrder, 4));
+    else delete edge.el.dataset.order;
+    if (isPadri || isFillol) {
+      const depth = isPadri ? padrins.get(edge.padri) : fillols.get(edge.fillol);
+      edge.el.dataset.depth = shade(depth);
+      highlighted.push({ el: edge.el, depth });
+    }
   }
+  // Painted last, closest relatives on top.
+  highlighted.sort((a, b) => b.depth - a.depth);
+  for (const { el: path } of highlighted) edgesLayer.appendChild(path);
 }
 
-function select(person) {
+function select(person, panToPerson = true) {
   // Someone outside the current lineage: the focus moves to them.
   if (person && !nodeEls.has(person)) {
     setFocus(person);
@@ -877,7 +1148,7 @@ function select(person) {
   hovered = null;
   yearFilter = null;
   renderHighlight();
-  if (person) reveal(person);
+  if (person && panToPerson) reveal(person);
 }
 
 function toggleYear(year) {
@@ -892,6 +1163,26 @@ function toggleYear(year) {
 // --------------------------
 
 const card = document.getElementById("card");
+let cardPlace = null, cardDrag = null;
+
+card.addEventListener("pointerdown", event => {
+  if (event.target.closest("button")) return;
+  const box = card.getBoundingClientRect(), main = svg.getBoundingClientRect();
+  cardDrag = { id: event.pointerId, dx: event.clientX - box.left + main.left, dy: event.clientY - box.top + main.top };
+  card.setPointerCapture(event.pointerId);
+  card.classList.add("dragging");
+});
+card.addEventListener("pointermove", event => {
+  if (!cardDrag || event.pointerId !== cardDrag.id) return;
+  cardPlace = { left: event.clientX - cardDrag.dx, top: event.clientY - cardDrag.dy };
+  positionCard();
+});
+for (const type of ["pointerup", "pointercancel"]) {
+  card.addEventListener(type, () => {
+    cardDrag = null;
+    card.classList.remove("dragging");
+  });
+}
 
 function chip(person, kind) {
   const button = document.createElement("button");
@@ -938,6 +1229,7 @@ function renderCard() {
   year.className = "card-year";
   year.textContent = `Any ${person.year}`;
   const header = document.createElement("div");
+  header.className = "card-header";
   header.append(name, year);
   card.replaceChildren(header, cardGroup("Padrins", person.padrins, "padri"), cardGroup("Fillols", person.fillols, "fillol"));
   card.classList.toggle("pinned", person === selected);
@@ -955,15 +1247,21 @@ function positionCard() {
   const person = cardPerson();
   if (!person || !person.vertex || card.hidden) return;
   const { width, height } = svg.getBoundingClientRect();
+  const clampLeft = left => Math.max(8, Math.min(width - card.offsetWidth - 8, left));
+  const clampTop = top => Math.max(8, Math.min(height - card.offsetHeight - 8, top));
+  // Once dragged, the card stays where it was put instead of following the node.
+  if (cardPlace) {
+    card.classList.remove("docked");
+    card.style.left = `${clampLeft(cardPlace.left)}px`;
+    card.style.top = `${clampTop(cardPlace.top)}px`;
+    return;
+  }
   const docked = width < 600;
   card.classList.toggle("docked", docked);
   if (docked) return;
-  const v = person.vertex;
-  const x = view.x + v.x * view.k, y = view.y + vertexY(v) * view.k, half = v.w * view.k / 2;
-  let left = x + half + 12;
-  if (left + card.offsetWidth > width - 8) left = x - half - 12 - card.offsetWidth;
-  card.style.left = `${Math.max(8, left)}px`;
-  card.style.top = `${Math.max(8, Math.min(height - card.offsetHeight - 8, y - card.offsetHeight / 2))}px`;
+  // In the column that fit() keeps free, so it covers nothing.
+  card.style.left = `${clampLeft(width - card.offsetWidth - 12)}px`;
+  card.style.top = `${clampTop(document.getElementById("focus-bar").offsetHeight + 24)}px`;
 }
 
 // --------------------------
@@ -1007,40 +1305,129 @@ function glideFrom(previous) {
   requestAnimationFrame(step);
 }
 
+// The short help under the search box, for the current view and input device.
+function renderHints() {
+  const touch = matchMedia("(pointer: coarse)").matches;
+  const hints = touch
+    ? (focusPerson
+      ? ["Toc: fitxa", "Segon toc: canvia l'enfocament", "Lliscador: família extensa"]
+      : ["Toc: padrins i fillols", "Segon toc: enfoca", "Pessic: zoom"])
+    : (focusPerson
+      ? ["Clic: fitxa", "Doble clic: canvia l'enfocament", "Doble clic a la persona enfocada: torna a l'arbre", "Lliscador: família extensa"]
+      : ["Clic: padrins i fillols", "Doble clic: enfoca el llinatge", "Arrossega: mou", "Clic en un any: qui hi va entrar"]);
+  document.getElementById("hints").textContent = hints.join("  ·  ");
+}
+
 function renderFocusBar() {
   const bar = document.getElementById("focus-bar");
   bar.hidden = !focusPerson;
   if (focusPerson) {
     document.getElementById("focus-label").textContent =
       `Llinatge de ${focusPerson.name}: ${shown.length} de ${people.size} xoriguers`;
+    const slider = document.getElementById("family-level");
+    slider.max = familySteps.length;
+    slider.value = familyLevel;
+    document.getElementById("family").hidden = !familySteps.length;
+    const name = familyLevel ? familySteps[familyLevel - 1].name : "Només llinatge";
+    document.getElementById("family-name").textContent = name;
+    slider.setAttribute("aria-valuetext", name);
+    const legendChip = (label, className, attribute, value) => {
+      const chip = document.createElement("span");
+      chip.className = `legend-chip ${className}`;
+      chip.dataset[attribute] = value;
+      chip.textContent = label;
+      return chip;
+    };
+    document.getElementById("focus-legend").replaceChildren(
+      legendChip("Padrins", "padri", "depth", "2"),
+      legendChip("Fillols", "fillol", "depth", "2"),
+      ...(familyLevel ? [legendChip("Família extensa", "kin", "order", "2")] : []),
+    );
   }
+  renderHints();
 }
 
-function setFocus(person) {
+function orderName(order) {
+  const ordinal = `${order}${{ 1: "r", 2: "n", 3: "r", 4: "t" }[order] || "è"} ordre`;
+  if (order === 1) return `${ordinal}: germans`;
+  if (order === 2) return `${ordinal}: oncles i nebots`;
+  if (order === 3) return `${ordinal}: cosins i besoncles`;
+  return ordinal;
+}
+
+// The slider's steps for one person. A relative's order counts the steps up to the
+// common ancestor and back down, minus one: brothers are 1 up and 1 down, so first
+// order; uncles (2 and 1) and nephews (1 and 2) second; cousins (2 and 2) third.
+// A relative through a distant ancestor is therefore a distant relative.
+function familyStepsOf(person, lineage) {
+  const inLineage = new Set(lineage);
+  const orders = new Map();
+  for (const [ancestor, up] of distances(person, p => p.padrins)) {
+    for (const [relative, down] of distances(ancestor, p => p.fillols)) {
+      if (inLineage.has(relative)) continue;
+      orders.set(relative, Math.min(orders.get(relative) ?? Infinity, up + down - 1));
+    }
+  }
+  const byOrder = new Map();
+  for (const [relative, order] of orders) {
+    if (!byOrder.has(order)) byOrder.set(order, []);
+    byOrder.get(order).push(relative);
+  }
+  return [...byOrder.keys()].sort((a, b) => a - b)
+    .map(order => ({ order, name: orderName(order), added: byOrder.get(order) }));
+}
+
+let lineageOfFocus = [], familySteps = [], familyLevel = 0, familyOrder = new Map();
+
+// Redraws for the current focus person and family order.
+function showScope(selection) {
   const previous = new Map(shown.map(p => {
     const v = p.vertex;
     return [p, { x: view.x + v.x * view.k, y: view.y + vertexY(v) * view.k }];
   }));
-  focusPerson = person;
-  if (person) {
-    const lineage = new Set([person, ...closure(person, p => p.padrins), ...closure(person, p => p.fillols)]);
-    shown = sortedPeople.filter(p => lineage.has(p));
-    shownRelations = relations.filter(r => lineage.has(r.padri) && lineage.has(r.fillol));
+  if (focusPerson) {
+    const included = new Set(lineageOfFocus);
+    familyOrder = new Map();
+    for (const step of familySteps.slice(0, familyLevel)) {
+      for (const p of step.added) {
+        included.add(p);
+        familyOrder.set(p, step.order);
+      }
+    }
+    shown = sortedPeople.filter(p => included.has(p));
+    shownRelations = relations.filter(r => included.has(r.padri) && included.has(r.fillol));
   } else {
+    familyOrder = new Map();
     shown = sortedPeople;
     shownRelations = relations;
   }
   draw();
-  if (!person) restorePositions();
+  if (!focusPerson) restorePositions();
+  renderFocusBar();
   fit();
   applyView();
   glideFrom(previous);
-  renderFocusBar();
+  // fit() has just framed the tree, and nodes are still gliding, so no panning here.
+  select(selection, false);
+}
+
+function setFocus(person) {
+  focusPerson = person;
+  cardPlace = null;
+  familyLevel = 0;
+  if (person) {
+    lineageOfFocus = [person, ...closure(person, p => p.padrins), ...closure(person, p => p.fillols)];
+    familySteps = familyStepsOf(person, lineageOfFocus);
+  }
   // Leaving the focus keeps the person selected, so it is clear where you were.
-  select(person || selected);
+  showScope(person || selected);
 }
 
 document.getElementById("focus-exit").addEventListener("click", () => setFocus(null));
+document.getElementById("family-level").addEventListener("input", event => {
+  familyLevel = Number(event.target.value);
+  showScope(selected);
+});
 
 svg.addEventListener("click", event => {
   const moved = drag && drag.moved;
@@ -1088,6 +1475,7 @@ svg.addEventListener("keydown", event => {
     const person = people.get(node.dataset.name);
     moveNode(person, person.vertex.x + arrow[0], person.vertex.dy + arrow[1]);
     savePositions();
+    routeEdges();
   }
 });
 document.addEventListener("keydown", event => {
@@ -1349,7 +1737,7 @@ document.getElementById("export-pdf").addEventListener("click", () => {
 if (DATA.issues.length) {
   setText("issues", target => {
     const title = document.createElement("summary");
-    title.textContent = `${DATA.issues.length} errors als CSV`;
+    title.textContent = `${DATA.issues.length} ${DATA.issues.length === 1 ? "error" : "errors"}`;
     const list = document.createElement("ul");
     for (const issue of DATA.issues) {
       const item = document.createElement("li");
@@ -1364,12 +1752,14 @@ if (DATA.issues.length) {
 draw();
 restorePositions();
 renderStats();
+renderHints();
 fit();
 applyView();
 let lastWidth = svg.clientWidth;
 new ResizeObserver(() => {
   if (svg.clientWidth === lastWidth) return;
   lastWidth = svg.clientWidth;
+  renderHints();
   fit();
   applyView();
 }).observe(svg);

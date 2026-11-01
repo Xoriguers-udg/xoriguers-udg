@@ -13,6 +13,10 @@ const imatge = mediaUrl(base, pagina.data.imatge);
 // this page shows them rather than keeping a second copy that can drift
 const uneixTe = await getEntry('pagines', 'uneix-te');
 const assajos = (uneixTe?.data.assajos ?? []).filter((a) => a.text);
+
+// no counts here on purpose: the tree rejects rows it cannot use, so any figure
+// quoted from the CSVs would eventually disagree with what it actually draws.
+// The tree reports its own under «Dades».
 ---
 <Base title={pagina.data.titol ?? 'La colla'} heroImage={imatge}>
   <div class="wrap">
@@ -33,10 +37,10 @@ const assajos = (uneixTe?.data.assajos ?? []).filter((a) => a.text);
         </div>
       )}
     </div>
-    <a class="arbre-crida" href={`${base}arbre`}>
+    <a class="arbre-crida" href={`${base}arbre/`} target="_blank" rel="noreferrer">
       <span class="eyebrow">Qui ha apadrinat qui</span>
       <span class="arbre-titol display">Arbre de xoriguers</span>
-      <span class="arbre-text">Els apadrinatges de la colla, dels més antics als més joves →</span>
+      <span class="arbre-text">Tots els apadrinatges de la colla, dels més antics als més joves ↗</span>
     </a>
     <a class="mes" href={`${base}uneix-te`}>Com venir a assajar →</a>
   </div>
