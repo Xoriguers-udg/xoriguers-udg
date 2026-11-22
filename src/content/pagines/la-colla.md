@@ -2,6 +2,8 @@
 titol: Xoriguers UdG
 contacteEmail: xoriguers.udg@gmail.com
 contacteInstagram: "@xoriguersudg"
+imatge: /images/uploads/diada-primavera-2026-3d7a.jpg
+fotoColla: /images/uploads/colla-xoriguers-al-complet.jpg
 ---
 Els Xoriguers i les Xorigueres som la colla castellera universitària de la Universitat de Girona. La nostra agrupació esta formada íntegrament per membres de la comunitat Universitària de Girona, això inclou estudiants sobretot, però també professorat i membres del personal d’administració i serveis (PAS).
 

@@ -19,21 +19,21 @@ const assajos = pagina?.data.assajos ?? [];
 const curs = pagina?.data.curs;
 ---
 <Base title={pagina!.data.titol ?? 'Uneix-te'} heroImage={imatge}>
-  <div class="wrap">
+  <div class="pagina">
     <div class="obertura">
-      <div class="lead">
+      <div class="pagina-intro lead">
         <Content />
       </div>
 
       {curs && (curs.titol || curs.text || curs.dades.length > 0) && (
-        <section class="curs">
-          {curs.titol && <h2 class="curs-titol display">{curs.titol}</h2>}
+        <section class="curs" aria-label={curs.titol ?? 'Curs'}>
+          {curs.titol && <h2 class="curs-titol">{curs.titol}</h2>}
           {curs.text && <p class="curs-text">{curs.text}</p>}
           {curs.dades.length > 0 && (
             <dl class="curs-dades">
               {curs.dades.map((d) => (
                 <div class="curs-dada">
-                  <dt class="mono">{d.etiqueta}</dt>
+                  <dt>{d.etiqueta}</dt>
                   <dd>{d.valor}</dd>
                 </div>
               ))}
@@ -43,41 +43,10 @@ const curs = pagina?.data.curs;
       )}
     </div>
 
-    <div class="assajos-grid">
-      {assajos.map((assaig) => (
-        <section class="assaig">
-          <div class="assaig-text">
-            <h2 class="assaig-titol display">{assaig.titol}</h2>
-            {assaig.text && <p>{assaig.text}</p>}
-            {assaig.clau === 'musics' && (
-              <a class="assaig-link" href={`${base}xorimusics`}>Més sobre els Xorimúsics →</a>
-            )}
-          </div>
-          <div class="assaig-mapa">
-            {assaig.ubicacio ? (
-              <MapEmbed ubicacio={assaig.ubicacio} label={`On assaja: ${assaig.titol}`} relacio="4 / 3" />
-            ) : (
-              <p class="sense-mapa">Encara no s'ha indicat cap ubicació.</p>
-            )}
-          </div>
-          {assaig.fotos.length > 0 && (
-            <div class="assaig-fotos">
-              {assaig.fotos.map((foto) => {
-                const src = mediaUrl(base, foto);
-                return src && <img src={src} alt={assaig.titol} loading="lazy" />;
-              })}
-            </div>
-          )}
-        </section>
-      ))}
-    </div>
-
     <div class="cta-row">
-      {isRealUrl(info?.data.contacteEmail) && (
-        <a class="btn btn-accent" href={`mailto:${info!.data.contacteEmail}`}>
-          Escriu-nos
-        </a>
-      )}
+      <a class="btn btn-accent" href={`${base}col-laboradors#contacte`}>
+        Escriu-nos
+      </a>
       {instagramUrl && (
         <a class="btn btn-outline" href={instagramUrl} target="_blank" rel="noreferrer">
           Segueix-nos a Instagram
@@ -87,92 +56,97 @@ const curs = pagina?.data.curs;
         Veure propers assajos
       </a>
     </div>
+
+    <div class="assajos-grid">
+      {assajos.map((assaig) => (
+        <section class="assaig">
+          <div class="assaig-text">
+            <h2 class="assaig-titol">{assaig.titol}</h2>
+            {assaig.text && <p>{assaig.text}</p>}
+            {assaig.clau === 'musics' && (
+              <a class="assaig-link" href={`${base}xorimusics`}>Més sobre els Xorimúsics<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+            )}
+          </div>
+          <div class="assaig-mapa">
+            {assaig.ubicacio ? (
+              <MapEmbed ubicacio={assaig.ubicacio} label={`On assaja: ${assaig.titol}`} relacio="4 / 3" />
+            ) : (
+              <p class="sense-mapa">Encara no s’ha indicat cap ubicació.</p>
+            )}
+          </div>
+          {assaig.fotos.length > 0 && (
+            <div class="assaig-fotos">
+              {assaig.fotos.map((foto) => {
+                const src = mediaUrl(base, foto);
+                return src && <img src={src} alt={assaig.titol} width="800" height="600" loading="lazy" />;
+              })}
+            </div>
+          )}
+        </section>
+      ))}
+    </div>
   </div>
 </Base>
 
 <style>
-  .wrap { max-width: var(--ample); margin: 0 auto; padding: 40px 28px 60px; }
-  .lead { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); max-width: 62ch; }
-  .lead :global(p) { margin: 0; }
+  .lead { margin-bottom: 0; }
+  .lead :global(p) { margin: 0 0 var(--space-md); }
 
   /* the intro and the credits sit side by side */
   .obertura {
     display: grid;
-    grid-template-columns: 1.05fr 1fr;
-    gap: 32px;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--space-3xl);
     align-items: start;
   }
-
-  /* the assajos pair up, castellers beside musics */
-  .assajos-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 56px 36px;
-    margin-top: 48px;
-  }
-  .assaig { padding-top: 26px; border-top: 2px solid var(--blue); }
-  .assaig-mapa { margin-top: 18px; }
-  .assaig-fotos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
-    margin-top: 18px;
-  }
-  .assaig-fotos img {
-    width: 100%; aspect-ratio: 4/3; object-fit: cover;
-    border-radius: 8px; display: block;
-  }
-  /* an odd one left over spans the width, text beside its map rather than above */
-  .assaig:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 28px;
-    align-items: start;
-  }
-  .assaig:last-child:nth-child(odd) .assaig-mapa { margin-top: 0; }
-  .assaig:last-child:nth-child(odd) .assaig-fotos { grid-column: 1 / -1; }
-  .assaig-titol {
-    font-size: 1.35rem;
-    color: var(--blue-deep);
-    margin-bottom: 10px;
-  }
-  /* the text can hold more than one line, as the rain fallback does */
-  .assaig-text p {
-    margin: 0; font-size: 0.9375rem; line-height: 1.6; color: var(--ink-soft);
-    white-space: pre-line;
-  }
-  .assaig-link { display: inline-block; margin-top: 14px; font-size: 0.875rem; font-weight: 600; }
-  .sense-mapa { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
 
   /* the credits are the strongest argument on the page, so they get the yellow */
   .curs {
-    background: var(--yellow-bg);
-    border: 1px solid var(--yellow);
-    border-left: 4px solid var(--yellow);
-    border-radius: 8px;
-    padding: 24px 26px;
+    padding: var(--space-xl);
+    border-radius: var(--radius-card);
+    background: var(--color-signal-wash);
   }
-  .curs-titol { font-size: 1.35rem; color: var(--yellow-ink); }
-  .curs-text { margin: 10px 0 0; font-size: 0.9375rem; line-height: 1.6; max-width: 62ch; }
+  .curs-titol { font-size: var(--text-2xl); color: var(--color-ink); }
+  .curs-text { margin-top: var(--space-sm); color: var(--color-ink-2); }
   .curs-dades {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 14px 22px;
-    margin: 20px 0 0;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--space-md) var(--space-lg);
+    margin: var(--space-lg) 0 0;
+    padding-top: var(--space-md);
+    border-top: 1px solid color-mix(in oklab, var(--color-signal) 45%, transparent);
   }
-  .curs-dada dt {
-    font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--yellow-ink);
-  }
-  .curs-dada dd { margin: 3px 0 0; font-size: 0.9375rem; font-weight: 600; }
+  .curs-dada dt { font-size: var(--text-sm); font-weight: 600; color: var(--color-signal-text); }
+  .curs-dada dd { margin: var(--space-2xs) 0 0; font-size: var(--text-lg); font-weight: 600; }
 
-  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 38px; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-xl); }
 
-  @media (max-width: 860px) {
-    .obertura { grid-template-columns: 1fr; gap: 26px; }
-    .assajos-grid { grid-template-columns: 1fr; gap: 40px; }
-    .assaig:last-child:nth-child(odd) { grid-template-columns: 1fr; gap: 16px; }
-    .assaig:last-child:nth-child(odd) .assaig-mapa { margin-top: 16px; }
+  /* the three assajos side by side, each above its own map */
+  .assajos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3xl) var(--gap-columns);
+    margin-top: var(--section-gap-s);
   }
+  .assaig { display: flex; flex-direction: column; padding-top: var(--space-lg); border-top: 2px solid var(--color-ink); }
+  .assaig-titol { font-size: var(--text-2xl); margin-bottom: var(--space-sm); }
+  /* the text can hold more than one line, as the rain fallback does */
+  .assaig-text p { font-size: var(--text-lg); line-height: 1.5; color: var(--color-ink-2); white-space: pre-line; }
+  .assaig-link { display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 44px; margin-top: var(--space-xs); font-weight: 600; }
+  .assaig-link svg { flex-shrink: 0; }
+  /* the maps line up along the bottom, however long each text above them runs */
+  .assaig-mapa { margin-top: auto; padding-top: var(--space-lg); }
+  .assaig-fotos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+  }
+  .assaig-fotos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--space-xs); }
+  .sense-mapa { color: var(--color-ink-2); }
+
+  @media (max-width: 60rem) {
+    .obertura { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); }
+    .assajos-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-2xl); }
+      }
 </style>

@@ -25,16 +25,17 @@ const base = import.meta.env.BASE_URL;
     <details class="temporada" open={i === 0}>
       <summary>
         <span class="numero display">{toRomanOrdinal(t.numeroTemporada)}</span>
+        <span class="comptador">{t.membres.length} {t.membres.length === 1 ? 'persona' : 'persones'}</span>
       </summary>
       <div class="membres">
         {t.membres.map((m) => {
           const foto = mediaUrl(base, m.foto);
           return (
-            <div class="persona">
-              {foto ? <img class="foto" src={foto} alt="" loading="lazy" /> : <div class="foto placeholder"></div>}
+            <div class={`persona${foto ? '' : ' sense-foto'}`}>
+              {foto && <img class="foto" src={foto} alt="" width="200" height="200" loading="lazy" />}
               <div class="nom">{m.nom} {m.cognom}</div>
               {m.malnom && <div class="malnom">{m.malnom}</div>}
-              <div class="carrec mono">{m.carrec}</div>
+              <div class="carrec">{m.carrec}</div>
             </div>
           );
         })}
@@ -46,27 +47,36 @@ const base = import.meta.env.BASE_URL;
 </div>
 
 <style>
-  .junta-llista { display: flex; flex-direction: column; gap: 14px; }
-  .temporada {
-    background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--blue);
-    border-radius: 10px; overflow: hidden;
-  }
+  .junta-llista { border-top: 2px solid var(--color-ink); }
+  .temporada { border-bottom: 1px solid var(--color-rule); }
   .temporada summary {
     list-style: none; cursor: pointer;
-    padding: 18px 22px;
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-lg);
+    padding: var(--space-lg) var(--space-sm);
+    transition: background-color var(--dur-short) var(--ease-out);
   }
   .temporada summary::-webkit-details-marker { display: none; }
-  .numero { font-size: 1.6rem; color: var(--blue-deep); }
-  .membres {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 200px)); gap: 24px;
-    padding: 4px 22px 28px;
+  .temporada summary:hover { background: var(--color-paper-2); }
+  .temporada summary:focus-visible { outline-offset: -2px; }
+  .temporada summary::after {
+    content: ''; flex-shrink: 0; width: 8px; height: 8px; margin-left: auto;
+    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    transform: rotate(45deg); transition: transform var(--dur-short) var(--ease-in-out);
   }
-  .persona { text-align: center; }
-  .foto { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; display: block; }
-  .foto.placeholder { background: var(--bg-deep); border: 1px solid var(--line); margin: 0 auto 10px; }
-  .nom { font-weight: 600; font-size: 0.9375rem; }
+  .temporada[open] summary::after { transform: rotate(-135deg); }
+  .numero { font-size: var(--text-2xl); color: var(--color-ink); }
+  .comptador { font-size: var(--text-sm); color: var(--color-ink-2); }
+  .membres {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: var(--space-xl) var(--gap-columns);
+    padding: var(--space-md) var(--space-sm) var(--space-2xl);
+  }
+  .foto { width: 100%; aspect-ratio: 1; border-radius: var(--radius-card); object-fit: cover; margin-bottom: var(--space-sm); }
+  /* without a photo the person is text, under the colla's yellow, rather than a grey square */
+  .persona.sense-foto { padding-top: var(--space-sm); border-top: 3px solid var(--color-signal); }
+  .nom { font-weight: 600; }
   /* a malnom is a name, and the tree writes names in the display face */
-  .malnom { font-family: var(--font-display); color: var(--blue-deep); font-weight: 700; font-size: 0.9375rem; margin-top: 2px; }
-  .carrec { font-size: 0.75rem; color: var(--ink-soft); margin-top: 4px; }
-  .empty { color: var(--ink-soft); font-size: 0.9375rem; padding: 0 22px 22px; }
+  .malnom { font-family: var(--font-display); font-weight: var(--display-weight); color: var(--color-accent-deep); font-size: var(--text-lg); line-height: 1.2; margin-top: var(--space-3xs); }
+  .carrec { font-size: var(--text-sm); color: var(--color-ink-2); margin-top: var(--space-2xs); }
+  .empty { color: var(--color-ink-2); padding: 0 var(--space-sm) var(--space-lg); }
+  @media (prefers-reduced-motion: reduce) { .temporada summary::after { transition: none; } }
 </style>

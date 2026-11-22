@@ -27,6 +27,7 @@ assajos:
     clau: vespre
     text: També assagem els dijous vespre, Al local dels Marrecs de Salt.
     ubicacio: Marrecs de Salt
+imatge: /images/uploads/diada-primavera-2026-5d7.jpg
 ---
 No cal experiència ni forma física prèvia: cada temporada comencem de zero amb gent nova. Vine un dia a l'assaig, a formar part de la pinya o a tocar amb els nostres músics, i si t'agrada, ja ets un xoriguer més. Escriu-nos o passa't per un assaig quan vulguis, no cal avisar abans.
 

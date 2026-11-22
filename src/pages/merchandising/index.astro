@@ -11,8 +11,8 @@ const imatge = mediaUrl(base, pagina?.data.imatge);
 const productes = (await getCollection('productes')).sort((a, b) => a.data.ordre - b.data.ordre);
 ---
 <Base title={pagina!.data.titol ?? 'Merchandising'} heroImage={imatge}>
-  <div class="wrap">
-    <div class="lead">
+  <div class="pagina">
+    <div class="pagina-intro lead">
       <Content />
     </div>
     <div class="catalog">
@@ -34,76 +34,71 @@ const productes = (await getCollection('productes')).sort((a, b) => a.data.ordre
           const disponible = p.data.estat === 'Disponible';
           return (
             <a class="producte" data-cat={p.data.categoria} href={`${base}merchandising/${p.id}`}>
-              {foto ? <img class="foto" src={foto} alt="" loading="lazy" /> : <div class="foto placeholder"></div>}
-              <div class="nom">{p.data.nom}</div>
-              {disponible ? (
-                <>
-                  <div class="preu">{p.data.preu}€</div>
-                  <span class="veure">Veure detalls</span>
-                </>
-              ) : (
-                <span class="fora">Fora de termini</span>
-              )}
+              <div class={`foto${foto ? '' : ' sense-foto'}`}>
+                {foto
+                  ? <img src={foto} alt="" width="600" height="600" loading="lazy" />
+                  : <img class="escut" src={`${base}images/escut-xoriguers.png`} alt="" width="180" height="180" loading="lazy" />}
+              </div>
+              <div class="peu">
+                <span class="nom">{p.data.nom}</span>
+                {disponible ? (
+                  <span class="preu">{p.data.preu}&nbsp;€</span>
+                ) : (
+                  <span class="fora">Fora de termini</span>
+                )}
+              </div>
             </a>
           );
         })}
-        {productes.length === 0 && <p class="empty">Encara no hi ha cap producte publicat.</p>}
+        {productes.length === 0 && <p class="buit-text empty">Encara no hi ha cap producte publicat.</p>}
       </div>
     </div>
   </div>
 </Base>
 
 <style>
-  .wrap { max-width: var(--ample); margin: 0 auto; padding: 40px 28px 60px; }
-  .lead { font-size: 1.0625rem; line-height: 1.6; color: var(--ink-soft); max-width: 65ch; margin-bottom: 32px; }
-  .lead :global(p) { margin: 0; }
-
-  .tab-input { position: absolute; opacity: 0; pointer-events: none; }
-  .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .tab-input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .tabs { display: flex; gap: var(--space-xs); margin-bottom: var(--space-xl); flex-wrap: wrap; }
   .tabs label {
-    cursor: pointer; padding: 8px 16px; border-radius: 16px;
-    font-size: 0.8125rem; font-weight: 600; background: var(--bg-deep); color: var(--ink-soft);
+    display: inline-flex; align-items: center; min-height: 44px;
+    padding: 0 var(--space-md); border: 1px solid var(--color-rule-firm); border-radius: var(--radius-pill);
+    font-weight: 600; color: var(--color-ink); cursor: pointer;
+    transition: background-color var(--dur-micro) var(--ease-out);
   }
+  .tabs label:hover { background: var(--color-paper-2); }
+  .tabs label:active { background: var(--color-paper-3); }
   #f-tots:checked ~ .tabs label[for="f-tots"],
   #f-roba:checked ~ .tabs label[for="f-roba"],
   #f-dessuadora:checked ~ .tabs label[for="f-dessuadora"],
   #f-complements:checked ~ .tabs label[for="f-complements"] {
-    background: var(--ink); color: #fff;
+    background: var(--color-ink); border-color: var(--color-ink); color: var(--color-on-dark);
   }
   #f-tots:focus-visible ~ .tabs label[for="f-tots"],
   #f-roba:focus-visible ~ .tabs label[for="f-roba"],
   #f-dessuadora:focus-visible ~ .tabs label[for="f-dessuadora"],
   #f-complements:focus-visible ~ .tabs label[for="f-complements"] {
-    outline: 2px solid var(--blue);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
   }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
-  .producte {
-    display: block; text-decoration: none; color: var(--ink);
-    background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--blue);
-    border-radius: 8px; overflow: hidden;
-  }
-  .producte:hover { border-color: var(--blue); }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2xl) var(--gap-columns); }
+  .producte { display: block; text-decoration: none; color: var(--color-ink); }
+  .producte:focus-visible { outline-offset: 4px; border-radius: var(--radius-card); }
   #f-roba:checked ~ .grid .producte:not([data-cat="Roba"]),
   #f-dessuadora:checked ~ .grid .producte:not([data-cat="Dessuadora"]),
   #f-complements:checked ~ .grid .producte:not([data-cat="Complements"]) {
     display: none;
   }
-  .foto { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
-  .foto.placeholder {
-    aspect-ratio: 1;
-    background: repeating-linear-gradient(135deg, var(--bg-deep) 0, var(--bg-deep) 14px, var(--line) 14px, var(--line) 28px);
-  }
-  .nom { font-weight: 600; font-size: 0.9375rem; padding: 14px 14px 0; }
-  .preu { font-weight: 700; padding: 6px 14px 0; }
-  .veure {
-    display: block; margin: 12px 14px 14px; text-align: center; padding: 9px;
-    background: var(--ink); color: #fff; border-radius: 16px; font-size: 0.8125rem; font-weight: 600;
-  }
-  .fora {
-    display: block; margin: 12px 14px 14px; text-align: center; padding: 9px;
-    background: var(--neutral-bg); color: var(--neutral-ink); border-radius: 16px; font-size: 0.8125rem; font-weight: 600;
-  }
-  .empty { color: var(--ink-soft); grid-column: 1 / -1; }
+  .foto { aspect-ratio: 1; border-radius: var(--radius-card); overflow: hidden; background: var(--color-paper-3); }
+  .foto img { width: 100%; height: 100%; object-fit: cover; }
+  .foto.sense-foto { display: grid; place-items: center; background: var(--color-accent-wash); }
+  .foto.sense-foto .escut { width: 38%; height: auto; object-fit: contain; }
+  .producte:active { opacity: 0.85; }
+  .peu { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-sm); margin-top: var(--space-md); }
+  .nom { font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--text-lg); line-height: 1.2; min-width: 0; overflow-wrap: break-word; }
+  .producte:hover .nom { color: var(--color-accent-deep); text-decoration: underline; text-decoration-thickness: 2px; }
+  .preu { font-weight: 600; font-size: var(--text-lg); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .fora { font-size: var(--text-sm); color: var(--color-ink-2); white-space: nowrap; }
+  .empty { grid-column: 1 / -1; }
+  @media (max-width: 60rem) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

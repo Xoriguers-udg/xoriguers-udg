@@ -105,6 +105,8 @@ const pagines = defineCollection({
     titol: z.string().optional(),
     curs: curs.optional(),
     imatge: z.string().optional(),
+    /** The whole colla in one photo: on La colla, and beside the call to join on the homepage. */
+    fotoColla: z.string().optional(),
     ctaText: z.string().optional(),
     /** Headings on the homepage's two columns, both editable. */
     presentacioTitol: z.preprocess(emptyToUndefined, z.string().optional()),
@@ -112,6 +114,16 @@ const pagines = defineCollection({
     assajos: z.array(assaig).default([]),
     contacteEmail: z.string().optional(),
     contacteInstagram: z.string().optional(),
+    /** Xorimúsics: the sheet music for the tocs, one PDF each. */
+    partitures: z
+      .array(
+        z.object({
+          titol: z.string(),
+          instrument: z.preprocess(emptyToUndefined, z.enum(['Gralla', 'Tabal', 'Gralla i tabal']).optional()),
+          fitxer: z.string(),
+        })
+      )
+      .default([]),
   }),
 });
 

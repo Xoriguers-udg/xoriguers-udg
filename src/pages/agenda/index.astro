@@ -24,80 +24,81 @@ const heroImage = mediaUrl(base, capcalera?.data.imatge);
 const { Content: IntroContent } = await render(capcalera!);
 ---
 <Base title="Properes actuacions" heroImage={heroImage}>
-  <div class="wrap">
+  <div class="pagina">
     {capcalera?.body?.trim() && (
-      <div class="lead">
+      <div class="pagina-intro">
         <IntroContent />
       </div>
     )}
-    <div class="list">
-      {sorted.map((entry, i) => (
-        <a class={`row${i === 0 ? ' propera' : ''}`} href={`${base}agenda/${entry.id}`}>
-          <div class="date mono">{formatDate(entry.data.data)}</div>
-          <div class="info">
-            <h2>{entry.data.nom}</h2>
-            {detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.poblacio) && (
-              <div class="meta">{detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.poblacio)}</div>
-            )}
-          </div>
-          {entry.data.cancelada && <span class="pill pill-danger">Cancel·lada</span>}
-          <span class={`pill ${entry.data.tipus === 'Assaig' ? 'pill-neutral' : 'pill-blue'}`}>{entry.data.tipus}</span>
-        </a>
-      ))}
-      {sorted.length === 0 && (
-        <p class="empty">
-          No hi ha cap actuació programada ara mateix. Les que ja s'han fet són a l'
-          <a href={`${base}castells`}>historial de castells</a>.
-        </p>
-      )}
-    </div>
-
-    <h2 class="display section-title">Calendari</h2>
-    {embedUrl ? (
-      <iframe class="calendar-embed" src={embedUrl} loading="lazy"></iframe>
+    {sorted.length > 0 ? (
+      <ol class="files">
+        {sorted.map((entry, i) => (
+          <li>
+            <a class={`fila row${i === 0 ? ' propera' : ''}`} href={`${base}agenda/${entry.id}`}>
+              <time class="date" datetime={entry.data.data.toISOString().slice(0, 10)}>{formatDate(entry.data.data)}</time>
+              <div class="info">
+                <h2 class="fila-titol">{entry.data.nom}</h2>
+                {detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.poblacio) && (
+                  <div class="fila-meta">{detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.poblacio)}</div>
+                )}
+              </div>
+              <div class="estats">
+                {entry.data.cancelada && <span class="pill pill-danger">Cancel·lada</span>}
+                <span class={`pill ${entry.data.tipus === 'Assaig' ? 'pill-neutral' : 'pill-blue'}`}>{entry.data.tipus}</span>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ol>
     ) : (
-      <div class="calendar-empty">
-        <p>Encara no s'ha configurat cap calendari de Google.</p>
-        <p class="hint">Es pot afegir des de <span class="mono">/admin → Configuració → URL d'inserció de Google Calendar</span>.</p>
-      </div>
+      <p class="buit-text empty">
+        No hi ha cap actuació programada ara mateix. Les que ja s’han fet són a l’<a href={`${base}castells`}>historial de castells</a>.
+      </p>
     )}
+
+    <section class="calendari" aria-labelledby="calendari-titol">
+      <h2 id="calendari-titol" class="section-title">Calendari</h2>
+      {embedUrl ? (
+        <iframe class="calendar-embed" src={embedUrl} loading="lazy" title="Calendari de la colla"></iframe>
+      ) : (
+        <div class="calendar-empty">
+          <p>Encara no s’ha configurat cap calendari de Google.</p>
+          <p class="hint">Es pot afegir des de <span class="mono">/admin, Configuració, URL d’inserció de Google Calendar</span>.</p>
+        </div>
+      )}
+    </section>
   </div>
 </Base>
 
 <style>
-  .wrap { max-width: var(--ample); margin: 0 auto; padding: 40px 28px 60px; }
-  .lead { color: var(--ink-soft); margin-bottom: 28px; }
-  .lead :global(p) { margin: 0; }
-  .list { display: flex; flex-direction: column; gap: 12px; }
-  .row {
-    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-    background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--blue);
-    border-radius: 8px; padding: 16px 20px;
-    text-decoration: none; color: var(--ink);
-    transition: background 0.14s, border-color 0.14s;
-  }
-  .row:hover { border-color: var(--blue); background: var(--bg-deep); }
+  .fila { grid-template-columns: minmax(0, 3fr) minmax(0, 7fr) auto; }
+  .date { font-size: var(--text-md); font-weight: 600; color: var(--color-accent-deep); font-variant-numeric: tabular-nums; }
+  .info { display: flex; flex-direction: column; gap: var(--space-2xs); min-width: 0; }
+  .estats { display: flex; flex-wrap: wrap; gap: var(--space-xs); justify-content: flex-end; }
   /* the one coming up next, the only thing on this page worth the yellow */
-  .row.propera { border-left-color: var(--yellow); background: var(--yellow-bg); }
-  .row.propera:hover { border-color: var(--yellow); }
-  .date { font-size: 0.8125rem; color: var(--blue-deep); font-weight: 600; width: 150px; flex: none; }
-  .info { flex: 1; min-width: 180px; }
-  .info h2 { font-size: 1.05rem; font-weight: 600; }
-  .meta { font-size: 0.8125rem; color: var(--ink-soft); margin-top: 2px; }
-  .empty { color: var(--ink-soft); }
-  .section-title { font-size: 1.4rem; margin: 40px 0 16px; }
+  .fila.propera { background: var(--color-signal-wash); }
+  .fila.propera:hover { background: color-mix(in oklab, var(--color-signal-wash) 85%, var(--color-signal)); }
+  .empty { padding-block: var(--space-lg); border-block: 1px solid var(--color-rule); }
+
+  .calendari { margin-top: var(--section-gap-s); }
+  .section-title { margin-bottom: var(--space-xl); }
   /* a month grid needs six week-rows: at 600px each day was about 85px tall,
      which is what made the events unreadable */
   .calendar-embed {
-    width: 100%; height: 820px; border: 1px solid var(--line);
-    border-top: 3px solid var(--blue); border-radius: 8px; display: block; background: #fff;
+    width: 100%; height: 820px; display: block;
+    border: 1px solid var(--color-rule); border-radius: var(--radius-card);
+    background: var(--color-paper);
   }
-  @media (max-width: 720px) {
+  .calendar-embed:focus, .calendari:focus-within .calendar-embed { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .calendar-empty {
+    padding: var(--space-xl); border-radius: var(--radius-card);
+    background: var(--color-paper-2); color: var(--color-ink-2);
+  }
+  .calendar-empty p:first-child { color: var(--color-ink); font-size: var(--text-lead); }
+  .calendar-empty .hint { font-size: var(--text-sm); margin-top: var(--space-sm); }
+  @media (max-width: 60rem) {
+    .fila { grid-template-columns: minmax(0, 1fr); }
+    .estats { justify-content: flex-start; }
     .calendar-embed { height: 620px; }
   }
-  .calendar-empty {
-    background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 28px; text-align: center; color: var(--ink-soft);
-  }
-  .calendar-empty .hint { font-size: 0.8125rem; margin: 10px 0 0; }
-  .calendar-empty p:first-child { color: var(--ink); font-size: 1.0625rem; }
 </style>

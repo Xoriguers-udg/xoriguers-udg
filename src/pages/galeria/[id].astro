@@ -14,32 +14,38 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const descripcio = `${entry.data.fotos.length} fotografies · ${formatDate(entry.data.data)}`;
+const descripcio = `${entry.data.fotos.length} fotografies, ${formatDate(entry.data.data)}`;
 ---
 <Base title={entry.data.nom} description={descripcio} heroImage={mediaUrl(base, entry.data.portada)} showHeader={false}>
-  <div class="wrap">
-    <a class="back mono" href={`${base}galeria`}>← Galeria</a>
-    <div class="eyebrow">{formatDate(entry.data.data)}</div>
-    <h1 class="display">{entry.data.nom}</h1>
-    <div class="photo-grid">
-      {entry.data.fotos.map((foto) =>
-        isUploadedPath(foto) ? (
-          <img class="photo" src={mediaUrl(base, foto)} alt="" loading="lazy" />
-        ) : (
-          <div class="photo placeholder"></div>
-        )
-      )}
-      {entry.data.fotos.length === 0 && <p class="empty">Encara no hi ha fotos en aquest àlbum.</p>}
-    </div>
+  <div class="pagina">
+    <a class="tornar back" href={`${base}galeria`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Galeria</a>
+    <h1 class="fitxa-titol">{entry.data.nom}</h1>
+    <p class="fitxa-meta"><time datetime={entry.data.data.toISOString().slice(0, 10)}>{formatDate(entry.data.data)}</time><span>{entry.data.fotos.length} fotografies</span></p>
+    {entry.data.fotos.length > 0 ? (
+      <ul class="photo-grid">
+        {entry.data.fotos.map((foto) =>
+          <li>
+            {isUploadedPath(foto) ? (
+              <img class="photo" src={mediaUrl(base, foto)} alt="" width="800" height="600" loading="lazy" />
+            ) : (
+              <div class="photo placeholder"></div>
+            )}
+          </li>
+        )}
+      </ul>
+    ) : (
+      <p class="buit-text empty">Encara no hi ha fotos en aquest àlbum.</p>
+    )}
   </div>
 </Base>
 
 <style>
-  .wrap { max-width: var(--ample); margin: 0 auto; padding: 40px 28px 60px; }
-  .back { display: block; margin-bottom: 14px; color: var(--ink-soft); text-decoration: none; }
-  h1 { margin: 8px 0 24px; font-size: clamp(1.8rem, 4vw, 2.6rem); }
-  .photo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-  .photo { aspect-ratio: 4/3; border-radius: 8px; object-fit: cover; width: 100%; display: block; }
-  .placeholder { background: repeating-linear-gradient(135deg, var(--bg-deep) 0, var(--bg-deep) 14px, var(--line) 14px, var(--line) 28px); }
-  .empty { color: var(--ink-soft); }
+  .photo-grid {
+    list-style: none; margin: var(--space-2xl) 0 0; padding: 0;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-md);
+  }
+  .photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--space-xs); }
+  .placeholder { background: var(--color-paper-3); }
+  .empty { margin-top: var(--space-xl); }
+  @media (max-width: 60rem) { .photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

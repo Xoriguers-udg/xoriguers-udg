@@ -163,15 +163,15 @@ const pillClass: Record<string, string> = {
 };
 ---
 <Base title={capcalera?.data.titol ?? 'Historial'} heroImage={heroImage}>
-  <div class="wrap">
+  <div class="pagina">
     {capcalera?.body?.trim() && (
-      <div class="lead">
+      <div class="pagina-intro">
         <IntroContent />
       </div>
     )}
     <p class="context">
-      Totes les actuacions de la colla des de la temporada {primeraTemporada}:
-      <b>{diades.length}</b> diades, <b>{totalCastells.toLocaleString('ca-ES')}</b> castells i
+      Totes les actuacions de la colla des de la temporada {primeraTemporada}:{' '}
+      <b>{diades.length}</b> diades, <b>{totalCastells.toLocaleString('ca-ES')}</b> castells i{' '}
       <b>{temporades.length}</b> temporades.
     </p>
 
@@ -201,8 +201,8 @@ const pillClass: Record<string, string> = {
           <div class="season buida">
             <div class="season-head cols-temporades">
               <div class="season-year">{f.temporada}</div>
-              <div class="season-n">—</div>
-              <div class="season-n">—</div>
+              <div class="season-n"></div>
+              <div class="season-n"></div>
               <div class="season-cap">Sense dades al registre</div>
               <div></div>
             </div>
@@ -224,7 +224,7 @@ const pillClass: Record<string, string> = {
                 <a class="diada" href={`${base}agenda/${d.id}`} data-cerca={[d.nom, d.observacio, ...d.castells.flatMap((c) => [c.notacio, notacioAmbEstat(c)])].join(' ').toLowerCase()}>
                   <div class="diada-date">{dataText(d)}</div>
                   <div>
-                    <div class="diada-name">{d.nom || '—'}</div>
+                    <div class="diada-name">{d.nom || 'Sense nom'}</div>
                     {d.castells.length > 0 ? (
                       <div class="castells-row">
                         {d.castells.map((c) => <span class={`c ${pillClass[c.estat]}`}>{notacioAmbEstat(c)}</span>)}
@@ -280,8 +280,8 @@ const pillClass: Record<string, string> = {
       <div class="sortbar">
         <label for="ordre">Ordena per</label>
         <select id="ordre">
-          <option value="data-desc">Data · de la més recent</option>
-          <option value="data-asc">Data · de la més antiga</option>
+          <option value="data-desc">Data, de la més recent</option>
+          <option value="data-asc">Data, de la més antiga</option>
           <option value="recurrents">Diades que es repeteixen</option>
           <option value="punts">Puntuació de la diada</option>
           <option value="millor">Millor castell</option>
@@ -307,13 +307,13 @@ const pillClass: Record<string, string> = {
             data-cerca={x.cerca}
           >
             <div class="grouphead" hidden>
-              {x.diada.nom} <span>· {x.recurrencia} {x.recurrencia === 1 ? 'vegada' : 'edicions'}</span>
+              {x.diada.nom} <span>({x.recurrencia} {x.recurrencia === 1 ? 'vegada' : 'edicions'})</span>
             </div>
             <a class="drow cols-diades" href={`${base}agenda/${x.diada.id}`}>
               <div class="diada-date">{dataText(x.diada)}</div>
               <div class="diada-date">{x.diada.temporada}</div>
               <div>
-                <div class="diada-name">{x.diada.nom || '—'}</div>
+                <div class="diada-name">{x.diada.nom || 'Sense nom'}</div>
                 {x.diada.castells.length > 0 ? (
                   <div class="castells-row">
                     {x.diada.castells.map((c) => <span class={`c ${pillClass[c.estat]}`}>{notacioAmbEstat(c)}</span>)}
@@ -498,172 +498,157 @@ const pillClass: Record<string, string> = {
 </script>
 
 <style>
-  .wrap { max-width: var(--ample); margin: 0 auto; padding: 40px 28px 60px; }
-  .lead { color: var(--ink-soft); margin-bottom: 18px; }
-  .lead :global(p) { margin: 0; }
-  .context { margin: 0 0 24px; max-width: 60ch; color: var(--ink-soft); font-size: 0.9375rem; }
-  .context b { color: var(--ink); font-weight: 600; }
-  .visually-hidden {
-    position: absolute; width: 1px; height: 1px; overflow: hidden;
-    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
-  }
+  .context { margin-bottom: var(--space-xl); max-width: 60ch; font-size: var(--text-lead); color: var(--color-ink-2); }
+  .context b { color: var(--color-ink); font-weight: 600; }
 
   /* ---------- controls ---------- */
   .controls {
-    display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 22px;
+    display: flex; flex-wrap: wrap; gap: var(--space-md) var(--space-lg); align-items: center; justify-content: space-between;
+    margin-bottom: var(--space-lg);
   }
-  .lenses { display: flex; gap: 22px; flex-wrap: wrap; }
+  .lenses { display: flex; flex-wrap: wrap; gap: var(--space-2xs); padding: var(--space-2xs); border-radius: var(--radius-pill); background: var(--color-paper-2); }
   .lens-btn {
-    appearance: none; border: 0; border-bottom: 2px solid transparent; background: none;
-    color: var(--ink-soft); font-family: inherit; font-size: 0.9375rem; font-weight: 600;
-    padding: 6px 0; cursor: pointer;
+    appearance: none; border: 0; background: none; cursor: pointer;
+    min-height: 44px; padding: 0 var(--space-md); border-radius: var(--radius-pill);
+    font-family: inherit; font-size: var(--text-md); font-weight: 600; color: var(--color-ink-2);
+    transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
   }
-  .lens-btn:hover { color: var(--blue-deep); }
-  .lens-btn[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--blue); }
-  .lens-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
-  .search-wrap { display: flex; align-items: center; gap: 10px; }
+  .lens-btn:hover { color: var(--color-ink); background: var(--color-paper-3); }
+  .lens-btn:active { transform: translateY(1px); }
+  .lens-btn[aria-selected='true'] { color: var(--color-on-dark); background: var(--color-ink); }
+  .lens-btn:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .search-wrap { display: flex; align-items: center; gap: var(--space-sm); }
   input[type='search'], select {
-    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.8125rem; padding: 7px 11px;
-    border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+    min-height: 44px; padding: 0 var(--space-md);
+    font: inherit; font-size: var(--text-md); font-variant-numeric: tabular-nums;
+    border: 1px solid var(--color-muted); border-radius: var(--radius-input);
+    background: var(--color-paper); color: var(--color-ink);
   }
-  input[type='search'] { width: 220px; max-width: 46vw; }
-  input[type='search']:focus-visible, select:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
-  .hits { font-size: 0.75rem; color: var(--ink-soft); white-space: nowrap; }
-  .sortbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 0 4px 14px; }
-  .sortbar label {
-    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.6875rem;
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft);
-  }
+  input[type='search'] { width: 18rem; max-width: 100%; }
+  input[type='search']:hover, select:hover { border-color: var(--color-ink); }
+  input[type='search']:focus-visible, select:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+  .hits { font-size: var(--text-sm); color: var(--color-ink-2); white-space: nowrap; }
+  .sortbar { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-md); align-items: center; padding-bottom: var(--space-md); }
+  .sortbar label { font-size: var(--text-sm); font-weight: 600; color: var(--color-ink-2); }
 
   /* ---------- shared row grammar ---------- */
-  .cols-temporades { grid-template-columns: 7rem 4.2rem 4.6rem minmax(0, 1fr) 1.2rem; }
-  .cols-diades { grid-template-columns: 7rem 5.5rem minmax(0, 1fr) 4.5rem; }
+  .cols-temporades { grid-template-columns: 8rem 5rem 5rem minmax(0, 1fr) 1.5rem; }
+  .cols-diades { grid-template-columns: 7.5rem 6rem minmax(0, 1fr) 5rem; }
   .col-head {
-    display: grid; gap: 16px; padding: 0 4px 7px; border-bottom: 2px solid var(--blue);
-    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.625rem;
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft);
+    display: grid; gap: var(--space-md); padding: 0 var(--space-sm) var(--space-xs);
+    border-bottom: 2px solid var(--color-ink);
+    font-size: var(--text-sm); font-weight: 600; color: var(--color-ink-2);
   }
   .col-head .num { text-align: right; }
   .grouphead, .resum tr.gamma th {
-    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.6875rem;
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue-deep); font-weight: 600;
-    background: var(--bg-deep); border-bottom: 1px solid var(--line-firm); padding: 8px 4px;
+    font-size: var(--text-sm); font-weight: 600; color: var(--color-accent-deep);
+    background: var(--color-paper-2); padding: var(--space-xs) var(--space-sm);
   }
-  .grouphead span { color: var(--ink-soft); font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
-  .agrupada .ditem:not(:first-child) .grouphead:not([hidden]) { margin-top: 14px; }
+  .grouphead span { color: var(--color-ink-2); font-weight: 400; }
+  .agrupada .ditem:not(:first-child) .grouphead:not([hidden]) { margin-top: var(--space-md); }
 
   .c {
     font-family: var(--font-display); font-variant-numeric: tabular-nums;
-    font-size: 0.8125rem; font-weight: 600;
-    border-radius: 16px; padding: 2px 10px; white-space: nowrap;
+    font-size: var(--text-sm); font-weight: var(--display-weight);
+    border-radius: var(--radius-pill); padding: var(--space-3xs) var(--space-sm); white-space: nowrap;
   }
-  .c-descarregat { background: var(--moss-bg); color: var(--moss); }
-  .c-carregat { background: var(--yellow-bg); color: var(--yellow-ink); }
-  .c-intent { background: var(--neutral-bg); color: var(--neutral-ink); }
-  .castells-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .c-descarregat { background: var(--color-moss-wash); color: var(--color-moss); }
+  .c-carregat { background: var(--color-signal-wash); color: var(--color-signal-text); }
+  .c-intent { background: var(--color-neutral-wash); color: var(--color-neutral-ink); }
+  .castells-row { display: flex; flex-wrap: wrap; gap: var(--space-2xs); margin-top: var(--space-xs); }
   .fita {
-    font-size: 0.75rem; font-weight: 600; color: var(--yellow-ink); background: var(--yellow-bg);
-    border-radius: 16px; padding: 2px 10px; white-space: nowrap;
+    font-size: var(--text-sm); font-weight: 600; color: var(--color-signal-text); background: var(--color-signal-wash);
+    border-radius: var(--radius-pill); padding: var(--space-3xs) var(--space-sm); white-space: nowrap;
   }
 
   /* ---------- per temporada ---------- */
-  .season { border-bottom: 1px solid var(--line); border-left: 4px solid transparent; }
-  .season-head { display: grid; gap: 16px; align-items: center; padding: 10px 4px; cursor: pointer; }
-  .season-head:hover, .season.open > .season-head { background: var(--bg-deep); }
-  .season-head:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
-  .season.open { border-left-color: var(--blue); }
+  .season { border-bottom: 1px solid var(--color-rule); }
+  .season-head {
+    display: grid; gap: var(--space-md); align-items: center;
+    min-height: 56px; padding: var(--space-sm);
+    cursor: pointer; transition: background-color var(--dur-short) var(--ease-out);
+  }
+  .season-head:hover, .season.open > .season-head { background: var(--color-paper-2); }
+  .season-head:active { background: var(--color-paper-3); }
+  .season-head:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
   /* the season under way, so it reads as current rather than as one more row */
-  .season.actual { border-left-color: var(--yellow); background: color-mix(in srgb, var(--yellow-bg) 40%, transparent); }
+  .season.actual > .season-head { background: var(--color-signal-wash); }
   .season-year {
-    font-family: var(--font-display); font-size: 0.875rem; font-weight: 700;
-    font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--blue-deep);
+    font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--display-weight);
+    font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--color-ink);
   }
-  .season-n {
-    font-family: var(--font-text); font-size: 0.8125rem;
-    color: var(--ink-soft); text-align: right; font-variant-numeric: tabular-nums;
-  }
-  .season-n.forta { color: var(--blue-deep); font-weight: 600; }
-  .season-tops { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; }
-  .season-cap { color: var(--ink-faint); font-size: 0.8125rem; }
-  .chev { color: var(--ink-faint); transition: transform 0.15s; justify-self: end; }
+  .season-n { font-size: var(--text-md); color: var(--color-ink-2); text-align: right; font-variant-numeric: tabular-nums; }
+  .season-n.forta { color: var(--color-ink); font-weight: 600; }
+  .season-tops { display: flex; flex-wrap: wrap; gap: var(--space-2xs); min-width: 0; }
+  .season-cap { color: var(--ink-faint); font-size: var(--text-sm); }
+  .chev { color: var(--color-ink-2); transition: transform var(--dur-short) var(--ease-in-out); justify-self: end; }
   .season.open .chev { transform: rotate(90deg); }
-  .season.buida .season-head { cursor: default; }
+  .season.buida .season-head { cursor: default; min-height: 44px; }
   .season.buida .season-head:hover { background: transparent; }
-  .season.buida .season-year { color: var(--ink-faint); }
-  .season-body { padding: 2px 4px 18px; }
+  .season.buida .season-year { color: var(--ink-faint); font-size: var(--text-md); }
+  .season-body { padding: 0 var(--space-sm) var(--space-lg); }
 
   .diada {
-    display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: 16px; padding: 8px 6px;
-    border-top: 1px solid var(--line); text-decoration: none; color: var(--ink);
-    border-radius: 10px; transition: background 0.12s;
+    display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: var(--space-md);
+    padding: var(--space-sm);
+    border-top: 1px solid var(--color-rule); text-decoration: none; color: var(--color-ink);
+    border-radius: var(--space-xs); transition: background-color var(--dur-micro) var(--ease-out);
   }
-  .diada:hover { background: var(--hover); }
-  .diada:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
-  .diada:hover .diada-name { color: var(--blue-deep); }
-  .diada-date {
-    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.75rem;
-    color: var(--ink-soft); white-space: nowrap;
-  }
-  .diada-name { font-size: 0.9375rem; }
-  .obs { margin-top: 6px; font-size: 0.8125rem; color: var(--ink-soft); }
-  .obs.is-fita { color: var(--yellow-ink); font-weight: 600; }
-  .raw-note {
-    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.75rem;
-    color: var(--ink-faint); margin-top: 5px;
-  }
+  .diada:hover { background: var(--color-paper-3); color: var(--color-ink); }
+  .diada:active { background: var(--color-accent-wash); }
+  .diada:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+  .diada:hover .diada-name { color: var(--color-accent-deep); }
+  .diada-date { font-size: var(--text-sm); color: var(--color-ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .diada-name { font-weight: 600; }
+  .obs { margin-top: var(--space-xs); font-size: var(--text-sm); color: var(--color-ink-2); }
+  .obs.is-fita { color: var(--color-signal-text); font-weight: 600; }
+  .raw-note { display: block; font-size: var(--text-sm); color: var(--ink-faint); margin-top: var(--space-2xs); }
 
   /* ---------- resum històric ---------- */
   .table-scroll { overflow-x: auto; }
   table.resum { width: 100%; border-collapse: collapse; }
-  .resum th, .resum td { text-align: left; padding: 7px 12px 7px 4px; }
+  .resum th, .resum td { text-align: left; padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-sm); }
   .resum thead th {
-    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.625rem; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--ink-soft); font-weight: 400;
-    border-bottom: 2px solid var(--blue); white-space: nowrap;
+    font-size: var(--text-sm); font-weight: 600; color: var(--color-ink-2);
+    border-bottom: 2px solid var(--color-ink); white-space: nowrap;
   }
-  .resum tbody td { border-bottom: 1px solid var(--line); }
+  .resum tbody td { border-bottom: 1px solid var(--color-rule); }
   /* the castell's name, so the display face, like the tree's own nodes */
-  .not { font-family: var(--font-display); font-variant-numeric: tabular-nums; font-size: 1rem; font-weight: 700; white-space: nowrap; }
-  .tally {
-    font-family: var(--font-text); font-size: 0.875rem;
-    white-space: nowrap; font-variant-numeric: tabular-nums;
-  }
+  .not { font-family: var(--font-display); font-variant-numeric: tabular-nums; font-size: var(--text-lg); font-weight: var(--display-weight); white-space: nowrap; }
+  .tally { white-space: nowrap; font-variant-numeric: tabular-nums; }
   .tally .desc { font-weight: 600; }
-  .tally .carr { color: var(--yellow-ink); }
-  .tally .int { color: var(--neutral-ink); }
-  .when {
-    font-family: var(--font-text); font-variant-numeric: tabular-nums; font-size: 0.75rem;
-    color: var(--ink-soft); white-space: nowrap;
-  }
+  .tally .carr { color: var(--color-signal-text); }
+  .tally .int { color: var(--color-neutral-ink); }
+  .when { font-size: var(--text-sm); color: var(--color-ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
   /* ---------- diades ---------- */
   .drow {
-    display: grid; gap: 16px; align-items: baseline; padding: 10px 4px;
-    border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink);
-    transition: background 0.12s;
+    display: grid; gap: var(--space-md); align-items: baseline; padding: var(--space-sm);
+    border-bottom: 1px solid var(--color-rule); text-decoration: none; color: var(--color-ink);
+    transition: background-color var(--dur-micro) var(--ease-out);
   }
-  .drow:hover { background: var(--hover); }
-  .drow:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
-  .drow:hover .diada-name { color: var(--blue-deep); }
-  .pts {
-    font-family: var(--font-text); font-size: 0.8125rem; color: var(--ink-soft);
-    text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;
-  }
-  .empty-state { padding: 34px 4px; color: var(--ink-soft); }
+  .drow:hover { background: var(--color-paper-2); color: var(--color-ink); }
+  .drow:active { background: var(--color-paper-3); }
+  .drow:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+  .drow:hover .diada-name { color: var(--color-accent-deep); }
+  .pts { font-size: var(--text-md); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .empty-state { padding: var(--space-xl) var(--space-sm); font-size: var(--text-lead); color: var(--color-ink-2); }
   .source {
-    border-top: 1px solid var(--line); margin-top: 34px; padding-top: 16px;
-    font-size: 0.8125rem; color: var(--ink-soft);
+    border-top: 1px solid var(--color-rule); margin-top: var(--space-2xl); padding-top: var(--space-md);
+    font-size: var(--text-sm); color: var(--color-ink-2);
   }
 
-  @media (max-width: 760px) {
+  @media (max-width: 60rem) {
     .col-head { display: none; }
-    .cols-temporades { grid-template-columns: 1fr auto; row-gap: 8px; }
-    .cols-diades { grid-template-columns: 1fr; gap: 3px; }
+    .cols-temporades { grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--space-xs); }
+    .cols-diades { grid-template-columns: minmax(0, 1fr); gap: var(--space-2xs); }
     .season-n { text-align: left; }
     .season-tops { grid-column: 1 / -1; }
-    .diada { grid-template-columns: 1fr; gap: 4px; }
+    .diada { grid-template-columns: minmax(0, 1fr); gap: var(--space-2xs); }
     .pts { text-align: left; }
+    .controls { align-items: stretch; }
+    .search-wrap { flex: 1 1 100%; }
+    input[type='search'] { flex: 1; width: auto; }
   }
   @media (prefers-reduced-motion: reduce) {
     .chev { transition: none; }

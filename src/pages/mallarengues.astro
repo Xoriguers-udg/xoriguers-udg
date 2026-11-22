@@ -2,44 +2,45 @@
 import Base from '../layouts/Base.astro';
 import { getEntry, getCollection, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
-import { isRealUrl } from '../lib/config';
 
 const pagina = await getEntry('pagines', 'mallarengues');
 const { Content } = await render(pagina!);
 const base = import.meta.env.BASE_URL;
 const imatge = mediaUrl(base, pagina?.data.imatge);
-const email = isRealUrl(pagina?.data.contacteEmail) ? pagina!.data.contacteEmail : undefined;
 
 const protocols = (await getCollection('documents', ({ data }) => data.categoria === 'Protocol'));
 ---
 <Base title={pagina!.data.titol ?? 'Mallarengues'} heroImage={imatge}>
-  <div class="wrap">
-    <div class="lead">
+  <div class="pagina">
+    <div class="obertura">
+    <div class="pagina-intro">
       <Content />
     </div>
+    <aside class="costat">
 
-    <div class="grid">
-      {email && (
-        <div class="card">
-          <div class="eyebrow">Contacte</div>
-          <p><a href={`mailto:${email}`}>{email}</a></p>
-        </div>
-      )}
-      {protocols.map((doc) => (
-        <div class="card">
-          <div class="eyebrow">Protocol</div>
-          <p><a href={mediaUrl(base, doc.data.fitxer)} target="_blank" rel="noreferrer">{doc.data.titol}</a></p>
-        </div>
-      ))}
+    {protocols.length > 0 && (
+      <dl class="dades costat-dades">
+        {protocols.map((doc) => (
+          <div class="dada">
+            <dt class="dada-etiqueta">Protocol</dt>
+            <dd class="dada-valor"><a href={mediaUrl(base, doc.data.fitxer)} target="_blank" rel="noreferrer">{doc.data.titol}</a></dd>
+          </div>
+        ))}
+      </dl>
+    )}
+    <a class="btn btn-accent contacta" href={`${base}col-laboradors#contacte`}>Contacta’ns</a>
+    </aside>
     </div>
   </div>
 </Base>
 
 <style>
-  .wrap { max-width: var(--mitja); margin: 0 auto; padding: 40px 28px 60px; }
-  .lead { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); max-width: 60ch; }
-  .lead :global(p) { margin: 0 0 16px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 28px 0; }
-  .card { background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 8px; padding: 18px 20px; }
-  .card p { margin: 8px 0 0; font-size: 0.9375rem; }
+  .dada-valor { margin-left: 0; overflow-wrap: anywhere; }
+  .obertura { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-3xl); align-items: start; }
+  .obertura .pagina-intro { margin-bottom: 0; }
+  .costat { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-lg); padding: var(--space-xl); border-radius: var(--radius-card); background: var(--color-signal-wash); }
+  .costat-dades { margin: 0; width: 100%; grid-template-columns: minmax(0, 1fr); }
+  .costat .dada { padding: 0; background: none; }
+  .costat .dada-etiqueta { color: var(--color-signal-text); }
+  @media (max-width: 60rem) { .obertura { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); } }
 </style>

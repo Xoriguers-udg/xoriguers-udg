@@ -10,3 +10,6 @@ npm-debug.log*
 # build_tree.py writes here when run with no arguments; the page that is served
 # is public/arbre/index.html, which npm run build:arbre produces
 arbre/arbre.html
+
+# Hallmark design runs: screenshots and logs, kept local
+.hallmark/

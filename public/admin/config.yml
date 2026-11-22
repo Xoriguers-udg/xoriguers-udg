@@ -178,6 +178,7 @@ collections:
           - { label: "Títol", name: "titol", widget: "string" }
           - { label: "Text principal", name: "body", widget: "markdown" }
           - { label: "Fotografia", name: "imatge", widget: "image", required: false }
+          - { label: "Foto de tota la colla", name: "fotoColla", widget: "image", required: false, hint: "Una foto de grup. Surt a La colla i a la portada, al costat de la crida a apuntar-se." }
           - { label: "Email de contacte", name: "contacteEmail", widget: "string" }
           - { label: "Instagram", name: "contacteInstagram", widget: "string" }
       - name: "uneix_te"
@@ -250,7 +251,6 @@ collections:
           - { label: "Títol", name: "titol", widget: "string" }
           - { label: "Text", name: "body", widget: "markdown" }
           - { label: "Fotografia", name: "imatge", widget: "image", required: false }
-          - { label: "Email de contacte", name: "contacteEmail", widget: "string", required: false }
       - name: "xorimusics"
         label: "Xorimúsics"
         file: "src/content/pagines/xorimusics.md"
@@ -258,7 +258,16 @@ collections:
           - { label: "Títol", name: "titol", widget: "string" }
           - { label: "Text", name: "body", widget: "markdown" }
           - { label: "Fotografia", name: "imatge", widget: "image", required: false }
-          - { label: "Email de contacte", name: "contacteEmail", widget: "string", required: false, hint: "L'horari i el mapa dels assajos es mostren automàticament des de la pàgina 'Uneix-te'." }
+          - label: "Partitures"
+            name: "partitures"
+            widget: "list"
+            required: false
+            summary: "{{fields.titol}}"
+            hint: "Les partitures dels tocs, en PDF. Surten a la pàgina dels Xorimúsics."
+            fields:
+              - { label: "Títol", name: "titol", widget: "string", hint: "Ex: Toc de castells" }
+              - { label: "Instrument", name: "instrument", widget: "select", options: ["Gralla", "Tabal", "Gralla i tabal"], required: false }
+              - { label: "Fitxer", name: "fitxer", widget: "file" }
       - name: "agenda"
         label: "Capçalera: Agenda"
         file: "src/content/pagines/agenda.md"
@@ -435,7 +444,7 @@ collections:
             widget: "string"
             required: false
             hint: "URL del calendari de Google Calendar en mode 'Insereix' (Configuració > Integra el calendari)"
-          - { label: "Email de contacte comercial/patrocinis", name: "contacteComercialEmail", widget: "string", required: false }
+          - { label: "Email de contacte", name: "contacteComercialEmail", widget: "string", required: false, hint: "L'únic correu que surt al web, a la secció Contacta'ns de Col·laboradors." }
           - { label: "Nom del responsable de patrocinis", name: "contacteComercialNom", widget: "string", required: false, hint: "Ex: Responsable de patrocinis" }
           - { label: "Fotografia de capçalera", name: "capceleraImatge", widget: "image", required: false, hint: "Imatge de fons que es mostra a la capçalera de totes les pàgines (llevat de l'inici)" }
           - { label: "Descripció general (SEO)", name: "descripcioGeneral", widget: "text", required: false, hint: "S'utilitza com a meta descripció a les pàgines que no en tenen una de pròpia (per exemple quan es comparteix l'enllaç a xarxes). Recomanat: 1-2 frases curtes." }

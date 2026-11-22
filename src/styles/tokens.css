@@ -1,0 +1,61 @@
+/*
+ * The values come from the arbre de xoriguers (arbre/template.html): its blue,
+ * its yellow, its ink and its two faces. A colour changed there is changed here.
+ */
+:root {
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px; --space-4xl: 144px;
+  --text-xs: 0.8125rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.25rem; --text-xl: 1.5625rem; --text-2xl: 1.953rem; --text-3xl: 2.441rem;
+  --text-display-s: clamp(2.25rem, 4vw + 0.5rem, 3.75rem); --text-display: clamp(2.75rem, 5vw + 1rem, 5.25rem);
+  --text-section: clamp(2rem, 2.5vw + 1rem, 3.5rem); --text-title: clamp(1.25rem, 0.75vw + 0.875rem, 1.625rem); --text-lead: clamp(1.125rem, 0.35vw + 1rem, 1.375rem);
+  /* the castell notation, set as the page's one poster-size thing */
+  --text-notation: clamp(5rem, 13vw, 11rem);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in: cubic-bezier(0.7, 0, 0.84, 0); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms; --dur-short: 220ms; --dur-long: 420ms;
+  --color-error: oklch(52% 0.19 27); --color-success: oklch(50% 0.12 150);
+  --container: 1440px; --gutter: 64px; --gap-columns: 32px; --section-gap-s: 120px; --section-gap: 144px; --section-gap-l: 176px;
+  --z-base: 1; --z-raised: 10; --z-dropdown: 100; --z-sticky: 200; --z-sticky-nav: 300; --z-modal: 400; --z-toast: 500; --z-tooltip: 600;
+
+  /* paper: the tree's white, tinted a breath toward its blue */
+  --color-paper: oklch(99.2% 0.004 235);
+  --color-paper-2: #eef6fb; /* the tree's row hover */
+  --color-paper-3: #e4f1f8; /* the tree's --band */
+  /* ink: the tree's deep blue rather than a near-black */
+  --color-ink: #0f3a54;
+  --color-ink-2: #4f6f83; /* the tree's --muted */
+  --color-muted: #4f6f83;
+  --color-rule: #bcd7e6; /* the tree's --line */
+  --color-rule-firm: #86b2c9; /* its --edge */
+
+  /* the colla's blue: links, structure, and the field of the castells band */
+  --color-accent: #1b7aae;
+  --color-accent-deep: #15658f;
+  --color-accent-wash: #dcedf6;
+  --color-accent-ink: oklch(99.2% 0.004 235);
+  /* the yellow is the one thing on a page that deserves the eye */
+  --color-signal: #e1a800;
+  --color-signal-ink: #0f3a54;
+  --color-signal-text: #6b5000; /* the tree's --warn */
+  --color-signal-wash: #fdf3d0; /* its --warn-soft */
+  --color-focus: #1b7aae;
+  /* on the blue and ink bands the ring turns yellow, to hold 3:1 */
+  --color-focus-on-dark: #e1a800;
+  /* text on the ink and blue fields */
+  --color-on-dark: oklch(99.2% 0.004 235);
+  --color-on-dark-2: #c9e0ec;
+  --color-on-dark-rule: color-mix(in oklab, #e4f1f8 22%, transparent);
+
+  /* outcomes: descarregat, carregat, intent, cancel·lada */
+  --color-moss: #336a3d; --color-moss-wash: #e1f2e4;
+  --color-neutral-wash: #e8eef2; --color-neutral-ink: #5a6a72;
+  --color-danger: #b3261e; --color-danger-wash: #fbe4e2;
+
+
+  --font-display: "Bricolage Grotesque", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-outlier: var(--font-body);
+  --display-weight: 800;
+
+  --radius-card: 12px; --radius-input: 10px; --radius-pill: 999px; --rule-hair: 1px; --shadow-card: none;
+  /* Bricolage is wide and heavy: it tightens only a little */
+  --tracking-display: -0.015em;
+}

@@ -10,6 +10,11 @@ const base = import.meta.env.BASE_URL;
 const config = await getEntry('configuracio', 'general');
 const comercialEmail = isRealUrl(config?.data.contacteComercialEmail) ? config!.data.contacteComercialEmail : undefined;
 const comercialNom = config?.data.contacteComercialNom;
+const laColla = await getEntry('pagines', 'la-colla');
+const instagram = isRealUrl(laColla?.data.contacteInstagram) ? laColla!.data.contacteInstagram! : undefined;
+const instagramUrl = isRealUrl(config?.data.instagramUrl)
+  ? config!.data.instagramUrl
+  : instagram && `https://instagram.com/${instagram.replace(/^@/, '')}`;
 
 const contactePagina = await getEntry('pagines', 'col-laboradors');
 const { Content: ContacteContent } = await render(contactePagina!);
@@ -19,64 +24,101 @@ const introPagina = await getEntry('pagines', 'col-laboradors-intro');
 const { Content: IntroContent } = await render(introPagina!);
 ---
 <Base title="Col·laboradors" heroImage={contacteImatge}>
-  <div class="wrap">
-    {introPagina?.body?.trim() && (
-      <div class="lead">
+  <div class="pagina">
+    {patrocinadors.length > 0 && introPagina?.body?.trim() && (
+      <div class="pagina-intro">
         <IntroContent />
       </div>
     )}
-    <div class="grid">
-      {patrocinadors.map((p) => {
-        const logo = mediaUrl(base, p.data.logo);
-        const hasUrl = isRealUrl(p.data.url);
-        const Tag = hasUrl ? 'a' : 'div';
-        return (
-          <Tag class="card" href={hasUrl ? p.data.url : undefined} target={hasUrl ? '_blank' : undefined} rel={hasUrl ? 'noreferrer' : undefined}>
-            {logo ? <img class="logo" src={logo} alt={p.data.nom} loading="lazy" /> : <div class="logo placeholder mono">{p.data.nom}</div>}
-          </Tag>
-        );
-      })}
-      {patrocinadors.length === 0 && <p class="empty">Encara no hi ha col·laboradors llistats.</p>}
-    </div>
+    {patrocinadors.length > 0 && (
+      <ul class="grid">
+        {patrocinadors.map((p) => {
+          const logo = mediaUrl(base, p.data.logo);
+          const hasUrl = isRealUrl(p.data.url);
+          const Tag = hasUrl ? 'a' : 'div';
+          return (
+            <li>
+              <Tag class="card" href={hasUrl ? p.data.url : undefined} target={hasUrl ? '_blank' : undefined} rel={hasUrl ? 'noreferrer' : undefined}>
+                {logo ? <img class="logo" src={logo} alt={p.data.nom} width="240" height="120" loading="lazy" /> : <span class="logo placeholder">{p.data.nom}</span>}
+              </Tag>
+            </li>
+          );
+        })}
+      </ul>
+    )}
 
-    {comercialEmail && (
-      <div class="contacte-comercial">
-        <div class="eyebrow" style="color: var(--yellow)">Col·laboracions i patrocinis</div>
-        <h2 class="display">{contactePagina!.data.titol}</h2>
-        <div class="contacte-text">
-          <ContacteContent />
+    {(comercialEmail || instagramUrl) && (
+      <section id="contacte" class={`contacte-comercial${patrocinadors.length > 0 ? '' : ' primera'}${contacteImatge ? '' : ' sense-foto'}`} aria-labelledby="comercial-titol">
+        <div class="contacte-cos">
+          <h2 id="comercial-titol">{contactePagina!.data.titol}</h2>
+          <div class="contacte-text">
+            <ContacteContent />
+          </div>
+          <div class="contacte-accions">
+            {comercialEmail && <a class="btn btn-accent" href={`mailto:${comercialEmail}`}>Escriu-nos</a>}
+            {instagramUrl && (
+              <a class="btn btn-on-dark" href={instagramUrl} target="_blank" rel="noreferrer">
+                Instagram<span class="visually-hidden"> (s’obre en una pestanya nova)</span>
+              </a>
+            )}
+          </div>
+          <dl class="email">
+            {comercialEmail && (
+              <div><dt>{comercialNom || 'Correu'}</dt><dd><a href={`mailto:${comercialEmail}`}>{comercialEmail}</a></dd></div>
+            )}
+            {instagramUrl && (
+              <div><dt>Instagram</dt><dd><a href={instagramUrl} target="_blank" rel="noreferrer">{instagram ?? instagramUrl}</a></dd></div>
+            )}
+          </dl>
         </div>
-        {contacteImatge && <img class="contacte-imatge" src={contacteImatge} alt="" />}
-        <a class="btn btn-accent" href={`mailto:${comercialEmail}`}>
-          {comercialNom ? `Contacta amb ${comercialNom}` : 'Escriu-nos'}
-        </a>
-        <div class="email mono">{comercialEmail}</div>
-      </div>
+        {contacteImatge && <img class="contacte-imatge" src={contacteImatge} alt="" width="600" height="800" />}
+      </section>
     )}
   </div>
 </Base>
 
 <style>
-  .wrap { max-width: var(--ample); margin: 0 auto; padding: 40px 28px 60px; }
-  .lead { color: var(--ink-soft); margin-bottom: 28px; }
-  .lead :global(p) { margin: 0; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px; }
+  .grid {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap-columns);
+  }
   .card {
     display: flex; align-items: center; justify-content: center;
-    background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--blue);
-    border-radius: 8px; padding: 24px;
-    text-decoration: none; min-height: 100px;
+    min-height: 140px; padding: var(--space-lg);
+    border-radius: var(--radius-card); background: var(--color-paper-2);
+    text-decoration: none; transition: background-color var(--dur-short) var(--ease-out);
   }
-  .logo { max-width: 100%; max-height: 60px; object-fit: contain; }
-  .logo.placeholder { color: var(--ink-soft); font-size: 0.8125rem; text-align: center; }
-  .empty { color: var(--ink-soft); }
+  a.card:hover { background: var(--color-paper-3); }
+  a.card:active { transform: translateY(1px); }
+  .logo { max-width: 100%; max-height: 72px; object-fit: contain; }
+  .logo.placeholder { font-weight: 600; color: var(--color-ink-2); text-align: center; }
+
   .contacte-comercial {
-    background: var(--ink); color: var(--bg); border-radius: 10px;
-    padding: 44px 36px; margin-top: 40px;
+    display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-3xl); align-items: center;
+    margin-top: var(--section-gap-s);
+    padding: var(--space-3xl) var(--space-2xl);
+    border-radius: var(--radius-card);
+    background: var(--color-ink); color: var(--color-on-dark);
   }
-  .contacte-comercial h2 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1; margin: 10px 0 18px; }
-  .contacte-text { color: var(--bg-deep); max-width: 56ch; line-height: 1.55; }
-  .contacte-text :global(p) { margin: 0 0 22px; }
-  .contacte-imatge { width: 100%; max-width: 420px; border-radius: 8px; display: block; margin-bottom: 22px; }
-  .contacte-comercial .email { color: rgba(228, 241, 248, 0.65); font-size: 0.8125rem; margin-top: 14px; }
+  .contacte-comercial :focus-visible { outline-color: var(--color-focus-on-dark); }
+  .contacte-cos { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-lg); }
+  .contacte-comercial h2 { color: var(--color-on-dark); overflow-wrap: break-word; min-width: 0; text-wrap: balance; }
+  .contacte-text { color: var(--color-on-dark-2); max-width: 56ch; font-size: var(--text-lead); }
+  .contacte-text :global(p) { margin: 0 0 var(--space-md); }
+  .contacte-text :global(p:last-child) { margin-bottom: 0; }
+  .contacte-imatge { width: 100%; aspect-ratio: 3 / 4; max-height: 480px; object-fit: cover; border-radius: var(--radius-card); }
+  .contacte-comercial.primera { margin-top: 0; }
+  .contacte-comercial.sense-foto { grid-template-columns: minmax(0, 1fr); }
+  .contacte-accions { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+  .btn-on-dark { background: transparent; border-color: var(--color-on-dark-rule); color: var(--color-on-dark); }
+  .btn-on-dark:hover { background: color-mix(in oklab, var(--color-ink) 80%, var(--color-on-dark)); border-color: var(--color-on-dark); color: var(--color-on-dark); }
+  .email { display: flex; flex-wrap: wrap; gap: var(--space-md) var(--space-2xl); margin: var(--space-xs) 0 0; font-size: var(--text-md); overflow-wrap: anywhere; }
+  .email dt { font-size: var(--text-sm); font-weight: 600; color: var(--color-signal); }
+  .email dd { margin: var(--space-3xs) 0 0; }
+  .email a { color: var(--color-on-dark); }
+  .email a:hover { color: var(--color-signal); }
+  @media (max-width: 60rem) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .contacte-comercial { grid-template-columns: minmax(0, 1fr); padding: var(--space-2xl) var(--space-lg); gap: var(--space-xl); }
+  }
 </style>

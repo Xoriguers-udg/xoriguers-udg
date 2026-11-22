@@ -3,9 +3,11 @@ import Base from '../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
 import { isRealUrl } from '../lib/config';
-import { formatDateShort, formatDayMonth } from '../lib/format';
+import { formatDateShort } from '../lib/format';
 import { detallsEsdeveniment } from '../lib/esdeveniment';
+import { isUploadedPath } from '../lib/media';
 
+const base = import.meta.env.BASE_URL;
 const config = await getEntry('configuracio', 'general');
 const instagramUrl = isRealUrl(config?.data.instagramUrl) ? config!.data.instagramUrl : undefined;
 const instagramHandle = instagramUrl?.replace(/\/$/, '').split('/').pop();
@@ -13,10 +15,37 @@ const instagramHandle = instagramUrl?.replace(/\/$/, '').split('/').pop();
 const inici = await getEntry('pagines', 'inici');
 const heroTitol = inici?.data.titol ?? 'Fem castells. Fem universitat.';
 const heroCtaText = inici?.data.ctaText || 'Vine a assajar';
-// the homepage's own body text is the presentation in the left column
+// the homepage's own body text is the presentation
 const { Content: Presentacio } = await render(inici!);
-const presentacioTitol = inici?.data.presentacioTitol;
+const presentacioTitol = inici?.data.presentacioTitol || 'Qui som';
 const properesTitol = inici?.data.properesTitol || 'Pròximes actuacions';
+
+// the hero's one sentence is when to come: the first line of the castellers'
+// assaig on Uneix-te, so it changes when the colla edits that page
+const uneixte = await getEntry('pagines', 'uneix-te');
+const assaig = uneixte?.data.assajos.find((a) => a.clau === 'castellers') ?? uneixte?.data.assajos[0];
+const assaigLinia = assaig?.text?.split('\n').map((l) => l.trim()).find(Boolean);
+const heroFrase = assaig && assaigLinia
+  ? `Assaig de ${assaig.titol.toLowerCase()}: ${assaigLinia.charAt(0).toLowerCase()}${assaigLinia.slice(1)}`
+  : undefined;
+
+// every assaig on Uneix-te, by its first line: shown when nothing is programmed
+// and beside the call to join
+const assajosCurts = (uneixte?.data.assajos ?? [])
+  .map((a) => ({ titol: a.titol, quan: a.text?.split('\n').map((l) => l.trim()).find(Boolean) }))
+  .filter((a) => a.quan);
+const curs = uneixte?.data.curs;
+const credits = curs?.dades.find((d) => /crèdit/i.test(d.etiqueta));
+// the join band's sentence is the first one of the Uneix-te page itself
+const uneixFrase = uneixte?.body?.trim().split(/(?<=[.!?])\s/)[0];
+
+const laColla = await getEntry('pagines', 'la-colla');
+// the colla photo already opens the page, so the join band takes Uneix-te's own
+// photo; it falls back to the colla photo only when the hero shows something else
+const fotoUneix = mediaUrl(base, uneixte?.data.imatge);
+const fotoColla = fotoUneix && fotoUneix !== mediaUrl(base, inici?.data.imatge)
+  ? fotoUneix
+  : mediaUrl(base, laColla?.data.fotoColla);
 
 const now = new Date();
 // an event happening today is still the next one up, so measure from midnight
@@ -39,6 +68,8 @@ const pastAmbCastells = agenda
 
 const ultimaActuacio = pastAmbCastells[0];
 const ultimsCastells = ultimaActuacio?.data.castells ?? [];
+// a castell can carry its own photo; the first one that does stands beside the list
+const castellAmbFoto = ultimsCastells.find((c) => c.foto);
 
 // each activity's description is its markdown body, so render them all
 const activitats = (await getCollection('activitats')).sort((a, b) => a.data.ordre - b.data.ordre);
@@ -49,262 +80,575 @@ const activitatsAmbText = await Promise.all(
 const noticies = await getCollection('noticies', ({ data }) => data.estat === 'publicat');
 const ultimesNoticies = noticies.sort((a, b) => b.data.data.getTime() - a.data.data.getTime()).slice(0, 2);
 
-const pillClass = { descarregat: 'pill-moss', carregat: 'pill-gold', intent: 'pill-neutral' } as const;
 const pillLabel = { descarregat: 'Descarregat', carregat: 'Carregat', intent: 'Intent' } as const;
 
-const base = import.meta.env.BASE_URL;
+const mes = new Intl.DateTimeFormat('ca-ES', { month: 'short' });
+
 const heroImatge = mediaUrl(base, inici?.data.imatge);
+
+// the newest album that has real photos in it, for the strip above Instagram
+const albums = await getCollection('galeria', ({ data }) => data.estat === 'publicat');
+const album = albums
+  .map((a) => ({ ...a, reals: a.data.fotos.filter(isUploadedPath) }))
+  .filter((a) => a.reals.length >= 3)
+  .sort((a, b) => b.data.data.getTime() - a.data.data.getTime())[0];
 ---
 <Base title="Inici" showHeader={false} heroImage={heroImatge}>
-  <div class="hero">
-    <div class="hero-panel">
-      <span class="badge">Xoriguers · UdG</span>
-      <h1 class="display">{heroTitol}</h1>
-      <a class="btn btn-accent" href={`${base}uneix-te`}>
-        {heroCtaText}
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </a>
-    </div>
-    <div class="hero-photo">
-      {heroImatge && <img class="hero-img" src={heroImatge} alt="" />}
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="intro">
-      <div class="presentacio">
-        {presentacioTitol && <div class="eyebrow">{presentacioTitol}</div>}
-        <div class="presentacio-text">
-          <Presentacio />
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-text">
+        <h1>{heroTitol}</h1>
+        {heroFrase && <p class="lead hero-frase">{heroFrase}</p>}
+        <div class="hero-accions">
+          <a class="btn btn-accent" href={`${base}uneix-te`}>{heroCtaText}</a>
+          <a class="btn btn-outline" href={`${base}agenda`}>Veure agenda</a>
         </div>
       </div>
-
-      <div class="properes">
-        <div class="properes-head">
-          <div class="eyebrow">{properesTitol}</div>
-          <a class="card-link" href={`${base}agenda`}>
-            Veure agenda
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-          </a>
-        </div>
-        {properes.length > 0 ? (
-          properes.map((e, i) => (
-            <a class={`properes-row${i === 0 ? ' primera' : ''}`} href={`${base}agenda/${e.id}`}>
-              <div class="properes-date display">{formatDayMonth(e.data.data)}</div>
-              <div class="properes-info">
-                <h2>{e.data.nom}</h2>
-                {detallsEsdeveniment(e.data.hora, e.data.lloc, e.data.poblacio) && (
-                  <div class="meta">{detallsEsdeveniment(e.data.hora, e.data.lloc, e.data.poblacio)}</div>
-                )}
-              </div>
-            </a>
-          ))
-        ) : (
-          <p class="properes-buit">
-            Ara mateix no hi ha cap actuació programada. Les que ja s'han fet són a l'
-            <a href={`${base}castells`}>historial de castells</a>.
-          </p>
+      <div class="hero-photo">
+        {heroImatge && (
+          <img src={heroImatge} alt="Tota la colla dels Xoriguers, amb la camisa blava, sota una volta gòtica" width="387" height="516" fetchpriority="high" />
         )}
       </div>
     </div>
+  </section>
 
-    {ultimsCastells.length > 0 && (
-      <>
-        <div class="castells-head">
-          <div class="eyebrow">Últims castells</div>
-          <div class="meta">{ultimaActuacio!.data.nom} · {formatDateShort(ultimaActuacio!.data.data)}</div>
+  {/* who we are on the left, what is coming up on the right */}
+  <section class="qui-som" aria-labelledby="qui-som-titol">
+    <div class="container qui-som-grid">
+      <div class="presentacio">
+        <h2 id="qui-som-titol">{presentacioTitol}</h2>
+        <div class="presentacio-text">
+          <Presentacio />
         </div>
-        <div class="castells-row">
-          {ultimsCastells.map((c) => (
-            <div class="castell-tile">
-              <div class="notation display">{c.castell}</div>
-              <span class={`pill ${pillClass[c.estat]}`}>{pillLabel[c.estat]}</span>
-            </div>
+        <a class="cap-enllac" href={`${base}la-colla`}>Més sobre la colla</a>
+      </div>
+
+      <div class={`properes${properes.length === 0 ? ' buida' : ''}`}>
+      <div class="properes-cap">
+        <h2 id="properes-titol">{properesTitol}</h2>
+        <a class="cap-enllac" href={`${base}agenda`}>Veure agenda</a>
+      </div>
+      {properes.length > 0 ? (
+        <ol class="properes-llista">
+          {properes.map((e, i) => (
+            <li>
+              <a class={`properes-row${i === 0 ? ' primera' : ''}`} href={`${base}agenda/${e.id}`}>
+                <time class="properes-data" datetime={e.data.data.toISOString().slice(0, 10)}>
+                  <span class="properes-dia display">{e.data.data.getDate()}</span>
+                  <span class="properes-mes">{mes.format(e.data.data)}</span>
+                </time>
+                <span class="properes-nom">{e.data.nom}</span>
+                {detallsEsdeveniment(e.data.hora, e.data.lloc, e.data.poblacio) && (
+                  <span class="properes-meta">{detallsEsdeveniment(e.data.hora, e.data.lloc, e.data.poblacio)}</span>
+                )}
+              </a>
+            </li>
           ))}
+        </ol>
+      ) : (
+        <div class="properes-buit">
+          <p>Ara mateix no hi ha cap actuació programada. Les que ja s’han fet són a l’<a href={`${base}castells`}>historial de castells</a>.</p>
+          {assajosCurts.length > 0 && (
+            <div class="mentrestant">
+              <p class="mentrestant-cap">Mentrestant, assagem</p>
+              <dl>
+                {assajosCurts.map((a) => (
+                  <div><dt>{a.titol}</dt><dd>{a.quan}</dd></div>
+                ))}
+              </dl>
+            </div>
+          )}
         </div>
-      </>
-    )}
+      )}
+      </div>
+    </div>
+  </section>
 
-    {activitatsAmbText.length > 0 && (
-      <div class="activitats-block">
-        <div class="section-head">
-          <div class="eyebrow">No només fem castells</div>
+  {ultimsCastells.length > 0 && (
+    <section class="castells" aria-labelledby="castells-titol">
+      <div class={`castells-grid${castellAmbFoto ? ' amb-foto' : ''}`}>
+        <div class="castells-cos">
+          <div class="castells-cap">
+            <h2 id="castells-titol">Últims castells</h2>
+            <p class="castells-diada">
+              <a href={`${base}agenda/${ultimaActuacio!.id}`}>{ultimaActuacio!.data.nom}</a>, <time datetime={ultimaActuacio!.data.data.toISOString().slice(0, 10)}>{formatDateShort(ultimaActuacio!.data.data)}</time>
+            </p>
+          </div>
+          <ul class="castells-llista">
+            {ultimsCastells.map((c) => (
+              <li class="castell">
+                <span class="notacio display">{c.castell}</span>
+                <span class="resultat">{pillLabel[c.estat]}</span>
+              </li>
+            ))}
+          </ul>
+          <a class="castells-historial" href={`${base}castells`}>Tot l’historial de castells</a>
         </div>
-        <div class="activitats-grid">
+        {castellAmbFoto && (
+          <figure class="castells-foto">
+            <img src={mediaUrl(base, castellAmbFoto.foto)} alt={`El ${castellAmbFoto.castell} dels Xoriguers`} width="900" height="1600" loading="lazy" />
+            <figcaption>{castellAmbFoto.castell}, {ultimaActuacio!.data.nom.toLowerCase()}</figcaption>
+          </figure>
+        )}
+      </div>
+    </section>
+  )}
+
+  {activitatsAmbText.length > 0 && (
+    <section class="activitats" aria-labelledby="activitats-titol">
+      <div class="container">
+        <h2 id="activitats-titol">No només fem castells</h2>
+        <ul class="activitats-grid">
           {activitatsAmbText.map(({ dades, Cos }) => (
-            <div class="activitat">
+            <li class="activitat">
               {mediaUrl(base, dades.imatge) && (
-                <img class="activitat-foto" src={mediaUrl(base, dades.imatge)} alt="" loading="lazy" />
+                <img class="activitat-foto" src={mediaUrl(base, dades.imatge)} alt="" width="800" height="600" loading="lazy" />
               )}
               <h3>{dades.nom}</h3>
-              {dades.quan && <div class="activitat-quan mono">{dades.quan}</div>}
+              {dades.quan && <p class="activitat-quan">{dades.quan}</p>}
               <div class="activitat-text"><Cos /></div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
-    )}
+    </section>
+  )}
 
-    {ultimesNoticies.length > 0 && (
-      <div class="noticies-block">
-        <div class="section-head">
-          <div class="eyebrow">Notícies</div>
-          <a class="veure-totes" href={`${base}noticies`}>
-            Veure-les totes
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-          </a>
+  <section class="uneix" aria-labelledby="uneix-titol">
+    <div class={`uneix-grid${fotoColla ? ' amb-foto' : ''}`}>
+      {fotoColla && (
+        <div class="uneix-foto">
+          <img src={fotoColla} alt="" width="1600" height="2133" loading="lazy" />
         </div>
-        {ultimesNoticies.map((noticia) => (
-          <a class="card-row noticia-row" href={`${base}noticies/${noticia.id}`}>
-            {mediaUrl(base, noticia.data.imatge) && (
-              <img class="card-cartell" src={mediaUrl(base, noticia.data.imatge)} alt="" />
-            )}
-            <div style="flex:1; min-width:180px;">
-              <h2>{noticia.data.titol}</h2>
-              <div class="meta">{formatDateShort(noticia.data.data)} · {noticia.data.resum}</div>
-            </div>
-            <span class="card-link">
-              Llegir
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-            </span>
-          </a>
-        ))}
+      )}
+      <div class="uneix-text">
+        <h2 id="uneix-titol">{uneixte?.data.titol ?? 'Uneix-te a la colla'}</h2>
+        {uneixFrase && <p class="uneix-frase">{uneixFrase}</p>}
+        {assajosCurts.length > 0 && (
+          <dl class="uneix-assajos">
+            {assajosCurts.map((a) => (
+              <div><dt>{a.titol}</dt><dd>{a.quan}</dd></div>
+            ))}
+          </dl>
+        )}
+        {curs?.titol && credits && (
+          <p class="uneix-curs"><strong>{curs.titol}</strong> {credits.valor}.</p>
+        )}
+        <a class="btn btn-ink" href={`${base}uneix-te`}>{heroCtaText}</a>
       </div>
-    )}
-  </div>
-
-  <div class="insta-strip">
-    <div>
-      <div class="eyebrow" style="color: var(--yellow)">Segueix-nos</div>
-      <h3>{instagramHandle ? `@${instagramHandle}` : 'Xoriguers UdG'}</h3>
     </div>
-    <a href={instagramUrl ?? `${base}la-colla`} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>
-      Veure Instagram
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-    </a>
-  </div>
+  </section>
+
+  {ultimesNoticies.length > 0 && (
+    <section class="noticies" aria-labelledby="noticies-titol">
+      <div class="container">
+        <div class="cap">
+          <h2 id="noticies-titol">Notícies</h2>
+          <a class="cap-enllac" href={`${base}noticies`}>Veure-les totes</a>
+        </div>
+        <ul class="noticies-llista">
+          {ultimesNoticies.map((noticia) => (
+            <li>
+              <a class={`noticia${mediaUrl(base, noticia.data.imatge) ? '' : ' sense-foto'}`} href={`${base}noticies/${noticia.id}`}>
+                <time class="noticia-data" datetime={noticia.data.data.toISOString().slice(0, 10)}>{formatDateShort(noticia.data.data)}</time>
+                <span class="noticia-cos">
+                  <h3 class="noticia-titol">{noticia.data.titol}</h3>
+                  <span class="noticia-resum">{noticia.data.resum}</span>
+                </span>
+                {mediaUrl(base, noticia.data.imatge) && (
+                  <img class="noticia-foto" src={mediaUrl(base, noticia.data.imatge)} alt="" width="160" height="120" loading="lazy" />
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  {album && (
+    <section class="album" aria-labelledby="album-titol">
+      <div class="container">
+        <div class="cap">
+          <h2 id="album-titol">{album.data.nom}</h2>
+          <a class="cap-enllac" href={`${base}galeria/${album.id}`}>Veure l’àlbum</a>
+        </div>
+        <ul class="album-tira">
+          {album.reals.slice(0, 5).map((f) => (
+            <li><img src={mediaUrl(base, f)} alt="" width="600" height="800" loading="lazy" /></li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <section class="insta" aria-labelledby="insta-titol">
+    <div class="container insta-grid">
+      <p class="insta-crida">Segueix-nos a Instagram</p>
+      <h2 id="insta-titol" class="insta-handle">
+        <a href={instagramUrl ?? `${base}la-colla`} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>{instagramHandle ? `@${instagramHandle}` : 'Xoriguers UdG'}</a>
+      </h2>
+      <a class="btn btn-outline insta-btn" href={instagramUrl ?? `${base}la-colla`} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>Veure Instagram</a>
+    </div>
+  </section>
 </Base>
 
 <style>
-  .hero {
+  /* ---------- hero: the headline and when to come, the castell beside them ---------- */
+  .hero { background: var(--color-accent-deep); color: var(--color-on-dark); }
+  .hero h1 { color: var(--color-on-dark); }
+  .hero :focus-visible { outline-color: var(--color-focus-on-dark); }
+  .hero .btn-outline { background: transparent; border-color: var(--color-on-dark-rule); color: var(--color-on-dark); }
+  .hero .btn-outline:hover { background: color-mix(in oklab, var(--color-accent-deep) 75%, var(--color-ink)); border-color: var(--color-on-dark); color: var(--color-on-dark); }
+  .hero-grid {
     display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    margin: 0 0 4px;
-    min-height: 420px;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: stretch;
+    min-height: min(calc(100svh - 72px), 860px);
   }
-  .hero-panel {
-    background: var(--blue-deep);
-    color: var(--bg);
-    padding: 48px 40px;
+  /* the text keeps to the container's left edge, the photo runs out to the window's */
+  .hero-text {
+    justify-content: center;
+    padding-block: var(--space-2xl);
+    padding-inline: max(var(--gutter), calc((100% * 12 / 7 - var(--container)) / 2 + var(--gutter))) var(--space-2xl);
+  }
+  .hero-text {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: center;
-    gap: 22px;
+    gap: var(--space-lg);
+    animation: assenta var(--dur-long) var(--ease-out) both;
   }
-  .hero-panel h1 { font-size: clamp(2.2rem, 4.2vw, 3.6rem); line-height: 0.98; }
-  .hero-photo {
-    position: relative;
-    overflow: hidden;
-    background: repeating-linear-gradient(135deg, var(--ink) 0px, var(--ink) 22px, #1d5676 22px, #1d5676 44px);
+  .hero h1 {
+    font-size: clamp(3rem, 6vw + 0.5rem, 6rem);
+    line-height: 0.95;
+    max-width: 16ch;
+    text-wrap: balance;
   }
-  .hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .section { padding: 40px 28px 0; max-width: var(--ample); margin: 0 auto; }
-  /* who we are on the left, what is coming up on the right */
-  .intro {
+  h2 { overflow-wrap: break-word; min-width: 0; text-wrap: balance; }
+  .hero-frase { color: var(--color-on-dark-2); max-width: 40ch; }
+  .hero-accions { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-xs); }
+  .hero-photo { position: relative; overflow: hidden; background: var(--color-accent-deep); }
+  .hero-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+  @keyframes assenta {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ---------- the shared head row: a section head with its one link ---------- */
+  .cap {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  .cap-enllac {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--color-rule-firm);
+  }
+  .cap-enllac:hover { text-decoration-color: currentColor; }
+
+  /* ---------- qui som and pròximes: the colla in its own words, beside what is next ---------- */
+  .qui-som { padding-top: var(--space-3xl); }
+  .qui-som-grid {
     display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: 40px;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--space-3xl);
     align-items: start;
-    margin: 8px 0 36px;
+    padding-top: var(--space-xl);
+    border-top: 2px solid var(--color-ink);
   }
+  .presentacio { display: flex; flex-direction: column; gap: var(--space-lg); }
   .presentacio-text {
-    margin-top: 10px;
-    font-size: 1.0625rem;
-    line-height: 1.7;
-    color: var(--ink-soft);
-    max-width: 58ch;
+    font-size: clamp(1.375rem, 1.1vw + 1rem, 2rem);
+    line-height: 1.35;
+    max-width: 34ch;
+    text-wrap: pretty;
   }
-  .presentacio-text :global(p) { margin: 0 0 14px; }
+  .presentacio-text :global(p) { margin: 0 0 var(--space-md); max-width: none; }
   .presentacio-text :global(p:last-child) { margin-bottom: 0; }
 
-  .properes-head {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-    padding-bottom: 8px; border-bottom: 2px solid var(--blue);
+  .properes {
+    padding: var(--space-xl);
+    border-radius: var(--radius-card);
+    background: var(--color-paper-2);
   }
+  /* with nothing programmed the card would frame one sentence: it becomes a ruled line */
+  .properes.buida { padding: var(--space-lg) 0 0; background: none; border-radius: 0; }
+  .properes-cap {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-lg);
+    margin-bottom: var(--space-lg);
+  }
+  .properes h2 { font-size: var(--text-xl); max-width: none; }
+  .properes-llista { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-rule); }
   .properes-row {
-    display: flex; gap: 16px; align-items: baseline;
-    padding: 14px 4px; border-bottom: 1px solid var(--line);
-    text-decoration: none; color: var(--ink);
-    transition: background 0.14s;
-  }
-  .properes-row:hover { background: var(--blue-wash); }
-  .properes-row.primera { border-left: 4px solid var(--yellow); background: var(--yellow-bg); padding-left: 12px; }
-  .properes-row.primera:hover { background: var(--yellow-bg); filter: brightness(0.98); }
-  .properes-date {
-    font-size: 1.05rem; color: var(--blue-deep); white-space: nowrap;
-    width: 5.5rem; flex: none;
-  }
-  .properes-info { min-width: 0; }
-  .properes-info h2 { font-size: 1rem; font-weight: 600; }
-  .properes-buit { font-size: 0.9375rem; color: var(--ink-soft); margin: 14px 0 0; }
-
-  .card-row {
-    display: flex; gap: 24px; align-items: center; justify-content: space-between; flex-wrap: wrap;
-    background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; padding: 20px 24px; margin: 20px 0;
-  }
-  .card-cartell { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex: none; }
-  .card-row h2 { font-size: 1.05rem; margin: 4px 0 2px; }
-  .meta { font-size: 0.8125rem; color: var(--ink-soft); }
-  .card-link { font-size: 0.8125rem; font-weight: 600; display: flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; }
-  .activitats-block { margin: 34px 0 12px; }
-  .activitats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 18px;
-    margin-top: 16px;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    grid-template-areas: "data nom" "data meta";
+    gap: var(--space-2xs) var(--space-md);
+    align-items: baseline;
+    margin-inline: calc(-1 * var(--space-sm));
+    padding: var(--space-md) var(--space-sm);
+    border-bottom: 1px solid var(--color-rule);
+    border-radius: var(--space-xs);
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: background-color var(--dur-short) var(--ease-out);
+  }
+  .properes-row:hover { background: var(--color-paper-3); color: var(--color-ink); }
+  .properes-row:active { background: var(--color-accent-wash); }
+  .properes-row.primera { background: var(--color-signal-wash); }
+  .properes-row.primera:hover { background: color-mix(in oklab, var(--color-signal-wash) 85%, var(--color-signal)); }
+  .properes-data { grid-area: data; display: flex; flex-direction: column; }
+  .properes-dia { font-size: var(--text-2xl); line-height: 1; font-variant-numeric: tabular-nums; }
+  .properes-mes { font-size: var(--text-xs); color: var(--color-ink-2); }
+  .properes-nom { grid-area: nom; font-weight: 600; font-size: var(--text-lg); line-height: 1.25; overflow-wrap: break-word; min-width: 0; }
+  .properes-meta { grid-area: meta; font-size: var(--text-sm); color: var(--color-ink-2); }
+  .properes-buit {
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-rule);
+    color: var(--color-ink-2);
+  }
+  .mentrestant {
+    margin-top: var(--space-lg);
+    padding: var(--space-lg);
+    border-radius: var(--radius-card);
+    background: var(--color-signal-wash);
+    color: var(--color-ink);
+  }
+  .mentrestant-cap { font-weight: 600; color: var(--color-signal-text); }
+  .mentrestant dl, .uneix-assajos { margin: var(--space-sm) 0 0; display: flex; flex-direction: column; gap: var(--space-sm); }
+  .mentrestant dt, .uneix-assajos dt { font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--text-lg); }
+  .mentrestant dd, .uneix-assajos dd { margin: 0; }
+
+  /* ---------- uneix-te: the whole colla beside the call, on the yellow ---------- */
+  .uneix { margin-top: var(--section-gap); background: var(--color-signal); color: var(--color-signal-ink); }
+  .uneix :focus-visible { outline-color: var(--color-ink); }
+  .uneix-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .uneix-grid.amb-foto { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .uneix-foto { position: relative; min-height: 520px; overflow: hidden; background: var(--color-accent-deep); }
+  .uneix-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 66%; }
+  .uneix-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-lg);
+    padding: var(--space-3xl) max(var(--gutter), calc((100% * 12 / 5 - var(--container)) / 2 + var(--gutter))) var(--space-3xl) var(--space-2xl);
+  }
+  .uneix-grid:not(.amb-foto) .uneix-text { padding-inline: var(--gutter); max-width: var(--container); margin-inline: auto; }
+  .uneix h2 { font-size: var(--text-section); line-height: 1; color: var(--color-signal-ink); }
+  .uneix-frase { font-size: var(--text-lead); max-width: 34ch; }
+  .uneix-assajos { margin: 0; padding-top: var(--space-md); border-top: 2px solid var(--color-signal-ink); width: 100%; }
+  .uneix-curs { max-width: 40ch; }
+  .btn-ink { background: var(--color-ink); color: var(--color-on-dark); }
+  .btn-ink:hover { background: color-mix(in oklab, var(--color-ink) 82%, var(--color-accent)); color: var(--color-on-dark); }
+
+  /* ---------- the newest album, as a strip ---------- */
+  .album { padding-top: var(--section-gap); }
+  .album-tira {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-sm);
+  }
+  .album-tira img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; object-position: 50% 35%; border-radius: var(--space-xs); }
+
+  /* ---------- últims castells: the signature, on the colla blue ---------- */
+  /* a short band now: the notation at section size, the castells side by side */
+  .castells {
+    margin-top: var(--section-gap-s);
+    background: var(--color-accent-deep);
+    color: var(--color-on-dark);
+  }
+  .castells :focus-visible { outline-color: var(--color-focus-on-dark); }
+  .castells a { color: var(--color-on-dark); }
+  .castells a:hover { color: var(--color-signal); }
+  .castells-grid { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+  /* like the hero: the text keeps to the container's edge, the photo fills the band's height and runs out to the window's */
+  .castells-grid.amb-foto { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); }
+  .castells-cos {
+    padding-block: var(--space-3xl);
+    padding-inline: max(var(--gutter), calc((100% - var(--container)) / 2 + var(--gutter))) var(--gutter);
+  }
+  .castells-grid.amb-foto .castells-cos {
+    padding-inline: max(var(--gutter), calc((100% * 12 / 8 - var(--container)) / 2 + var(--gutter))) var(--space-2xl);
+  }
+  .castells h2 { font-size: var(--text-2xl); }
+  .castells-cap { display: flex; flex-direction: column; gap: var(--space-xs); }
+  .castells-diada { font-size: var(--text-md); color: var(--color-on-dark-2); }
+  .castells-diada a { text-decoration-color: var(--color-on-dark-rule); }
+  .castells-llista {
+    list-style: none;
+    margin: var(--space-lg) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--color-on-dark-rule);
+  }
+  .castell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2xs);
+    padding: var(--space-md) var(--space-2xl) var(--space-md) 0;
+  }
+  .castell + .castell { padding-left: var(--space-2xl); border-left: 1px solid var(--color-on-dark-rule); }
+  .notacio {
+    font-size: var(--text-section);
+    line-height: 0.95;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  .resultat { font-size: var(--text-md); font-weight: 600; color: var(--color-on-dark-2); }
+  .castells-historial {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: var(--space-lg);
+    font-weight: 600;
+  }
+  .castells-foto { position: relative; margin: 0; min-height: 360px; overflow: hidden; background: var(--color-ink); }
+  .castells-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; }
+  .castells-foto figcaption {
+    position: absolute;
+    left: var(--space-md);
+    bottom: var(--space-md);
+    padding: var(--space-2xs) var(--space-sm);
+    border-radius: var(--radius-pill);
+    background: var(--color-ink);
+    font-size: var(--text-sm);
+    color: var(--color-on-dark);
+  }
+
+  /* ---------- activitats: four across, parted by hairlines ---------- */
+  .activitats { padding-top: var(--section-gap); }
+  .activitats h2 { margin-bottom: var(--space-2xl); }
+  .activitats-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .activitat {
-    background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--yellow);
-    border-radius: 8px; padding: 18px 20px;
+    padding: var(--space-lg) var(--space-lg) 0;
+    border-left: 1px solid var(--color-rule);
+    border-top: 4px solid var(--color-signal);
   }
+  .activitat:first-child { border-left: 0; padding-left: 0; }
+  .activitat:last-child { padding-right: 0; }
   .activitat-foto {
-    width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px;
-    display: block; margin: -2px 0 12px;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--space-xs);
+    margin-bottom: var(--space-md);
   }
-  .activitat h3 { font-size: 1.05rem; font-weight: 600; }
-  .activitat-quan {
-    font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--yellow-ink); margin-top: 4px;
-  }
-  .activitat-text { margin-top: 8px; font-size: 0.875rem; line-height: 1.55; color: var(--ink-soft); }
+  .activitat h3 { font-size: var(--text-2xl); }
+  .activitat-quan { margin-top: var(--space-2xs); font-size: var(--text-sm); font-weight: 600; color: var(--color-signal-text); }
+  .activitat-text { margin-top: var(--space-md); font-size: var(--text-md); color: var(--color-ink-2); }
   .activitat-text :global(p) { margin: 0; }
 
-  .noticies-block { margin-bottom: 12px; }
-  .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 8px; }
-  .veure-totes { font-size: 0.8125rem; font-weight: 600; display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--blue-deep); }
-  .noticia-row { text-decoration: none; color: var(--ink); margin: 12px 0; }
-  .noticia-row:hover { border-left-color: var(--blue-deep); }
-  .noticia-row .card-link { color: var(--blue-deep); }
-  .castells-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .castells-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 14px 0 32px; }
-  .castell-tile { background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 8px; padding: 18px; text-align: center; }
-  /* the display face is wide, so a long canonic wraps rather than spilling */
-  .notation { font-size: 2rem; line-height: 1.05; overflow-wrap: anywhere; }
-  @media (max-width: 860px) {
-    .intro { grid-template-columns: 1fr; gap: 28px; }
+  /* ---------- notícies: dated rows ---------- */
+  .noticies { padding-top: var(--section-gap); }
+  .noticies-llista { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--color-ink); }
+  .noticia {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 8fr) minmax(0, 2fr);
+    gap: var(--gap-columns);
+    align-items: center;
+    padding-block: var(--space-lg);
+    border-bottom: 1px solid var(--color-rule);
+    color: var(--color-ink);
+    text-decoration: none;
   }
-  @media (max-width: 720px) {
-    .hero { grid-template-columns: 1fr; min-height: 0; }
-    .hero-photo { aspect-ratio: 16/9; }
+  .noticia:hover { color: var(--color-ink); }
+  .noticia:hover .noticia-titol { color: var(--color-accent-deep); text-decoration: underline; text-decoration-thickness: 2px; }
+  .noticia:active { opacity: 0.85; }
+  .noticia-data { font-size: var(--text-sm); color: var(--color-ink-2); font-variant-numeric: tabular-nums; }
+  .noticia-cos { display: flex; flex-direction: column; gap: var(--space-xs); min-width: 0; }
+  .noticia-titol {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--text-title);
+    line-height: 1.15;
+    overflow-wrap: break-word;
   }
-  .insta-strip {
-    background: var(--ink); color: var(--bg); padding: 26px 28px;
-    display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
+  .noticia-resum { color: var(--color-ink-2); max-width: 65ch; }
+  .noticia-foto {
+    justify-self: end;
+    width: 100%;
+    max-width: 160px;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--space-xs);
   }
-  .insta-strip h3 { font-size: 1.15rem; margin-top: 6px; }
-  .insta-strip a { color: var(--bg); font-size: 0.8125rem; font-weight: 600; display: flex; align-items: center; gap: 6px; text-decoration: none; }
-  @media (max-width: 720px) {
-    .section { padding-left: 18px; padding-right: 18px; }
+
+  /* ---------- segueix-nos: the handle set large on the band ---------- */
+  .insta {
+    margin-top: var(--section-gap);
+    padding-block: var(--space-3xl);
+    background: var(--color-paper-3);
+  }
+  .insta-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 6fr) auto;
+    gap: var(--space-lg) var(--gap-columns);
+    align-items: center;
+  }
+  .insta-crida { font-size: var(--text-lead); color: var(--color-ink-2); }
+  .insta-handle {
+    font-size: var(--text-section);
+    line-height: 1;
+    max-width: none;
+    overflow-wrap: anywhere;
+  }
+  .insta-handle a { color: var(--color-ink); text-decoration: none; }
+  .insta-handle a:hover { color: var(--color-accent-deep); text-decoration: underline; text-decoration-thickness: 3px; }
+
+  /* the band meets the footer directly, without the footer's usual gap */
+  :global(main:has(> .insta:last-child) + .site-footer) { margin-top: 0; }
+
+  @media (max-width: 60rem) {
+    .hero-grid { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+    .hero-text { padding: var(--space-xl) var(--gutter) var(--space-2xl); }
+    .hero-photo { height: 56svh; min-height: 320px; }
+    .uneix-grid.amb-foto { grid-template-columns: minmax(0, 1fr); }
+    .uneix-foto { min-height: 360px; }
+    .uneix-text { padding: var(--space-2xl) var(--gutter); }
+    .album-tira { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .album-tira li:nth-child(n+4) { display: none; }
+    .qui-som-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-2xl); }
+    .properes { padding: var(--space-lg); }
+    .castells-grid.amb-foto { grid-template-columns: minmax(0, 1fr); }
+    .castells-grid.amb-foto .castells-cos { padding: var(--space-2xl) var(--gutter); }
+    .castells-foto { min-height: 280px; }
+    .activitats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-xl); }
+    .activitat:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .activitat:nth-child(even) { padding-right: 0; }
+    .noticia { grid-template-columns: minmax(0, 1fr) 96px; gap: var(--space-xs) var(--space-md); }
+    .noticia-data { grid-column: 1 / -1; }
+    .noticia.sense-foto .noticia-cos { grid-column: 1 / -1; }
+    .insta-grid { grid-template-columns: minmax(0, 1fr); }
+    .insta-btn { justify-self: start; }
+  }
+  @media (max-width: 40rem) {
+    .activitats-grid { grid-template-columns: minmax(0, 1fr); }
+    .activitat, .activitat:nth-child(even) { border-left: 0; padding: var(--space-md) 0 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-text { animation: none; }
   }
 </style>

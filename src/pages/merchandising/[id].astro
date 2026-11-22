@@ -32,50 +32,56 @@ const primeraDisponible = talles.findIndex((t) => t.estoc > 0);
 const totsEsgotats = talles.length > 0 && primeraDisponible === -1;
 const tallaPerDefecte = primeraDisponible >= 0 ? talles[primeraDisponible].talla : talles[0]?.talla;
 const reservaHref = email ? buildMailto(email, entry.data.nom, tallaPerDefecte) : undefined;
-const descripcio = disponible ? `${entry.data.nom} — ${entry.data.preu}€` : `${entry.data.nom} — Fora de termini`;
+const descripcio = disponible ? `${entry.data.nom}, ${entry.data.preu} €` : `${entry.data.nom}, fora de termini`;
 ---
 <Base title={entry.data.nom} description={descripcio} heroImage={principal} showHeader={false}>
-  <div class="wrap">
-    <a class="back mono" href={`${base}merchandising`}>← Merchandising</a>
+  <div class="pagina">
+    <a class="tornar back" href={`${base}merchandising`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Merchandising</a>
 
-    {principal ? <img class="foto-principal" src={principal} alt={entry.data.nom} /> : <div class="foto-principal placeholder"></div>}
-    {extra.length > 0 && (
-      <div class="thumbs">
-        {extra.map((f) => <img src={f} alt="" loading="lazy" />)}
+    <div class="producte">
+      <div class="fotos">
+        {principal ? <img class="foto-principal" src={principal} alt={entry.data.nom} width="900" height="900" /> : <div class="foto-principal placeholder"></div>}
+        {extra.length > 0 && (
+          <div class="thumbs">
+            {extra.map((f) => <img src={f} alt="" width="160" height="160" loading="lazy" />)}
+          </div>
+        )}
       </div>
-    )}
 
-    <h1 class="display">{entry.data.nom}</h1>
-    {disponible ? (
-      <div class="preu display">{entry.data.preu}€</div>
-    ) : (
-      <span class="pill pill-neutral">Fora de termini</span>
-    )}
+      <div class="compra">
+        <h1 class="fitxa-titol">{entry.data.nom}</h1>
+        {disponible ? (
+          <p class="preu display">{entry.data.preu}&nbsp;€</p>
+        ) : (
+          <span class="pill pill-neutral">Fora de termini</span>
+        )}
 
-    {disponible && talles.length > 0 && (
-      <div class="talles">
-        <div class="eyebrow">Talla</div>
-        <div class="talles-row">
-          {talles.map((t, i) => {
-            const esgotat = t.estoc <= 0;
-            return (
-              <label class="talla-btn">
-                <input type="radio" name="talla" value={t.talla} checked={i === primeraDisponible} disabled={esgotat} />
-                <span class="talla-content mono">{t.talla} <span class="estoc">{esgotat ? 'Esgotat' : t.estoc}</span></span>
-              </label>
-            );
-          })}
-        </div>
+        {disponible && talles.length > 0 && (
+          <fieldset class="talles">
+            <legend>Talla</legend>
+            <div class="talles-row">
+              {talles.map((t, i) => {
+                const esgotat = t.estoc <= 0;
+                return (
+                  <label class="talla-btn">
+                    <input type="radio" name="talla" value={t.talla} checked={i === primeraDisponible} disabled={esgotat} />
+                    <span class="talla-content">{t.talla} <span class="estoc">{esgotat ? 'Esgotat' : t.estoc}</span></span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        {disponible && totsEsgotats && <p class="sense-estoc">Sense estoc disponible ara mateix.</p>}
+
+        {disponible && reservaHref && !totsEsgotats && (
+          <a id="reserva-link" class="btn btn-accent" href={reservaHref} data-nom={entry.data.nom} data-email={email}>
+            Reserva
+          </a>
+        )}
       </div>
-    )}
-
-    {disponible && totsEsgotats && <p class="sense-estoc">Sense estoc disponible ara mateix.</p>}
-
-    {disponible && reservaHref && !totsEsgotats && (
-      <a id="reserva-link" class="btn btn-accent" href={reservaHref} data-nom={entry.data.nom} data-email={email}>
-        Reserva
-      </a>
-    )}
+    </div>
   </div>
 </Base>
 
@@ -97,36 +103,37 @@ const descripcio = disponible ? `${entry.data.nom} — ${entry.data.preu}€` : 
 )}
 
 <style>
-  /* one product, so deliberately narrower than the rest of the site */
-  .wrap { max-width: 620px; margin: 0 auto; padding: 40px 28px 60px; }
-  .back { display: block; margin-bottom: 14px; color: var(--ink-soft); text-decoration: none; }
-  .foto-principal { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; display: block; }
-  .foto-principal.placeholder {
-    background: repeating-linear-gradient(135deg, var(--bg-deep) 0, var(--bg-deep) 14px, var(--line) 14px, var(--line) 28px);
-  }
-  .thumbs { display: flex; gap: 10px; margin-top: 10px; }
-  .thumbs img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
-  h1 { margin: 22px 0 6px; font-size: clamp(1.6rem, 4vw, 2.2rem); }
-  .preu { font-size: 1.6rem; color: var(--blue-deep); margin-bottom: 20px; }
-  .pill { margin-bottom: 20px; }
-  .talles { margin-bottom: 24px; }
-  .talles-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .producte { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: var(--space-3xl); align-items: start; }
+  .foto-principal { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-card); }
+  .foto-principal.placeholder { background: var(--color-paper-3); }
+  .thumbs { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-sm); }
+  .thumbs img { width: 80px; height: 80px; object-fit: cover; border-radius: var(--space-xs); }
+  .compra { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-lg); }
+  .preu { font-size: var(--text-3xl); line-height: 1; color: var(--color-accent-deep); }
+  .talles { border: 0; margin: 0; padding: 0; }
+  .talles legend { padding: 0; font-size: var(--text-sm); font-weight: 600; color: var(--color-ink-2); }
+  .talles-row { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-sm); }
   .talla-btn { position: relative; cursor: pointer; }
-  .talla-btn input { position: absolute; opacity: 0; pointer-events: none; }
+  .talla-btn input { position: absolute; opacity: 0; width: 1px; height: 1px; }
   .talla-content {
-    display: inline-flex; align-items: center; gap: 6px;
-    border: 1px solid var(--line); border-radius: 16px; padding: 8px 16px; font-size: 0.875rem;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    display: inline-flex; align-items: center; gap: var(--space-xs);
+    min-height: 44px; padding: 0 var(--space-md);
+    border: 1px solid var(--color-rule-firm); border-radius: var(--radius-pill);
+    font-weight: 600; font-variant-numeric: tabular-nums;
+    transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
   }
+  .talla-btn:hover .talla-content { background: var(--color-paper-2); }
   .talla-content .estoc {
-    background: var(--bg-deep); color: var(--ink-soft); border-radius: 16px; padding: 1px 8px; font-size: 0.75rem;
+    background: var(--color-paper-3); color: var(--color-ink-2);
+    border-radius: var(--radius-pill); padding: 0 var(--space-xs); font-size: var(--text-xs); font-weight: 400;
   }
-  .talla-btn input:checked + .talla-content { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .talla-btn input:checked + .talla-content .estoc { background: rgba(255, 255, 255, 0.2); color: #fff; }
-  .talla-btn input:focus-visible + .talla-content { outline: 2px solid var(--blue); outline-offset: 2px; }
-  .talla-btn input:disabled { cursor: not-allowed; }
-  .talla-btn input:disabled + .talla-content { color: var(--ink-soft); border-style: dashed; text-decoration: line-through; }
+  .talla-btn input:checked + .talla-content { background: var(--color-ink); color: var(--color-on-dark); border-color: var(--color-ink); }
+  .talla-btn input:checked + .talla-content .estoc { background: var(--color-accent-deep); color: var(--color-on-dark); }
+  .talla-btn { border-radius: var(--radius-pill); }
+  .talla-btn:has(input:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .talla-btn input:disabled + .talla-content { opacity: 0.55; cursor: not-allowed; background: var(--color-paper-3); color: var(--color-ink-2); border-style: dashed; text-decoration: line-through; }
   .talla-btn input:disabled + .talla-content .estoc { text-decoration: none; }
   .talla-btn:has(input:disabled) { cursor: not-allowed; }
-  .sense-estoc { color: var(--ink-soft); font-size: 0.9375rem; }
+  .sense-estoc { color: var(--color-ink-2); }
+  @media (max-width: 60rem) { .producte { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); } }
 </style>

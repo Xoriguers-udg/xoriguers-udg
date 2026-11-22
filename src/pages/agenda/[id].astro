@@ -23,10 +23,8 @@ const pillLabel = { descarregat: 'Descarregat', carregat: 'Carregat', intent: 'I
 const base = import.meta.env.BASE_URL;
 const descripcio = [formatDate(entry.data.data), llocComplet(entry.data.lloc, entry.data.poblacio)]
   .filter(Boolean)
-  .join(' · ');
-const detalls = [formatDate(entry.data.data), detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.poblacio)]
-  .filter(Boolean)
-  .join(' · ');
+  .join(', ');
+const lloc = detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.poblacio);
 
 const temporada = temporadaDe(entry.data.data);
 const castells = llegeixCastellsRegistrats(entry.data.castells);
@@ -37,95 +35,107 @@ const avui = new Date();
 avui.setHours(0, 0, 0, 0);
 const jaPassada = entry.data.data < avui;
 const tornarA = jaPassada ? `${base}castells#t-${temporada}` : `${base}agenda`;
-const tornarText = jaPassada ? '← Historial de castells' : '← Agenda';
+const tornarText = jaPassada ? 'Historial de castells' : 'Agenda';
+const ambFotos = entry.data.castells.some((c) => c.foto);
 ---
 <Base title={entry.data.nom} description={descripcio} heroImage={mediaUrl(base, entry.data.cartell)} showHeader={false}>
-  <div class="wrap">
-    <a class="back mono" href={tornarA}>{tornarText}</a>
-    <div class="eyebrow-row">
-      <div class="eyebrow">{entry.data.tipus}</div>
-      {entry.data.cancelada && <span class="pill pill-danger">Cancel·lada</span>}
-    </div>
-    <h1 class="display">{entry.data.nom}</h1>
-    <div class="meta">{detalls}</div>
-    <div class="facts">
-      <a class="fact" href={`${base}castells#t-${temporada}`}>
-        <span class="fact-label mono">Temporada</span>
-        <span class="fact-value mono">{temporada}</span>
-      </a>
-      {castells.length > 0 && (
-        <div class="fact">
-          <span class="fact-label mono">Castells</span>
-          <span class="fact-value mono">{castells.length}</span>
+  <div class="pagina">
+    <a class="tornar back" href={tornarA}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>{tornarText}</a>
+    <div class={`fitxa${mediaUrl(base, entry.data.cartell) ? ' amb-cartell' : ''}`}>
+      <div class="fitxa-cos">
+        <h1 class="fitxa-titol">{entry.data.nom}</h1>
+        <div class="fitxa-meta">
+          <time datetime={entry.data.data.toISOString().slice(0, 10)}>{formatDate(entry.data.data)}</time>
+          {lloc && <span>{lloc}</span>}
         </div>
-      )}
-    </div>
-    {mediaUrl(base, entry.data.cartell) && <img class="cartell" src={mediaUrl(base, entry.data.cartell)} alt="" />}
-    {entry.data.collesParticipants.length > 0 && (
-      <div class="chips">
-        {entry.data.collesParticipants.map((c: string) => <span class="chip">{c}</span>)}
+        <div class="etiquetes">
+          <span class="pill pill-blue">{entry.data.tipus}</span>
+          {entry.data.cancelada && <span class="pill pill-danger">Cancel·lada</span>}
+          <a class="pill pill-neutral temporada" href={`${base}castells#t-${temporada}`}>Temporada {temporada}</a>
+        </div>
+        {entry.data.collesParticipants.length > 0 && (
+          <div class="chips">
+            <span class="chips-etiqueta">Colles</span>
+            {entry.data.collesParticipants.map((c: string) => <span class="chip">{c}</span>)}
+          </div>
+        )}
+        <div class="body">
+          <Content />
+        </div>
+        {entry.data.observacio && <p class="observacio">{entry.data.observacio}</p>}
       </div>
-    )}
-    <div class="body">
-      <Content />
+      {mediaUrl(base, entry.data.cartell) && <img class="cartell" src={mediaUrl(base, entry.data.cartell)} alt={`Cartell: ${entry.data.nom}`} width="600" height="800" />}
     </div>
-    {entry.data.observacio && <p class="observacio">{entry.data.observacio}</p>}
+
     {entry.data.castells.length > 0 && (
-      <div class="castells">
-        <div class="eyebrow">Castells fets</div>
-        <div class="castells-row">
-          {entry.data.castells.map((c, i) => (
-            <div class="castell-tile">
-              {mediaUrl(base, c.foto) && (
-                <img class="castell-foto" src={mediaUrl(base, c.foto)} alt={c.castell} loading="lazy" />
-              )}
-              <div class="notation display">{notacioAmbEstat(castells[i])}</div>
-              <span class={`pill ${pillClass[c.estat]}`}>{pillLabel[c.estat]}</span>
-              {c.ronda && <div class="ronda mono">Ronda {c.ronda}</div>}
-            </div>
-          ))}
+      <section class="castells" aria-labelledby="castells-titol">
+        <div class="castells-cap">
+          <h2 id="castells-titol">Castells fets</h2>
+          <span class="compte">{castells.length} {castells.length === 1 ? 'castell' : 'castells'}</span>
         </div>
+        <ul class={`castells-row${ambFotos ? ' amb-fotos' : ''}`}>
+          {entry.data.castells.map((c, i) => (
+            <li class="castell">
+              {mediaUrl(base, c.foto) ? (
+                <img class="castell-foto" src={mediaUrl(base, c.foto)} alt={`El ${c.castell}`} width="900" height="1200" loading="lazy" />
+              ) : ambFotos && (
+                /* beside photographed castells, one without a photo keeps the same frame */
+                <span class="castell-marc" aria-hidden="true"></span>
+              )}
+              <span class="notation display">{notacioAmbEstat(castells[i])}</span>
+              <span class="castell-peu">
+                <span class={`pill ${pillClass[c.estat]}`}>{pillLabel[c.estat]}</span>
+                {c.ronda && <span class="ronda">Ronda {c.ronda}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
         {entry.data.notacioOriginal && (
           <p class="registre">
             Tal com es va escriure al registre: <span class="mono">{entry.data.notacioOriginal}</span>
           </p>
         )}
-      </div>
+      </section>
     )}
   </div>
 </Base>
 
 <style>
-  .wrap { max-width: var(--mitja); margin: 0 auto; padding: 40px 28px 60px; }
-  .back { display: block; margin-bottom: 14px; color: var(--ink-soft); text-decoration: none; }
-  .eyebrow-row { display: flex; align-items: center; gap: 10px; }
-  h1 { margin: 8px 0 10px; font-size: clamp(1.8rem, 4vw, 2.6rem); }
-  .meta { font-size: 0.9375rem; color: var(--ink-soft); }
-  .cartell { width: 100%; aspect-ratio: 3/4; max-height: 420px; object-fit: cover; border-radius: 8px; margin-top: 20px; }
-  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
-  .chip { border: 1px solid var(--line); border-radius: 16px; padding: 5px 12px; font-size: 0.8125rem; background: #fff; }
-  .body { margin-top: 28px; font-size: 1rem; line-height: 1.7; color: var(--ink); max-width: 65ch; }
+  .fitxa { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2xl); align-items: start; }
+  .fitxa.amb-cartell { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .etiquetes { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-lg); }
+  .temporada { text-decoration: none; }
+  .temporada:hover { background: var(--color-accent-wash); color: var(--color-accent-deep); }
+  .chips { display: flex; gap: var(--space-xs); flex-wrap: wrap; align-items: center; margin-top: var(--space-lg); }
+  .chips-etiqueta { font-size: var(--text-sm); color: var(--color-ink-2); margin-right: var(--space-2xs); }
+  .chip { border: 1px solid var(--color-rule-firm); border-radius: var(--radius-pill); padding: var(--space-2xs) var(--space-sm); font-size: var(--text-sm); }
+  .body { margin-top: var(--space-xl); font-size: var(--text-lead); line-height: 1.6; max-width: 60ch; }
+  .body :global(p) { margin: 0 0 var(--space-md); }
   .observacio {
-    margin: 20px 0 0; padding: 12px 16px; background: var(--yellow-bg); color: var(--yellow-ink);
-    border-radius: 8px; font-size: 0.9375rem; font-weight: 600; max-width: 65ch;
+    margin-top: var(--space-lg); padding: var(--space-md) var(--space-lg);
+    background: var(--color-signal-wash); color: var(--color-signal-text);
+    border-radius: var(--radius-card); font-weight: 600; max-width: 60ch;
   }
-  .castells { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
-  .castells-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; margin-top: 14px; }
-  .facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-  .fact {
-    display: flex; flex-direction: column; gap: 2px;
-    background: var(--bg-deep); border-radius: 10px; padding: 8px 14px;
-    text-decoration: none; color: var(--ink);
+  .cartell { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius-card); }
+
+  .castells { margin-top: var(--section-gap-s); padding-top: var(--space-xl); border-top: 2px solid var(--color-ink); }
+  .castells-cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-xs) var(--space-lg); }
+  .castells h2 { text-wrap: balance; }
+  .compte { font-family: var(--font-body); font-size: var(--text-lead); font-weight: 600; color: var(--color-ink-2); }
+  .castells-row {
+    list-style: none; margin: var(--space-xl) 0 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: var(--gap-columns);
   }
-  a.fact:hover { background: var(--blue-wash); }
-  .fact-label { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
-  .fact-value { font-size: 0.9375rem; font-weight: 600; color: var(--blue-deep); }
-  .castell-tile { background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 8px; padding: 16px; text-align: center; }
-  .castell-foto {
-    width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;
-    display: block; margin: -4px 0 12px;
+  .castell { display: flex; flex-direction: column; gap: var(--space-xs); padding-top: var(--space-md); border-top: 1px solid var(--color-rule); }
+  .castells-row.amb-fotos { grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }
+  .castell-marc { display: block; width: 100%; aspect-ratio: 3 / 4; border-radius: var(--radius-card); margin-bottom: var(--space-xs); background: var(--color-accent-wash); }
+  .castell-foto { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius-card); margin-bottom: var(--space-xs); }
+  .notation { font-size: var(--text-3xl); line-height: 1; overflow-wrap: anywhere; min-width: 0; }
+  .castell-peu { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+  .ronda { font-size: var(--text-sm); color: var(--color-ink-2); }
+  .registre { margin-top: var(--space-xl); font-size: var(--text-sm); color: var(--color-ink-2); }
+  @media (max-width: 60rem) {
+    .fitxa.amb-cartell { grid-template-columns: minmax(0, 1fr); }
+    .cartell { max-width: 26rem; }
   }
-  .registre { margin: 18px 0 0; font-size: 0.8125rem; color: var(--ink-soft); }
-  .notation { font-size: 1.6rem; line-height: 1.05; overflow-wrap: anywhere; }
-  .ronda { font-size: 0.6875rem; color: var(--ink-soft); margin-top: 8px; }
 </style>

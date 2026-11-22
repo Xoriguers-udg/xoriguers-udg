@@ -1,0 +1,129 @@
+---
+/**
+ * The colla's best castells, worked out from the agenda rather than written by
+ * hand: every castell ever descarregat, ranked by the concurs table, each with
+ * the diada where it first came down and a photo of it where one was uploaded.
+ */
+import { getCollection } from 'astro:content';
+import { llegeixCastellsRegistrats, valorBase } from '../lib/historial';
+import { mediaUrl } from '../lib/media';
+import { formatDate } from '../lib/format';
+
+interface Props {
+  quants?: number;
+  titol?: string;
+}
+const { quants = 4, titol = 'Els nostres millors castells' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const ara = new Date();
+
+const agenda = await getCollection('agenda', ({ data }) => data.estat === 'publicat' && data.data <= ara);
+
+interface Millor { canonic: string; valor: number; primer: { id: string; nom: string; data: Date }; foto?: string; cops: number }
+const millors = new Map<string, Millor>();
+for (const e of agenda) {
+  const llegits = llegeixCastellsRegistrats(e.data.castells);
+  llegits.forEach((c, i) => {
+    if (c.estat !== 'descarregat') return;
+    const valor = valorBase(c.canonic);
+    if (valor === 0) return;
+    const foto = e.data.castells[i].foto;
+    const m = millors.get(c.canonic);
+    if (!m) {
+      millors.set(c.canonic, { canonic: c.canonic, valor, primer: { id: e.id, nom: e.data.nom, data: e.data.data }, foto, cops: 1 });
+      return;
+    }
+    m.cops++;
+    if (e.data.data < m.primer.data) m.primer = { id: e.id, nom: e.data.nom, data: e.data.data };
+    if (!m.foto && foto) m.foto = foto;
+  });
+}
+const llista = [...millors.values()].sort((a, b) => b.valor - a.valor).slice(0, quants);
+// the notation is written as the colla writes it on the castells band: 3d8f, Pd6f
+const escrit = (c: string) => c.replace(/^pd/, 'Pd');
+---
+{llista.length > 0 && (
+  <section class="millors" aria-labelledby="millors-titol">
+    <div class="millors-cap">
+      <h2 id="millors-titol">{titol}</h2>
+      <a class="millors-enllac" href={`${base}castells`}>Tot l’historial</a>
+    </div>
+    <ol class="millors-llista">
+      {llista.map((c) => (
+        <li class={`millor${c.foto ? '' : ' sense-foto'}`}>
+          {c.foto && (
+            <div class="millor-foto">
+              <img src={mediaUrl(base, c.foto)} alt={`El ${escrit(c.canonic)} dels Xoriguers`} width="600" height="900" loading="lazy" />
+            </div>
+          )}
+          <p class="millor-notacio display">{escrit(c.canonic)}</p>
+          <p class="millor-text">
+            Descarregat per primer cop el <time datetime={c.primer.data.toISOString().slice(0, 10)}>{formatDate(c.primer.data)}</time>, a la <a href={`${base}agenda/${c.primer.id}`}>{c.primer.nom}</a>.
+            {c.cops > 1 && <> En total, {c.cops} cops.</>}
+          </p>
+        </li>
+      ))}
+    </ol>
+  </section>
+)}
+
+<style>
+  .millors { margin-top: var(--section-gap-s); }
+  .millors-cap {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  .millors-cap h2 { font-size: var(--text-section); max-width: none; overflow-wrap: break-word; min-width: 0; }
+  .millors-enllac {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
+    text-decoration-color: var(--color-rule-firm);
+  }
+  .millors-enllac:hover { text-decoration-color: currentColor; }
+  .millors-llista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gap-columns);
+  }
+  .millor { display: flex; flex-direction: column; gap: var(--space-sm); min-width: 0; }
+  .millor-foto {
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--color-accent-deep);
+  }
+  .millor-foto img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+  /* with no photo, the notation fills the frame on the colla blue instead */
+  .millor.sense-foto .millor-notacio {
+    display: flex;
+    align-items: flex-end;
+    aspect-ratio: 3 / 4;
+    padding: var(--space-lg);
+    border-radius: var(--radius-card);
+    background: var(--color-accent-deep);
+    margin-top: 0;
+    color: var(--color-on-dark);
+    font-size: clamp(3.5rem, 6vw, 6rem);
+  }
+  .millor-notacio {
+    margin-top: var(--space-xs);
+    font-size: var(--text-section);
+    line-height: 1;
+    color: var(--color-ink);
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  .millor-text { font-size: var(--text-sm); color: var(--color-ink-2); }
+  @media (max-width: 60rem) {
+    .millors-llista { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-xl); }
+  }
+</style>

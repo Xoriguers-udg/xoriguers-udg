@@ -24,6 +24,7 @@ const query = encodeURIComponent(ubicacio);
 </div>
 
 <style>
-  .map { width: 100%; border: 1px solid var(--line); border-radius: 8px; display: block; }
-  .map-link { display: inline-block; margin-top: 10px; font-size: 0.9375rem; color: var(--blue-deep); }
+  .map { width: 100%; display: block; border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper-2); }
+  .map:focus, .map-embed:focus-within .map { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .map-link { display: inline-flex; align-items: center; min-height: 44px; margin-top: var(--space-2xs); font-weight: 600; }
 </style>

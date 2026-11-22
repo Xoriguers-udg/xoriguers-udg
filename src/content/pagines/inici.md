@@ -1,7 +1,7 @@
 ---
 titol: "Xoriguers: més que castells"
 ctaText: Vine a assaig!
-imatge: /images/uploads/images.jpg
+imatge: /images/uploads/colla-xoriguers-al-complet.jpg
 presentacioTitol: Qui som
 properesTitol: Pròximes actuacions
 ---
