@@ -1,32 +1,41 @@
 /**
  * Brings the colla's Google Calendar into the agenda collection.
  *
- *   node scripts/import-calendar.mjs [--dry] [--url <ics>]
+ *   node scripts/import-calendar.mjs [--dry] [--url <ics> | --fitxer <file.ics>]
  *
  * The calendar owns when and where an event happens; everything an editor
  * records afterwards — the castells, the cartell, the observació, the estat —
  * belongs to the entry and is never touched here. Repeating events (the weekly
- * assaig) are skipped: the agenda page already shows them through the embed.
+ * assaig, and any one occurrence of it changed on its own) are skipped: the
+ * agenda page already shows them through the embed.
+ *
+ * An upcoming event that disappears from the calendar is marked cancel·lada
+ * rather than left on the site as if it were still on; if it comes back, the
+ * next run un-cancels it, since cancelada is one of the calendar's fields.
  */
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import yaml from 'js-yaml';
 
 const { parseIcal } = await import('../src/lib/ical.ts');
-const { classificaEsdeveniment } = await import('../src/lib/esdeveniment.ts');
+const { classificaEsdeveniment, llegeixParaules, separaLloc, REGLES_PER_DEFECTE, TIPUS } = await import('../src/lib/esdeveniment.ts');
 const { urlFeedIcal } = await import('../src/lib/calendari.ts');
 
 const DEST = 'src/content/agenda';
 const CONFIG = 'src/content/configuracio/general.md';
+const CLASSIFICACIO = 'src/content/configuracio/calendari.md';
 
 /** Fields the calendar is the authority on. Everything else is the editor's. */
 const DEL_CALENDARI = ['nom', 'data', 'hora', 'lloc', 'poblacio', 'cancelada', 'calendarUid'];
 
 const dry = process.argv.includes('--dry');
-const urlArg = process.argv[process.argv.indexOf('--url') + 1];
+const arg = (nom) => (process.argv.includes(nom) ? process.argv[process.argv.indexOf(nom) + 1] : undefined);
+const urlArg = arg('--url');
+const fitxerArg = arg('--fitxer');
 
 /** The embed URL already names the calendar, so derive the feed from it. */
 function urlDelFeed() {
-  if (process.argv.includes('--url') && urlArg) return urlArg;
+  if (urlArg) return urlArg;
   const config = readFileSync(CONFIG, 'utf8');
   const linia = config.match(/^googleCalendarEmbedUrl:\s*(.+)$/m);
   if (!linia) throw new Error(`No hi ha googleCalendarEmbedUrl a ${CONFIG}`);
@@ -34,6 +43,27 @@ function urlDelFeed() {
   if (!feed) throw new Error("L'URL d'inserció no porta cap calendari");
   return feed;
 }
+
+/**
+ * The words that give a new event its type, as the colla set them in the CMS
+ * (Configuració → Calendari). Read leniently: this runs every hour unattended,
+ * so a rule it cannot use is skipped with a warning rather than stopping the
+ * sync, and with no usable rule at all the built-in words apply.
+ */
+function regles() {
+  if (!existsSync(CLASSIFICACIO)) return { regles: REGLES_PER_DEFECTE, perDefecte: 'Actuacio' };
+  const frontmatter = readFileSync(CLASSIFICACIO, 'utf8').replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
+  const dades = yaml.load(frontmatter) ?? {};
+  const valides = [];
+  for (const r of Array.isArray(dades.classificacio) ? dades.classificacio : []) {
+    const paraules = llegeixParaules(r?.paraules);
+    if (!TIPUS.includes(r?.tipus)) console.warn(`  avís: tipus desconegut a ${CLASSIFICACIO}: ${r?.tipus}`);
+    else if (paraules.length) valides.push({ tipus: r.tipus, paraules });
+  }
+  const perDefecte = TIPUS.includes(dades.tipusPerDefecte) ? dades.tipusPerDefecte : 'Actuacio';
+  return { regles: valides.length ? valides : REGLES_PER_DEFECTE, perDefecte };
+}
+const classificacio = regles();
 
 function slugify(text) {
   return text
@@ -55,19 +85,32 @@ function valorYaml(camp, valor) {
 
 /**
  * Replaces the calendar-owned lines and leaves the rest of the file alone.
- * Only column-0 keys are touched, so nested castells entries are safe.
+ * Only column-0 keys are touched, so nested castells entries are safe. A field
+ * the file does not have yet goes in after the calendar field before it
+ * (poblacio after lloc), or at the end.
+ *
+ * Line endings are read as LF whatever the file has: a file saved with CRLF
+ * never matched the frontmatter's `---` lines, and was rewritten on every run.
  */
 function aplica(contingut, camps) {
-  const parts = contingut.split(/^---$/m);
+  const parts = contingut.replace(/\r\n/g, '\n').split(/^---$/m);
   if (parts.length < 3) throw new Error('frontmatter inesperat');
-  let linies = parts[1].replace(/^\n|\n$/g, '').split('\n');
+  const linies = parts[1].replace(/^\n|\n$/g, '').split('\n');
+  const posicio = (camp) => linies.findIndex((l) => l.startsWith(`${camp}:`));
 
+  let anterior;
   for (const [camp, valor] of Object.entries(camps)) {
-    if (valor === undefined) continue;
-    const linia = `${camp}: ${valorYaml(camp, valor)}`;
-    const i = linies.findIndex((l) => l.startsWith(`${camp}:`));
-    if (i === -1) linies.push(linia);
-    else linies[i] = linia;
+    if (valor !== undefined) {
+      const linia = `${camp}: ${valorYaml(camp, valor)}`;
+      const i = posicio(camp);
+      if (i !== -1) linies[i] = linia;
+      else {
+        const despresDe = anterior ? posicio(anterior) : -1;
+        if (despresDe === -1) linies.push(linia);
+        else linies.splice(despresDe + 1, 0, linia);
+      }
+    }
+    anterior = camp;
   }
 
   const cos = parts.slice(2).join('---');
@@ -89,11 +132,23 @@ for (const f of fitxers) {
 }
 
 /* ---------- read the calendar ---------- */
-const url = urlDelFeed();
-console.log(`feed  ${url}`);
-const resposta = await fetch(url);
-if (!resposta.ok) throw new Error(`El calendari ha respost ${resposta.status}`);
-const esdeveniments = parseIcal(await resposta.text());
+let ics;
+if (fitxerArg) {
+  console.log(`fitxer  ${fitxerArg}`);
+  ics = readFileSync(fitxerArg, 'utf8');
+} else {
+  const url = urlDelFeed();
+  console.log(`feed  ${url}`);
+  const resposta = await fetch(url);
+  if (!resposta.ok) throw new Error(`El calendari ha respost ${resposta.status}`);
+  ics = await resposta.text();
+}
+// a calendar that answers with an error page, or with nothing, must not read
+// as "every event was deleted" and cancel the whole agenda
+if (!/^BEGIN:VCALENDAR/m.test(ics) || !/^END:VCALENDAR/m.test(ics)) {
+  throw new Error('La resposta no és un calendari sencer; no es toca res.');
+}
+const esdeveniments = parseIcal(ics);
 
 const recurrents = esdeveniments.filter((e) => e.recurrent);
 const puntuals = esdeveniments.filter((e) => !e.recurrent);
@@ -105,11 +160,13 @@ let adoptats = 0;
 let igual = 0;
 
 for (const e of puntuals) {
+  const { lloc, poblacio } = separaLloc(e.lloc);
   const camps = {
     nom: e.resum,
     data: e.data,
     hora: e.hora,
-    lloc: e.lloc,
+    lloc,
+    poblacio,
     cancelada: e.cancellat,
     calendarUid: e.uid,
   };
@@ -152,8 +209,9 @@ for (const e of puntuals) {
     `nom: ${yamlString(e.resum)}`,
     `data: ${e.data}`,
     ...(e.hora ? [`hora: ${yamlString(e.hora)}`] : []),
-    ...(e.lloc ? [`lloc: ${yamlString(e.lloc)}`] : []),
-    `tipus: ${classificaEsdeveniment(e.resum)}`,
+    ...(lloc ? [`lloc: ${yamlString(lloc)}`] : []),
+    ...(poblacio ? [`poblacio: ${yamlString(poblacio)}`] : []),
+    `tipus: ${classificaEsdeveniment(e.resum, classificacio.regles, classificacio.perDefecte)}`,
     'estat: publicat',
     `cancelada: ${e.cancellat ? 'true' : 'false'}`,
     `calendarUid: ${yamlString(e.uid)}`,
@@ -166,12 +224,30 @@ for (const e of puntuals) {
   console.log(`  crea        ${nom}`);
 }
 
+/* ---------- events that left the calendar ---------- */
+// only upcoming ones: a past actuació keeps its record even if someone tidies
+// the calendar up afterwards
+const avui = new Date().toISOString().slice(0, 10);
+const alCalendari = new Set(esdeveniments.map((e) => e.uid));
+let cancellats = 0;
+for (const [uid, fitxer] of perUid) {
+  if (alCalendari.has(uid)) continue;
+  const cami = join(DEST, fitxer);
+  const abans = readFileSync(cami, 'utf8');
+  const data = abans.match(/^data:\s*(\d{4}-\d{2}-\d{2})/m)?.[1];
+  if (!data || data < avui) continue;
+  const despres = aplica(abans, { cancelada: true });
+  if (abans === despres) continue;
+  if (!dry) writeFileSync(cami, despres, 'utf8');
+  cancellats++;
+  console.log(`  cancel·la   ${fitxer} (ja no és al calendari)`);
+}
+
 console.log(
-  `\n${dry ? '[dry] ' : ''}creats ${creats} · actualitzats ${actualitzats} · adoptats ${adoptats} · sense canvis ${igual}`
+  `\n${dry ? '[dry] ' : ''}creats ${creats} · actualitzats ${actualitzats} · adoptats ${adoptats} · cancel·lats ${cancellats} · sense canvis ${igual}`
 );
 
 /* ---------- what still needs recording ---------- */
-const avui = new Date().toISOString().slice(0, 10);
 const pendents = [];
 for (const f of readdirSync(DEST).filter((x) => x.endsWith('.md'))) {
   const contingut = readFileSync(join(DEST, f), 'utf8');

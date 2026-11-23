@@ -15,7 +15,13 @@ export interface EsdevenimentIcal {
   /** Start time in Europe/Madrid as HH:MM; absent for all-day events. */
   hora?: string;
   cancellat: boolean;
-  /** Carries an RRULE, so it stands for many occurrences rather than one. */
+  /**
+   * Part of a repeating series: either the series itself (it carries an RRULE)
+   * or one occurrence of it changed on its own, which Google publishes as a
+   * separate event with the series' UID and a RECURRENCE-ID. Neither is a
+   * one-off event, and the exception would otherwise land in the agenda under
+   * the series' UID.
+   */
   recurrent: boolean;
 }
 
@@ -144,6 +150,7 @@ export function parseIcal(raw: string): EsdevenimentIcal[] {
         current.cancellat = prop.valor.trim().toUpperCase() === 'CANCELLED';
         break;
       case 'RRULE':
+      case 'RECURRENCE-ID':
         current.recurrent = true;
         break;
       case 'DTSTART': {

@@ -12,6 +12,7 @@
  */
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { TIPUS } from './lib/esdeveniment';
 
 /** The CMS writes "" for a cleared field; the schemas want it to be absent. */
 const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
@@ -39,7 +40,7 @@ const agenda = defineCollection({
     hora: z.preprocess(emptyToUndefined, z.string().optional()),
     lloc: z.preprocess(emptyToUndefined, z.string().optional()),
     poblacio: z.preprocess(emptyToUndefined, z.string().optional()),
-    tipus: z.enum(['Actuacio', 'Assaig', 'Diada', 'Trobada', 'Altres']),
+    tipus: z.enum(TIPUS),
     cartell: z.string().optional(),
     collesParticipants: z.array(z.string()).default([]),
     mostrarPortada: z.boolean().default(false),
@@ -209,6 +210,21 @@ const configuracio = defineCollection({
     contacteComercialEmail: z.string().optional(),
     capceleraImatge: z.string().optional(),
     descripcioGeneral: z.string().optional(),
+    /**
+     * calendari.md: the words in an event's name that give its type, read by
+     * the calendar importer (src/lib/esdeveniment.ts, classificaEsdeveniment).
+     * The order is the priority. The site itself never reads them.
+     */
+    classificacio: z
+      .array(
+        z.object({
+          tipus: z.enum(TIPUS),
+          // one line separated by commas, as the CMS writes it; see llegeixParaules
+          paraules: z.union([z.string(), z.array(z.string())]).optional(),
+        }),
+      )
+      .optional(),
+    tipusPerDefecte: z.preprocess(emptyToUndefined, z.enum(TIPUS).optional()),
   }),
 });
 

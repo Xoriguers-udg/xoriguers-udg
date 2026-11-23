@@ -2,7 +2,8 @@
 nom: "ACTUACIÓ BARRAQUES"
 data: 2026-10-29
 hora: "18:00"
-lloc: "Carrer de les Hortes, 17001 Girona, Espanya"
+lloc: "Carrer de les Hortes"
+poblacio: "Girona"
 tipus: Actuacio
 mostrarPortada: true
 estat: publicat

@@ -16,7 +16,7 @@ Now there is **one entry per event, for its whole life**:
 ```
 Google Calendar          an event is created: "ACTUACIÓ Barraques"
       │
-      │  nightly workflow, scripts/import-calendar.mjs
+      │  hourly workflow, scripts/import-calendar.mjs
       ▼
 src/content/agenda/2026-10-29-actuacio-barraques.md
       │
@@ -32,9 +32,9 @@ src/content/agenda/2026-10-29-actuacio-barraques.md
 date. Nothing is copied between them, so nothing can disagree.
 
 A consequence worth remembering: **the archive changes without anybody editing
-anything**, simply because a date passes. That is why the deploy workflow also
-runs after the nightly calendar sync — otherwise a diada could sit in "upcoming"
-for a day after it happened.
+anything**, simply because a date passes. That is why the calendar sync also starts
+a deploy once a day even when nothing changed — otherwise a diada could sit in
+"upcoming" after it happened.
 
 ## Content collections
 
@@ -62,7 +62,7 @@ The fields that matter, and who owns them:
 
 | Field | Owner | Notes |
 |---|---|---|
-| `nom`, `data`, `hora`, `lloc`, `poblacio`, `cancelada`, `calendarUid` | **the importer** | Overwritten on every nightly run. Editing them by hand is pointless; change the Google Calendar instead. |
+| `nom`, `data`, `hora`, `lloc`, `poblacio`, `cancelada`, `calendarUid` | **the importer** | Overwritten on every sync run (hourly) when the calendar has a value for them. Editing them by hand is pointless; change the Google Calendar instead. |
 | `castells[]`, `cartell`, `observacio`, `mostrarPortada`, `estat`, `collesParticipants`, body | **the editor** | The importer never touches these. |
 | `tipus` | importer at creation, editor afterwards | Guessed from the name by `classificaEsdeveniment`. |
 | `notacioOriginal`, `cccc` | the migration | Provenance from the old spreadsheet. |
@@ -95,9 +95,10 @@ reading and the rendering; the libraries hold anything worth testing.
 
 ## The calendar importer
 
-[`scripts/import-calendar.mjs`](../scripts/import-calendar.mjs), run nightly by
-[`import-calendar.yml`](../.github/workflows/import-calendar.yml) at 04:23 UTC,
-or by hand with `npm run import:calendar` (`--dry` to see what it would do).
+[`scripts/import-calendar.mjs`](../scripts/import-calendar.mjs), run every hour
+at `:23` by [`import-calendar.yml`](../.github/workflows/import-calendar.yml),
+or by hand with `npm run import:calendar` (`--dry` to see what it would do,
+`--fitxer <file.ics>` to read a saved feed instead of Google's).
 
 It reads the public ICS feed — derived from the embed URL already in
 Configuració, so there is only ever one calendar address to keep right, and no
@@ -105,27 +106,59 @@ credentials anywhere — and then, for each event:
 
 1. **Recurring events are skipped.** The weekly assaig is an `RRULE`; expanding
    it would create an entry every Tuesday and Thursday forever. The agenda page
-   shows them through the embedded calendar instead.
+   shows them through the embedded calendar instead. One occurrence changed on
+   its own (one Thursday moved or cancelled) arrives as a separate event with
+   the series' UID and a `RECURRENCE-ID`; it is skipped with the series, or it
+   would become an agenda entry that every other exception then overwrote.
 2. It finds the existing entry by `calendarUid`, or adopts a file whose name
    already matches the date and slug (this is how historical entries get joined
    to their calendar event rather than duplicated).
 3. It rewrites **only** the calendar-owned lines, by key, at column 0. Nested
-   `castells:` entries are untouched by construction.
-4. It prints past actuacions with no castells recorded — the "needs writing up"
+   `castells:` entries are untouched by construction. A Google Maps address
+   («Carrer de les Hortes, 17001 Girona, Espanya») is split into `lloc` and
+   `poblacio` by its postcode (`separaLloc`); a place typed by hand stays whole.
+4. An **upcoming** entry whose event is no longer in the feed is marked
+   `cancelada: true`; if the event comes back, the next run sets it false again.
+   Past entries are never touched this way: tidying up the calendar must not
+   rewrite the record. A response that is not a whole `VCALENDAR` stops the run
+   before anything is written, so an outage cannot read as "everything was
+   deleted".
+5. A **new** entry takes its `tipus` from the event's name, by the words the
+   colla keeps in the CMS (Configuració → Calendari, i.e.
+   `src/content/configuracio/calendari.md`): an ordered list of rules, each a
+   type and a comma-separated line of words, first match wins, case and
+   accents ignored, a word matching where a word of the name starts
+   (`classificaEsdeveniment`). With no usable rule it falls back to the words
+   built into `REGLES_PER_DEFECTE`. An existing entry's `tipus` is the
+   editor's and is never reclassified.
+6. It prints past actuacions with no castells recorded — the "needs writing up"
    queue.
 
-The ownership rule in step 3 is the whole safety of the thing. A nightly job
+The ownership rule in step 3 is the whole safety of the thing. An hourly job
 with write access to the colla's permanent record has to be unable to erase it.
 If you extend the importer, extend `DEL_CALENDARI` consciously.
 
-Two operational notes, both learned the hard way:
+Operational notes, all learned the hard way:
 
+- **It runs hourly, not nightly.** It ran once a day at 04:23 UTC, but GitHub
+  starts scheduled jobs late when it is busy — that run actually started
+  between 11:00 and 13:40 — and sometimes not at all: on the day the repo moved
+  to the colla's account it never ran, and an actuació added on a Saturday
+  evening was still missing on Monday afternoon. Hourly, a late or dropped run
+  is covered by the next.
 - The cron is at `:23`, not on the hour. GitHub queues every cron that lands on
-  `:00` and silently drops what it cannot get to; the first scheduled run was
-  lost that way.
+  `:00` and silently drops what it cannot get to.
 - A push made with the default `GITHUB_TOKEN` does not trigger other workflows,
-  so `deploy.yml` listens for `workflow_run` on the sync rather than for the
-  push it makes.
+  but a `workflow_dispatch` does. So the sync starts `deploy.yml` itself
+  (`gh workflow run`, which is why it has `actions: write`): when it committed
+  something, and otherwise on its first run of the day in Girona time, so the
+  agenda/historial split follows the date. That last step runs even when the
+  import fails.
+- It `git pull --rebase`s before pushing: an editor may have saved from the
+  CMS since the checkout, and with hourly runs that will happen.
+- GitHub switches scheduled workflows off after 60 days without a commit. The
+  bot only commits when something changes, so after 50 quiet days it makes an
+  empty commit to keep the schedule on through the summer.
 
 ## The arbre de xoriguers
 
@@ -135,10 +168,10 @@ and committed to `public/arbre/index.html`, which Astro copies to `dist`
 verbatim. There is no Astro page for it and nothing frames it: the URL serves
 the app itself, full screen.
 
-It is linked from the La colla menu, the footer index and a card on *Qui som*,
-all with `target="_blank"`, because the app has no navigation of its own — it
-opens beside the site rather than replacing it. If you would rather it opened in
-the same tab, put a link back to the site into `arbre/template.html` first.
+Nothing links to it: it is an easter egg. Three taps in a row on the escut in
+the footer open it in a new tab (the inline script at the end of
+`src/layouts/Base.astro`), because the app has no navigation of its own — it
+opens beside the site rather than replacing it.
 
 **The site's design system comes from this app.** Its two faces and its palette
 are the source for `src/styles/global.css`, so the tree and the site read as one

@@ -20,6 +20,28 @@ describe('parseIcal', () => {
     expect(e).toMatchObject({ uid: 'abc@google.com', resum: 'ASSAIG', data: '2026-09-22', hora: '12:30' });
   });
 
+  it('counts one changed occurrence of a series as part of the series', () => {
+    // moving or cancelling one Thursday's assaig publishes it apart, with the
+    // series' UID; as a one-off it would become an agenda entry
+    const [serie, excepcio] = parseIcal(
+      envolta(
+        event('DTSTART;TZID=Europe/Madrid:20260922T123000', 'RRULE:FREQ=WEEKLY;BYDAY=TU,TH', 'UID:s@google.com', 'SUMMARY:ASSAIG CASTELLERS'),
+        event('DTSTART;TZID=Europe/Madrid:20261126T130000', 'RECURRENCE-ID;TZID=Europe/Madrid:20261126T123000', 'UID:s@google.com', 'SUMMARY:ASSAIG CASTELLERS')
+      )
+    );
+    expect(serie.recurrent).toBe(true);
+    expect(excepcio.recurrent).toBe(true);
+  });
+
+  it('reads the colla\'s own feed shape: a UTC start with no location', () => {
+    // ACTUACIÓ EMBOS, as Google published it: 16:00Z in November is 17:00 in Madrid
+    const [e] = parseIcal(
+      envolta(event('DTSTART:20261126T160000Z', 'DTEND:20261126T190000Z', 'UID:3nqrk65d9vkqesog1niiu64pn5@google.com', 'STATUS:CONFIRMED', 'SUMMARY:ACTUACIÓ EMBOS'))
+    );
+    expect(e).toMatchObject({ data: '2026-11-26', hora: '17:00', recurrent: false, cancellat: false });
+    expect(e.lloc).toBeUndefined();
+  });
+
   it('converts a UTC start into Madrid time', () => {
     // 16:30Z in September is 18:30 in Madrid
     const [e] = parseIcal(

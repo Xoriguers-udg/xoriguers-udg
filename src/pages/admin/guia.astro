@@ -105,8 +105,10 @@ const feines = [
 
     <section class="feina" id="actuacio" aria-labelledby="actuacio-titol">
       <h2 id="actuacio-titol">Una actuació nova, o un canvi d’hora o de lloc</h2>
-      <p>Les actuacions s’apunten al <strong>Google Calendar de la colla</strong>, no al gestor. L’endemà al matí ja surten soles a l’agenda de la web.</p>
-      <p>Per això <strong>el nom, la data, l’hora, el lloc i la població es canvien al calendari</strong>. Si els canvies al gestor, l’endemà tornen a ser com al calendari. El mateix passa amb les cancel·lacions: cancel·la-la al calendari i a la web surt com a cancel·lada.</p>
+      <p>Les actuacions s’apunten al <strong>Google Calendar de la colla</strong>, no al gestor. En una hora o dues ja surten soles a l’agenda de la web.</p>
+      <p>Per això <strong>el nom, la data, l’hora, el lloc i la població es canvien al calendari</strong>. Si els canvies al gestor, a la següent sincronització tornen a ser com al calendari. El mateix passa amb les cancel·lacions: cancel·la-la o esborra-la del calendari i a la web surt com a cancel·lada.</p>
+      <p>Si tries el lloc amb el buscador de Google Maps del calendari, la web en separa sola el lloc i la població.</p>
+      <p><strong>El tipus (actuació, diada, assaig…) surt del nom</strong> que li poses al calendari: «ASSAIG XORIFIT» és un assaig, «DIADA DE PRIMAVERA» és una diada. Les paraules que decideixen cada tipus es canvien a <span class="boto">Configuració</span> → <span class="boto">Calendari: tipus d’esdeveniment</span>, i cada tipus en pot tenir tantes com calgui. Si una actuació ha quedat amb el tipus equivocat, canvia-l’hi a l’Agenda.</p>
       <p>Al gestor s’hi afegeix tota la resta: el cartell, una descripció, les colles que hi actuen, i «Mostrar a portada» si vols que surti la primera a «Pròximes actuacions».</p>
     </section>
 
@@ -217,7 +219,8 @@ const feines = [
     gap: var(--space-3xl);
   }
   .guia h2 { font-size: var(--text-title); line-height: 1.15; overflow-wrap: break-word; min-width: 0; margin-bottom: var(--space-md); }
-  .guia p { line-height: 1.6; max-width: none; }
+  /* Figtree runs narrower than its 0, so 52ch is about 70 characters a line */
+  .guia p { line-height: 1.6; max-width: 52ch; }
   .guia p + p { margin-top: var(--space-sm); }
 
   .calma { padding: var(--space-xl); border-radius: var(--radius-card); background: var(--color-signal-wash); }
@@ -237,6 +240,8 @@ const feines = [
 
   .feina { scroll-margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--color-rule); }
   .nota { margin-top: var(--space-md); font-size: var(--text-sm); color: var(--color-ink-2); }
+  /* the notes are a size smaller, so the same ch would run longer */
+  .guia .nota { max-width: 48ch; }
 
   /* a button as the CMS names it, so it can be found on screen */
   .boto {

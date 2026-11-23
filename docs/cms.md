@@ -54,6 +54,12 @@ entry out of the build entirely.
 - **Every collection has a one-line `description`** at the top of its list,
   saying what it is for and where it shows. Treat these like the hints.
 
+The words that classify calendar events (Configuració → «Calendari: tipus
+d'esdeveniment») are a plain string per rule, split on commas by
+`llegeixParaules`, not Decap's comma-separated `list` widget: that widget
+drops a comma typed before a space, so «assajos, xorifit» was saved as
+«assajosxorifit».
+
 Galeria's photos stay a list of single images. The image widget's
 `multiple: true` was tried: the default media library still uploads one file
 at a time, and «Escull una imatge diferent» replaces the whole selection, so
@@ -69,13 +75,13 @@ runs in two places:
 
 - **the deploy**, before the build, so a new photo is served small from its
   first deploy;
-- **the nightly calendar job**, which commits the result, so the repo and the
+- **the hourly calendar job**, which commits the result, so the repo and the
   CMS's media library stay light.
 
 The rule is in [`src/lib/compressio.ts`](../src/lib/compressio.ts): an image is
 left alone if it is already within 2000px and 500 KB, or if it carries the
-script's mark in its EXIF «Software» tag. The mark is what keeps the nightly
-run from re-encoding the same photo every night. Writing it replaces the
+script's mark in its EXIF «Software» tag. The mark is what keeps the hourly
+run from re-encoding the same photo every hour. Writing it replaces the
 phone's EXIF, so the GPS position a phone stores goes with it. PDFs, GIFs and
 SVGs are not touched.
 
@@ -141,11 +147,11 @@ If an editor says they cannot find a diada, that list is where to look.
 Three agenda fields belong to the machine, and their hints say so (they start
 with «No cal tocar-ho», which is also how the guide tells editors to spot them):
 
-- **`calendarUid`** — the join key the nightly import matches on. Changing it
+- **`calendarUid`** — the join key the hourly import matches on. Changing it
   duplicates the event.
 - **`notacioOriginal`** — the castells as the old registre wrote them.
 - `nom`, `data`, `hora`, `lloc`, `poblacio`, `cancelada` — editable, but the
-  nightly import overwrites them from Google Calendar, and their hints now say
+  hourly import overwrites them from Google Calendar, and their hints now say
   so. The calendar is where to change them.
 
 Everything else on an agenda entry is the editor's and is never touched by the

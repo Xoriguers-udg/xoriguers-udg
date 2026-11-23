@@ -3,11 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
-  # a push made by the importer does not trigger workflows on its own, and
-  # rebuilding daily also keeps the agenda/historial split right as dates pass
-  workflow_run:
-    workflows: ['Sync agenda with Google Calendar']
-    types: [completed]
+  # the calendar sync starts this itself (a push made with its token would not):
+  # when it changed something, and once a day so the agenda/historial split
+  # follows the date. It used to start on every sync run; now that the sync
+  # runs hourly, that would be 24 deploys a day for nothing.
   workflow_dispatch:
 
 permissions:
@@ -39,7 +38,7 @@ jobs:
         run: npm test
 
       # editors upload photos straight from their phones; what is served is
-      # shrunk here, so a new photo is light from its first deploy. The nightly
+      # shrunk here, so a new photo is light from its first deploy. The hourly
       # job commits the same result to the repo.
       - name: Compress uploaded images
         run: node --experimental-strip-types scripts/comprimeix-imatges.mjs public/images/uploads

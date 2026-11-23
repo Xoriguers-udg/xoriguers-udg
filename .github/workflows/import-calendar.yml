@@ -2,14 +2,20 @@ name: Sync agenda with Google Calendar
 
 on:
   schedule:
-    # Early morning, so the agenda is up to date before anyone reads it, and
-    # deliberately off the hour: GitHub queues every cron that lands on :00 at
-    # once and drops what it cannot get to, which is how the first run was lost.
-    - cron: '23 4 * * *'
+    # Every hour, off the hour. It used to run once a day at 04:23, but GitHub
+    # starts scheduled jobs late when it is busy (that one ran between 11:00
+    # and 13:40 UTC) and now and then not at all, so an event added on a
+    # Saturday evening could wait until Monday. Hourly, a late or dropped run is
+    # covered by the next one. Off the hour because GitHub queues every cron on
+    # :00 at once and drops what it cannot get to.
+    - cron: '23 * * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
+  # to start the deploy: a push made with this job's token does not trigger
+  # workflows, but a workflow_dispatch does
+  actions: write
 
 concurrency:
   group: import-calendar
@@ -18,6 +24,8 @@ concurrency:
 jobs:
   import:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,11 +49,12 @@ jobs:
 
       # the deploy already serves uploads shrunk; this keeps the stored files
       # light too, so the repo and the CMS's media library do not fill up with
-      # 5 MB phone photos. The deploy that follows this workflow picks it up.
+      # 5 MB phone photos
       - name: Compress uploaded images
         run: node --experimental-strip-types scripts/comprimeix-imatges.mjs public/images/uploads
 
       - name: Commit any changes
+        id: commit
         run: |
           agenda="$(git status --porcelain src/content/agenda)"
           imatges="$(git status --porcelain public/images/uploads)"
@@ -64,4 +73,46 @@ jobs:
             missatge="Comprimeix les fotos pujades"
           fi
           git commit -m "$missatge"
+          # someone may have saved from the CMS since the checkout; the importer
+          # only touches calendar fields, so replaying on top of their commit is safe
+          git pull --rebase
           git push
+          echo "canvis=1" >> "$GITHUB_OUTPUT"
+
+      # GitHub switches scheduled workflows off after 60 days without a commit.
+      # The bot only commits when the calendar changes, and a quiet summer could
+      # go longer than that; the sync would then stop without anyone noticing
+      # until September. An empty commit after 50 quiet days keeps it on.
+      - name: Keep the schedule alive
+        run: |
+          darrer=$(git log -1 --format=%ct)
+          if [ $(( $(date +%s) - darrer )) -gt $(( 50 * 86400 )) ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "Manté actives les tasques programades"
+            git pull --rebase
+            git push
+          fi
+
+      # Deploy when this run changed something; otherwise once a day anyway,
+      # because the site splits the agenda from the historial by today's date
+      # and an actuació has to move across after it happens. «Once a day» is
+      # the first run after midnight in Girona with no successful deploy yet
+      # that day. Runs even if the import failed, so a calendar outage does not
+      # also freeze the date.
+      - name: Deploy if needed
+        if: always()
+        run: |
+          if [ "${{ steps.commit.outputs.canvis }}" = "1" ]; then
+            echo "Hi ha canvis: es publica."
+            gh workflow run deploy.yml --ref "${{ github.ref_name }}"
+            exit 0
+          fi
+          mitjanit=$(TZ=Europe/Madrid date -d 'today 00:00' +%s)
+          darrer=$(gh run list --workflow deploy.yml --status success --limit 1 --json createdAt --jq '.[0].createdAt // empty')
+          if [ -z "$darrer" ] || [ "$(date -d "$darrer" +%s)" -lt "$mitjanit" ]; then
+            echo "Primera publicació del dia: l'agenda passa les actuacions d'ahir a l'historial."
+            gh workflow run deploy.yml --ref "${{ github.ref_name }}"
+          else
+            echo "Avui ja s'ha publicat i no hi ha canvis."
+          fi

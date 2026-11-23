@@ -1,6 +1,6 @@
 /**
  * What to do with an uploaded image before it is served. Editors upload photos
- * straight from their phones (4000px, 5 MB and more); the deploy and the nightly
+ * straight from their phones (4000px, 5 MB and more); the deploy and the hourly
  * job shrink them so nobody has to resize anything by hand.
  *
  * The decision is kept apart from sharp so it can be tested without images.
@@ -20,7 +20,7 @@ export const MIDA_BONA = 500 * 1024;
 /**
  * Written into every image the script has processed, as the EXIF «Software»
  * tag. A compressed photo can still be over MIDA_BONA, and without the mark it
- * would be re-encoded, and lose a little more, every night.
+ * would be re-encoded, and lose a little more, on every run.
  */
 export const MARCA = 'xoriguers-udg: comprimeix-imatges';
 

@@ -5,7 +5,7 @@
  *   node --experimental-strip-types scripts/comprimeix-imatges.mjs [folder] [--dry]
  *
  * It runs twice: in the deploy, before the build, so a photo is served small
- * from the first deploy after it is uploaded; and in the nightly job, which
+ * from the first deploy after it is uploaded; and in the hourly calendar job, which
  * commits the result so the repo and the CMS's media library stay light too.
  * Running it again over its own output does nothing: every file it writes is
  * marked (MARCA, in src/lib/compressio.ts) and a marked file is skipped. The

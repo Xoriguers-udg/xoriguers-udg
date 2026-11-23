@@ -54,7 +54,7 @@ collections:
   - name: "agenda"
     label: "Agenda"
     label_singular: "actuació"
-    description: "Una entrada per a cada actuació, diada o assaig, del 1998 ençà. Les noves arriben soles cada nit des del Google Calendar de la colla; aquí s'hi afegeixen els castells, les fotos i les notes. Els canvis es veuen a la web en un parell de minuts."
+    description: "Una entrada per a cada actuació, diada o assaig, del 1998 ençà. Les noves arriben soles des del Google Calendar de la colla, en una hora o dues; aquí s'hi afegeixen els castells, les fotos i les notes. Els canvis es veuen a la web en un parell de minuts."
     folder: "src/content/agenda"
     create: true
     # the agenda is 25 years of history: an entry that should not show is
@@ -88,9 +88,9 @@ collections:
         field: "observacio"
         pattern: "."
     fields:
-      # the nightly import rewrites these five from Google Calendar (see
+      # the hourly import rewrites these five from Google Calendar (see
       # scripts/import-calendar.mjs, DEL_CALENDARI), so the hint sends people there
-      - { label: "Nom", name: "nom", widget: "string", hint: "Si l'actuació ve del Google Calendar, canvia el nom allà: cada nit es torna a copiar del calendari." }
+      - { label: "Nom", name: "nom", widget: "string", hint: "Si l'actuació ve del Google Calendar, canvia el nom allà: cada hora es torna a copiar del calendari." }
       - { label: "Data", name: "data", widget: "datetime", date_format: "DD/MM/YYYY", time_format: false, format: "YYYY-MM-DD", hint: "Si ve del Google Calendar, canvia-la allà." }
       - { label: "Hora", name: "hora", widget: "string", required: false, hint: "Ex: 12:30. Si ve del Google Calendar, canvia-la allà." }
       - { label: "Lloc", name: "lloc", widget: "string", required: false, hint: "Ex: Església de Sant Domènec. Si ve del Google Calendar, canvia'l allà." }
@@ -535,7 +535,7 @@ collections:
   - name: "configuracio"
     label: "Configuració"
     editor: { preview: false }
-    description: "Xarxes socials, correu de contacte i ajustos generals. No cal tocar-ho gaire sovint."
+    description: "Xarxes socials, correu de contacte, ajustos generals i com es classifiquen les actuacions que arriben del calendari. No cal tocar-ho gaire sovint."
     files:
       - name: "general"
         label: "Configuració general"
@@ -552,4 +552,43 @@ collections:
             name: "googleCalendarEmbedUrl"
             widget: "string"
             required: false
-            hint: "No cal tocar-ho. És el calendari d'on l'agenda s'omple sola cada nit."
+            hint: "No cal tocar-ho. És el calendari d'on l'agenda s'omple sola cada hora."
+      # read by the calendar importer only (scripts/import-calendar.mjs); a
+      # file of its own so the general form stays short
+      - name: "calendari"
+        label: "Calendari: tipus d'esdeveniment"
+        file: "src/content/configuracio/calendari.md"
+        fields:
+          - label: "Paraules per classificar"
+            name: "classificacio"
+            widget: "list"
+            required: false
+            label_singular: "tipus"
+            summary: "{{fields.tipus}}: {{fields.paraules}}"
+            hint: "Quan arriba una actuació nova del Google Calendar, el seu nom decideix de quin tipus és. Es miren els tipus en aquest ordre i guanya el primer que té alguna de les seves paraules al nom: arrossega'ls per canviar-ne l'ordre. No importen les majúscules ni els accents, i una paraula també troba les que comencen igual («actuació» troba «ACTUACIONS»). Només afecta les actuacions noves; el tipus de les que ja hi són es canvia a mà a l'Agenda."
+            fields:
+              - label: "Tipus"
+                name: "tipus"
+                widget: "select"
+                options:
+                  - { label: "Actuació", value: "Actuacio" }
+                  - { label: "Assaig", value: "Assaig" }
+                  - { label: "Diada", value: "Diada" }
+                  - { label: "Trobada", value: "Trobada" }
+                  - { label: "Altres", value: "Altres" }
+              - label: "Paraules"
+                name: "paraules"
+                widget: "string"
+                hint: "Separades per comes. Ex: assaig, assajos, xorifit. També hi caben expressions, com «festa major»."
+          - label: "Tipus si no hi ha cap paraula"
+            name: "tipusPerDefecte"
+            widget: "select"
+            required: false
+            default: "Actuacio"
+            hint: "El tipus d'una actuació nova amb un nom que no té cap de les paraules de dalt. Per exemple, «OCTOBERFEST»."
+            options:
+              - { label: "Actuació", value: "Actuacio" }
+              - { label: "Assaig", value: "Assaig" }
+              - { label: "Diada", value: "Diada" }
+              - { label: "Trobada", value: "Trobada" }
+              - { label: "Altres", value: "Altres" }

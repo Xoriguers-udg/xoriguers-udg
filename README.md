@@ -56,7 +56,7 @@ src/
 public/admin/         the CMS: config.yml is the form definitions
 arbre/                the apadrinatge tree's data and generator
 scripts/              the Google Calendar importer, and a spent migration
-.github/workflows/    deploy, and the nightly calendar sync
+.github/workflows/    deploy, and the hourly calendar sync
 docs/                 the longer explanations
 ```
 
@@ -118,8 +118,9 @@ subdirectory on GitHub Pages — so **always build links from
 `import.meta.env.BASE_URL`**, never as a bare `/agenda`. `astro.config.mjs` sets
 it from `GITHUB_ACTIONS`.
 
-A second workflow syncs the Google Calendar every night and commits any change,
-which in turn triggers a deploy. [docs/architecture.md](docs/architecture.md)
+A second workflow syncs the Google Calendar every hour and commits any change,
+then starts a deploy (and once a day regardless, so past actuacions move to the
+historial). [docs/architecture.md](docs/architecture.md)
 covers what it does and does not own.
 
 ## Where to read next
