@@ -5,7 +5,7 @@ membres:
     nom: Alexandra
     cognom: Banegas
     malnom: TERROR
-  - carrec: Secretari
+  - carrec: Secretaria
     nom: Judit
     cognom: Oriol
     malnom: ENGRUNA
