@@ -5,30 +5,36 @@ categories:
     paraules: assaig, assajos
     color: gris
     agenda: true
-    historial: ambCastells
+    historial: mai
   - nom: Diada
     clau: Diada
     paraules: diada
-    color: blau
-    agenda: true
-    historial: sempre
-  - nom: Trobada
-    clau: Trobada
-    paraules: trobada
-    color: blau
+    color: groc
     agenda: true
     historial: sempre
   - nom: Actuació
     clau: Actuacio
     paraules: actuació
+    color: groc
+    agenda: true
+    historial: sempre
+  - nom: Comercial
+    clau: Comercial
+    paraules: comercial
     color: blau
     agenda: true
     historial: sempre
+  - color: groc
+    agenda: true
+    historial: ambCastells
+    nom: Event
+    clau: event
+    paraules: October, Calçotada, Calcotada, Barraques
   - nom: Altres
     clau: Altres
     paraules: ""
-    color: blau
+    color: verd
     agenda: true
-    historial: sempre
-tipusPerDefecte: Actuacio
+    historial: mai
+tipusPerDefecte: Altres
 ---
