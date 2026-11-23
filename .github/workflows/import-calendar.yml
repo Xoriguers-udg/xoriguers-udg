@@ -26,22 +26,42 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
-      # no npm ci: the importer only uses Node built-ins and the project's own
-      # TypeScript helpers, which Node runs by stripping the types
+      # the importer itself only uses Node built-ins and the project's own
+      # TypeScript helpers, which Node runs by stripping the types; the install
+      # is for sharp, which the image step below needs
+      - name: Install dependencies
+        run: npm ci
+
       - name: Import events
         env:
           NODE_OPTIONS: --experimental-strip-types
         run: node scripts/import-calendar.mjs
 
+      # the deploy already serves uploads shrunk; this keeps the stored files
+      # light too, so the repo and the CMS's media library do not fill up with
+      # 5 MB phone photos. The deploy that follows this workflow picks it up.
+      - name: Compress uploaded images
+        run: node --experimental-strip-types scripts/comprimeix-imatges.mjs public/images/uploads
+
       - name: Commit any changes
         run: |
-          if [ -z "$(git status --porcelain src/content/agenda)" ]; then
-            echo "L'agenda ja estava al dia."
+          agenda="$(git status --porcelain src/content/agenda)"
+          imatges="$(git status --porcelain public/images/uploads)"
+          if [ -z "$agenda" ] && [ -z "$imatges" ]; then
+            echo "L'agenda ja estava al dia i les imatges ja tenien bona mida."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/content/agenda
-          git commit -m "Sincronitza l'agenda amb el calendari"
+          git add src/content/agenda public/images/uploads
+          if [ -n "$agenda" ] && [ -n "$imatges" ]; then
+            missatge="Sincronitza l'agenda amb el calendari i comprimeix les fotos pujades"
+          elif [ -n "$agenda" ]; then
+            missatge="Sincronitza l'agenda amb el calendari"
+          else
+            missatge="Comprimeix les fotos pujades"
+          fi
+          git commit -m "$missatge"
           git push

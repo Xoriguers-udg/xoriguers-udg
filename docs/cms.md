@@ -30,9 +30,18 @@ entry out of the build entirely.
   its locale first. Both Decap scripts must stay `is:inline`: without it Astro
   turns the CDN script into a deferred module and the merge runs before `CMS`
   exists.
-- **No preview pane.** Every collection has `editor: { preview: false }`.
-  Decap's preview is the raw fields with no styling, which reads as broken;
-  «Veure publicació» opens the real page instead, through `site_url` plus each
+- **A styled preview pane** on Agenda, Galeria, Notícies, Pàgines and the
+  banners. [`public/admin/preview.js`](../public/admin/preview.js) registers a
+  template per form, written with Decap's `h` so it needs no build, and
+  [`src/pages/admin/preview.css.ts`](../src/pages/admin/preview.css.ts) serves
+  the pane one stylesheet: the site's tokens, base and global CSS plus
+  [`src/styles/preview.css`](../src/styles/preview.css), the few page styles
+  that live in scoped `<style>` blocks. When a page's scoped styles change,
+  change their copy in `preview.css` too. Decap matches a template by the
+  collection's name for a folder and by the file's name for a file, which is
+  why the banners' files are called `capcalera_*`: plain `agenda` would take
+  the diada template. The other forms keep `editor: { preview: false }`;
+  «Veure publicació» opens the real page through `site_url` plus each
   collection's `preview_path`.
 - **Dates are `datetime` with `time_format: false` and `format: YYYY-MM-DD`.**
   Decap 3 removed the old `date` widget: a field still declared as `date` shows
@@ -49,6 +58,26 @@ Galeria's photos stay a list of single images. The image widget's
 `multiple: true` was tried: the default media library still uploads one file
 at a time, and «Escull una imatge diferent» replaces the whole selection, so
 adding one photo meant re-picking the album.
+
+## Uploaded images
+
+Editors upload photos straight from their phones.
+[`scripts/comprimeix-imatges.mjs`](../scripts/comprimeix-imatges.mjs) shrinks
+everything in `public/images/uploads` to 2000px on the longest side and
+re-encodes it (JPEG at 80), keeping the name and format so no path changes. It
+runs in two places:
+
+- **the deploy**, before the build, so a new photo is served small from its
+  first deploy;
+- **the nightly calendar job**, which commits the result, so the repo and the
+  CMS's media library stay light.
+
+The rule is in [`src/lib/compressio.ts`](../src/lib/compressio.ts): an image is
+left alone if it is already within 2000px and 500 KB, or if it carries the
+script's mark in its EXIF «Software» tag. The mark is what keeps the nightly
+run from re-encoding the same photo every night. Writing it replaces the
+phone's EXIF, so the GPS position a phone stores goes with it. PDFs, GIFs and
+SVGs are not touched.
 
 Locally, `local_backend: true` makes Decap talk to `decap-server` instead of
 DecapBridge, so `npm run dev:all` gives you the real CMS writing to your own

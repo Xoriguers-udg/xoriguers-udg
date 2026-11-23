@@ -38,6 +38,12 @@ jobs:
       - name: Test
         run: npm test
 
+      # editors upload photos straight from their phones; what is served is
+      # shrunk here, so a new photo is light from its first deploy. The nightly
+      # job commits the same result to the repo.
+      - name: Compress uploaded images
+        run: node --experimental-strip-types scripts/comprimeix-imatges.mjs public/images/uploads
+
       - name: Build
         run: npm run build
 

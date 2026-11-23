@@ -41,8 +41,10 @@ slug:
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
 
-# No preview pane on any form: Decap's preview is the raw fields with no styling,
-# which reads as broken. «Veure publicació» at the top opens the real page.
+# The preview pane: Agenda, Galeria, Notícies, Pàgines and the banners have one,
+# drawn with the site's CSS by public/admin/preview.js. The rest (juntes,
+# botiga, documents, settings) are forms with nothing worth previewing, so the
+# pane is off there and «Veure publicació» opens the real page instead.
 #
 # The sidebar runs in the order people reach for things: the agenda and its
 # photos first, the settings nobody needs to touch last. Every collection keeps
@@ -51,7 +53,6 @@ public_folder: "/images/uploads"
 collections:
   - name: "agenda"
     label: "Agenda"
-    editor: { preview: false }
     label_singular: "actuació"
     description: "Una entrada per a cada actuació, diada o assaig, del 1998 ençà. Les noves arriben soles cada nit des del Google Calendar de la colla; aquí s'hi afegeixen els castells, les fotos i les notes. Els canvis es veuen a la web en un parell de minuts."
     folder: "src/content/agenda"
@@ -140,7 +141,6 @@ collections:
 
   - name: "galeria"
     label: "Galeria"
-    editor: { preview: false }
     label_singular: "àlbum"
     description: "Un àlbum per a cada diada o activitat. Un àlbum només surt a la web quan té almenys una foto, i a la portada quan en té tres o més."
     folder: "src/content/galeria"
@@ -175,7 +175,6 @@ collections:
 
   - name: "noticies"
     label: "Notícies"
-    editor: { preview: false }
     label_singular: "notícia"
     description: "Les dues notícies publicades més recents surten a la portada. Mentre no n'hi ha cap de publicada, la secció Notícies queda amagada de tota la web."
     folder: "src/content/noticies"
@@ -206,7 +205,6 @@ collections:
 
   - name: "pagines"
     label: "Pàgines"
-    editor: { preview: false }
     label_singular: "pàgina"
     description: "Els textos i les fotos de cada pàgina de la web. Les pàgines no es poden crear ni esborrar, només editar."
     files:
@@ -330,18 +328,17 @@ collections:
   # intro, so they sit apart from the real pages
   - name: "capcaleres"
     label: "Capçaleres de les llistes"
-    editor: { preview: false }
     label_singular: "capçalera"
     description: "La foto de capçalera i el text d'entrada de les pàgines que són llistes (Agenda, Galeria...). Si no hi poses foto, es fa servir la de «Configuració»."
     files:
-      - name: "agenda"
+      - name: "capcalera_agenda"
         label: "Agenda"
         file: "src/content/pagines/agenda.md"
         preview_path: "agenda"
         fields:
           - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
-      - name: "castells"
+      - name: "capcalera_castells"
         label: "Historial de castells"
         file: "src/content/pagines/castells.md"
         preview_path: "castells"
@@ -349,21 +346,21 @@ collections:
           - { label: "Títol", name: "titol", widget: "string", required: false }
           - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
-      - name: "galeria"
+      - name: "capcalera_galeria"
         label: "Galeria"
         file: "src/content/pagines/galeria.md"
         preview_path: "galeria"
         fields:
           - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
-      - name: "noticies"
+      - name: "capcalera_noticies"
         label: "Notícies"
         file: "src/content/pagines/noticies.md"
         preview_path: "noticies"
         fields:
           - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
-      - name: "documents"
+      - name: "capcalera_documents"
         label: "Documents"
         file: "src/content/pagines/documents.md"
         preview_path: "documents"

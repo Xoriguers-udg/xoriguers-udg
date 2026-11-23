@@ -28,6 +28,10 @@ const base = import.meta.env.BASE_URL;
     .guia-ocult { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   </style>
   <script is:inline src="https://unpkg.com/decap-cms@3.16.2/dist/decap-cms.js"></script>
+  {/* the preview pane's templates and styles; the base path is passed in so
+      stored image paths resolve under /xoriguers-udg on GitHub Pages */}
+  <script is:inline define:vars={{ base }}>window.XORI_BASE = base;</script>
+  <script is:inline src={`${base}admin/preview.js`}></script>
   {/* Decap's Catalan leaves some buttons in English ("Add castell", "Expand").
       These fill in the ones an editor meets, on top of Decap's own Catalan; the
       notes and review strings are left out because this CMS uses neither. */}
