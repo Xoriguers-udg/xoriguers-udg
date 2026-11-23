@@ -7,6 +7,7 @@ import { detallsEsdeveniment } from '../../lib/esdeveniment';
 import { urlEmbedMensual } from '../../lib/calendari';
 import { CLASSE_PILL, categoriaDe } from '../../lib/categories';
 import { carregaCategories } from '../../lib/carrega-categories';
+import { ancoraAgenda, teFitxa } from '../../lib/fitxa';
 
 // only what is still to come, of the categories the colla lists here (Configuració
 // → Calendari); everything past belongs to the historial
@@ -36,9 +37,13 @@ const { Content: IntroContent } = await render(capcalera!);
     )}
     {sorted.length > 0 ? (
       <ol class="files">
-        {sorted.map((entry, i) => (
-          <li>
-            <a class={`fila row${i === 0 ? ' propera' : ''}`} href={`${base}agenda/${entry.id}`}>
+        {sorted.map((entry, i) => {
+          // a link only when the entry has a page of its own (src/lib/fitxa.ts):
+          // an actuació from the calendar is all in its row already
+          const Rengle = teFitxa(entry) ? 'a' : 'div';
+          return (
+          <li id={ancoraAgenda(entry.id)}>
+            <Rengle class={`fila row${i === 0 ? ' propera' : ''}`} href={Rengle === 'a' ? `${base}agenda/${entry.id}` : undefined}>
               <time class="date" datetime={entry.data.data.toISOString().slice(0, 10)}>{formatDate(entry.data.data)}</time>
               <div class="info">
                 <h2 class="fila-titol">{entry.data.nom}</h2>
@@ -53,9 +58,10 @@ const { Content: IntroContent } = await render(capcalera!);
                   return <span class={`pill ${CLASSE_PILL[categoria.color]}`}>{categoria.nom}</span>;
                 })()}
               </div>
-            </a>
+            </Rengle>
           </li>
-        ))}
+          );
+        })}
       </ol>
     ) : (
       <p class="buit-text empty">
@@ -84,7 +90,11 @@ const { Content: IntroContent } = await render(capcalera!);
   .estats { display: flex; flex-wrap: wrap; gap: var(--space-xs); justify-content: flex-end; }
   /* the one coming up next, the only thing on this page worth the yellow */
   .fila.propera { background: var(--color-signal-wash); }
-  .fila.propera:hover { background: color-mix(in oklab, var(--color-signal-wash) 85%, var(--color-signal)); }
+  a.fila .fila-titol { color: var(--color-accent-deep); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  /* arriving from an old link to this entry (agenda#e-…) */
+  li { scroll-margin-block: var(--space-3xl); }
+  li:target .fila { box-shadow: inset 4px 0 0 var(--color-signal); }
+  a.fila.propera:hover { background: color-mix(in oklab, var(--color-signal-wash) 85%, var(--color-signal)); }
   .empty { padding-block: var(--space-lg); border-block: 1px solid var(--color-rule); }
 
   .calendari { margin-top: var(--section-gap-s); }

@@ -10,6 +10,7 @@ import { mediaUrl } from '../lib/media';
 import { formatDate } from '../lib/format';
 import { alHistorial, categoriaDe } from '../lib/categories';
 import { carregaCategories } from '../lib/carrega-categories';
+import { enllacDiada } from '../lib/fitxa';
 
 interface Props {
   quants?: number;
@@ -27,7 +28,7 @@ const agenda = await getCollection(
   ({ data }) => data.estat === 'publicat' && data.data <= ara && alHistorial(categoriaDe(data.tipus, categories), data.castells.length),
 );
 
-interface Millor { canonic: string; valor: number; primer: { id: string; nom: string; data: Date }; foto?: string; cops: number }
+interface Millor { canonic: string; valor: number; primer: { id: string; nom: string; data: Date; enllac: string }; foto?: string; cops: number }
 const millors = new Map<string, Millor>();
 for (const e of agenda) {
   const llegits = llegeixCastellsRegistrats(e.data.castells);
@@ -38,11 +39,11 @@ for (const e of agenda) {
     const foto = e.data.castells[i].foto;
     const m = millors.get(c.canonic);
     if (!m) {
-      millors.set(c.canonic, { canonic: c.canonic, valor, primer: { id: e.id, nom: e.data.nom, data: e.data.data }, foto, cops: 1 });
+      millors.set(c.canonic, { canonic: c.canonic, valor, primer: { id: e.id, nom: e.data.nom, data: e.data.data, enllac: enllacDiada(base, e) }, foto, cops: 1 });
       return;
     }
     m.cops++;
-    if (e.data.data < m.primer.data) m.primer = { id: e.id, nom: e.data.nom, data: e.data.data };
+    if (e.data.data < m.primer.data) m.primer = { id: e.id, nom: e.data.nom, data: e.data.data, enllac: enllacDiada(base, e) };
     if (!m.foto && foto) m.foto = foto;
   });
 }
@@ -66,7 +67,7 @@ const escrit = (c: string) => c.replace(/^pd/, 'Pd');
           )}
           <p class="millor-notacio display">{escrit(c.canonic)}</p>
           <p class="millor-text">
-            Descarregat per primer cop el <time datetime={c.primer.data.toISOString().slice(0, 10)}>{formatDate(c.primer.data)}</time>, a la <a href={`${base}agenda/${c.primer.id}`}>{c.primer.nom}</a>.
+            Descarregat per primer cop el <time datetime={c.primer.data.toISOString().slice(0, 10)}>{formatDate(c.primer.data)}</time>, a la <a href={c.primer.enllac}>{c.primer.nom}</a>.
             {c.cops > 1 && <> En total, {c.cops} cops.</>}
           </p>
         </li>

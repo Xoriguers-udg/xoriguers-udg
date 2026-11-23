@@ -162,7 +162,12 @@
     const colles = llista(entry, 'collesParticipants');
     const castells = llista(entry, 'castells');
     const ambFotos = castells.some((c) => c.foto);
+    // the same rule as src/lib/fitxa.ts: only an entry with something beyond its
+    // row gets a page; the rest are a row in the agenda or the historial
+    const omplert = (v) => typeof v === 'string' && v.trim() !== '';
+    const teFitxa = omplert(dada(entry, 'body')) || !!cartell || colles.some(omplert) || castells.some((c) => omplert(c.foto));
     return h('div', { className: 'previa' },
+      !teFitxa && nota('Ara surt com una fila a l’agenda o a l’historial, amb el nom, la data, el lloc i els castells. Tindrà pàgina pròpia quan hi afegeixis una foto d’un castell, un cartell, un text o les colles participants.'),
       h('div', { className: 'pagina' },
         h('div', { className: `fitxa${cartell ? ' amb-cartell' : ''}` },
           h('div', null,

@@ -25,8 +25,17 @@ src/content/agenda/2026-10-29-actuacio-barraques.md
       ├── someone records the castells in /admin after it happens
       │
       └── once the date has passed        →  /castells (the archive)
-                                              and its own page, /agenda/<id>
 ```
+
+An entry has a page of its own, `/agenda/<id>`, only when it holds something its
+row cannot show: a photo of a castell, a poster, a text or the colles that took
+part (`src/lib/fitxa.ts`, `teFitxa`). Its rows are then links. Every other entry
+is a plain row, and its address keeps answering with a tiny redirect to that row
+(`/castells#d-<id>` or `/agenda#e-<id>`; the historial opens the season), so
+links shared before and the CMS's «Veure a la web» still land. The redirects are
+`noindex` and `astro.config.mjs` keeps them out of the sitemap. Today that is 2
+pages out of 285; adding a photo in the CMS makes a diada's row clickable on the
+next publish.
 
 `/agenda` and `/castells` are two queries over the same collection, split by
 date. Nothing is copied between them, so nothing can disagree.

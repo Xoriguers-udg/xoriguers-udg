@@ -5,8 +5,10 @@ import { mediaUrl } from '../../lib/media';
 import { formatDate } from '../../lib/format';
 import { detallsEsdeveniment, llocComplet, temporadaDe } from '../../lib/esdeveniment';
 import { llegeixCastellsRegistrats, notacioAmbEstat } from '../../lib/historial';
-import { CLASSE_PILL, categoriaDe } from '../../lib/categories';
+import { alHistorial, CLASSE_PILL, categoriaDe } from '../../lib/categories';
 import { carregaCategories } from '../../lib/carrega-categories';
+import { ancoraAgenda, ancoraHistorial, teFitxa } from '../../lib/fitxa';
+import { paginaRedireccio } from '../../lib/redireccio';
 
 export async function getStaticPaths() {
   const agenda = await getCollection('agenda', ({ data }) => data.estat === 'publicat');
@@ -17,19 +19,7 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await render(entry);
-
-const pillClass = { descarregat: 'pill-moss', carregat: 'pill-gold', intent: 'pill-neutral' } as const;
-const pillLabel = { descarregat: 'Descarregat', carregat: 'Carregat', intent: 'Intent' } as const;
-
 const base = import.meta.env.BASE_URL;
-const descripcio = [formatDate(entry.data.data), llocComplet(entry.data.lloc, entry.data.poblacio)]
-  .filter(Boolean)
-  .join(', ');
-const lloc = detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.poblacio);
-
-const temporada = temporadaDe(entry.data.data);
-const castells = llegeixCastellsRegistrats(entry.data.castells);
 const categoria = categoriaDe(entry.data.tipus, (await carregaCategories()).categories);
 
 // a past diada belongs to the historial; the agenda only lists what is still to
@@ -37,7 +27,38 @@ const categoria = categoriaDe(entry.data.tipus, (await carregaCategories()).cate
 const avui = new Date();
 avui.setHours(0, 0, 0, 0);
 const jaPassada = entry.data.data < avui;
-const tornarA = jaPassada ? `${base}castells#t-${temporada}` : `${base}agenda`;
+
+// Every entry keeps its address, but only one with something more than its row
+// has a page there (src/lib/fitxa.ts). The rest send the visitor to their row,
+// so a link shared on WhatsApp, or the CMS's «Veure a la web», still lands.
+const redireccio = teFitxa(entry)
+  ? null
+  : base +
+    (jaPassada
+      ? alHistorial(categoria, entry.data.castells.length) ? `castells#${ancoraHistorial(entry.id)}` : 'castells'
+      : categoria.agenda ? `agenda#${ancoraAgenda(entry.id)}` : 'agenda');
+if (redireccio) {
+  return new Response(paginaRedireccio(redireccio, new URL(redireccio, Astro.site).href), {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
+}
+
+const { Content } = await render(entry);
+
+const pillClass = { descarregat: 'pill-moss', carregat: 'pill-gold', intent: 'pill-neutral' } as const;
+const pillLabel = { descarregat: 'Descarregat', carregat: 'Carregat', intent: 'Intent' } as const;
+
+const descripcio = [formatDate(entry.data.data), llocComplet(entry.data.lloc, entry.data.poblacio)]
+  .filter(Boolean)
+  .join(', ');
+const lloc = detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.poblacio);
+
+const temporada = temporadaDe(entry.data.data);
+const castells = llegeixCastellsRegistrats(entry.data.castells);
+// back to the very row this page opened from
+const tornarA = jaPassada
+  ? `${base}castells#${alHistorial(categoria, entry.data.castells.length) ? ancoraHistorial(entry.id) : `t-${temporada}`}`
+  : `${base}agenda`;
 const tornarText = jaPassada ? 'Historial de castells' : 'Agenda';
 const ambFotos = entry.data.castells.some((c) => c.foto);
 ---

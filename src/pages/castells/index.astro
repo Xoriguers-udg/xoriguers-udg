@@ -6,6 +6,7 @@ import { carregaCategories } from '../../lib/carrega-categories';
 import { mediaUrl } from '../../lib/media';
 import { formatDateNumeric } from '../../lib/format';
 import { temporadaDe } from '../../lib/esdeveniment';
+import { ancoraHistorial, teFitxa } from '../../lib/fitxa';
 import {
   ES_FITA,
   GAMMES,
@@ -27,6 +28,8 @@ interface Diada {
   castells: CastellFet[];
   castellsText: string;
   observacio: string;
+  /** whether it has a page of its own (src/lib/fitxa.ts); if not, its row is not a link */
+  fitxa: boolean;
 }
 
 const base = import.meta.env.BASE_URL;
@@ -57,6 +60,7 @@ const diades: Diada[] = passat.map((e) => ({
   castells: llegeixCastellsRegistrats(e.data.castells),
   castellsText: e.data.notacioOriginal ?? '',
   observacio: e.data.observacio ?? '',
+  fitxa: teFitxa(e),
 }));
 
 const totalCastells = diades.reduce((n, d) => n + d.castells.length, 0);
@@ -160,6 +164,8 @@ const llista = [...diades].sort(perData).map((d) => {
   };
 });
 
+// a row with a page is a link; the rest are plain rows, which do not pretend to be
+const etiqueta = (d: Diada) => (d.fitxa ? 'a' : 'div');
 const pillClass: Record<string, string> = {
   descarregat: 'c-descarregat',
   carregat: 'c-carregat',
@@ -224,8 +230,10 @@ const pillClass: Record<string, string> = {
               <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
             </div>
             <div class="season-body" hidden>
-              {f.rows.map((d) => (
-                <a class="diada" href={`${base}agenda/${d.id}`} data-cerca={[d.nom, d.observacio, ...d.castells.flatMap((c) => [c.notacio, notacioAmbEstat(c)])].join(' ').toLowerCase()}>
+              {f.rows.map((d) => {
+                const Rengle = etiqueta(d);
+                return (
+                <Rengle id={ancoraHistorial(d.id)} class="diada" href={d.fitxa ? `${base}agenda/${d.id}` : undefined} data-cerca={[d.nom, d.observacio, ...d.castells.flatMap((c) => [c.notacio, notacioAmbEstat(c)])].join(' ').toLowerCase()}>
                   <div class="diada-date">{dataText(d)}</div>
                   <div>
                     <div class="diada-name">{d.nom || 'Sense nom'}</div>
@@ -240,8 +248,9 @@ const pillClass: Record<string, string> = {
                       <div class={`obs${ES_FITA.test(d.observacio) ? ' is-fita' : ''}`}>{d.observacio}</div>
                     )}
                   </div>
-                </a>
-              ))}
+                </Rengle>
+                );
+              })}
             </div>
           </div>
         )
@@ -299,7 +308,9 @@ const pillClass: Record<string, string> = {
         <span class="num">Punts</span>
       </div>
       <div id="llista-diades">
-        {llista.map((x) => (
+        {llista.map((x) => {
+          const Rengle = etiqueta(x.diada);
+          return (
           <div
             class="ditem"
             data-d={clau(x.diada)}
@@ -313,7 +324,7 @@ const pillClass: Record<string, string> = {
             <div class="grouphead" hidden>
               {x.diada.nom} <span>({x.recurrencia} {x.recurrencia === 1 ? 'vegada' : 'edicions'})</span>
             </div>
-            <a class="drow cols-diades" href={`${base}agenda/${x.diada.id}`}>
+            <Rengle class="drow cols-diades" href={x.diada.fitxa ? `${base}agenda/${x.diada.id}` : undefined}>
               <div class="diada-date">{dataText(x.diada)}</div>
               <div class="diada-date">{x.diada.temporada}</div>
               <div>
@@ -330,9 +341,10 @@ const pillClass: Record<string, string> = {
                 )}
               </div>
               <div class="pts" data-pts={x.punts}>{x.punts > 0 ? x.punts.toLocaleString('ca-ES') : ''}</div>
-            </a>
+            </Rengle>
           </div>
-        ))}
+          );
+        })}
       </div>
       <p class="empty-state" id="cap-diada" hidden>Cap diada coincideix amb aquesta cerca.</p>
     </section>
@@ -488,14 +500,19 @@ const pillClass: Record<string, string> = {
   cerca.addEventListener('input', filter);
   reorder();
 
-  // arriving from a diada's page via #t-2025-2026 should open that season
+  // #t-2025-2026 opens that season; #d-<id> opens the season that holds that
+  // diada and brings its row into view (the links to a diada without a page
+  // of its own land here, src/lib/fitxa.ts)
   function obreDelHash() {
-    if (!location.hash.startsWith('#t-')) return;
-    const season = document.querySelector(location.hash) as HTMLElement | null;
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!/^[td]-/.test(id)) return;
+    const objectiu = document.getElementById(id);
+    const season = objectiu?.closest('.season') as HTMLElement | null;
     const head = season?.querySelector('.season-head') as HTMLElement | null;
-    if (!head || season!.classList.contains('open')) return;
-    toggleSeason(head);
-    season!.scrollIntoView({ block: 'center' });
+    if (!objectiu || !season || !head) return;
+    if (tab('temporades').getAttribute('aria-selected') !== 'true') tab('temporades').click();
+    if (!season.classList.contains('open')) toggleSeason(head);
+    objectiu.scrollIntoView({ block: 'center' });
   }
   window.addEventListener('hashchange', obreDelHash);
   obreDelHash();
@@ -598,10 +615,15 @@ const pillClass: Record<string, string> = {
     border-top: 1px solid var(--color-rule); text-decoration: none; color: var(--color-ink);
     border-radius: var(--space-xs); transition: background-color var(--dur-micro) var(--ease-out);
   }
-  .diada:hover { background: var(--color-paper-3); color: var(--color-ink); }
-  .diada:active { background: var(--color-accent-wash); }
-  .diada:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
-  .diada:hover .diada-name { color: var(--color-accent-deep); }
+  a.diada:hover { background: var(--color-paper-3); color: var(--color-ink); }
+  a.diada:active { background: var(--color-accent-wash); }
+  a.diada:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+  /* most rows are not links (src/lib/fitxa.ts): the few with photos say so */
+  a .diada-name { color: var(--color-accent-deep); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  a:hover .diada-name { text-decoration-thickness: 2px; }
+  /* arriving from a link to this diada (castells#d-…) */
+  .diada { scroll-margin-block: var(--space-3xl); }
+  .diada:target { background: var(--color-signal-wash); }
   .diada-date { font-size: var(--text-sm); color: var(--color-ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .diada-name { font-weight: 600; }
   .obs { margin-top: var(--space-xs); font-size: var(--text-sm); color: var(--color-ink-2); }
@@ -631,10 +653,9 @@ const pillClass: Record<string, string> = {
     border-bottom: 1px solid var(--color-rule); text-decoration: none; color: var(--color-ink);
     transition: background-color var(--dur-micro) var(--ease-out);
   }
-  .drow:hover { background: var(--color-paper-2); color: var(--color-ink); }
-  .drow:active { background: var(--color-paper-3); }
-  .drow:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
-  .drow:hover .diada-name { color: var(--color-accent-deep); }
+  a.drow:hover { background: var(--color-paper-2); color: var(--color-ink); }
+  a.drow:active { background: var(--color-paper-3); }
+  a.drow:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
   .pts { font-size: var(--text-md); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .empty-state { padding: var(--space-xl) var(--space-sm); font-size: var(--text-lead); color: var(--color-ink-2); }
   .source {

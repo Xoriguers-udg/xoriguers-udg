@@ -8,6 +8,7 @@ import { detallsEsdeveniment } from '../lib/esdeveniment';
 import { isUploadedPath } from '../lib/media';
 import { alHistorial, categoriaDe } from '../lib/categories';
 import { carregaCategories } from '../lib/carrega-categories';
+import { enllacDiada, teFitxa } from '../lib/fitxa';
 
 const base = import.meta.env.BASE_URL;
 const config = await getEntry('configuracio', 'general');
@@ -136,9 +137,12 @@ const album = albums
       </div>
       {properes.length > 0 ? (
         <ol class="properes-llista">
-          {properes.map((e, i) => (
+          {properes.map((e, i) => {
+            // a link only when the entry has a page of its own (src/lib/fitxa.ts)
+            const Rengle = teFitxa(e) ? 'a' : 'div';
+            return (
             <li>
-              <a class={`properes-row${i === 0 ? ' primera' : ''}`} href={`${base}agenda/${e.id}`}>
+              <Rengle class={`properes-row${i === 0 ? ' primera' : ''}`} href={Rengle === 'a' ? `${base}agenda/${e.id}` : undefined}>
                 <time class="properes-data" datetime={e.data.data.toISOString().slice(0, 10)}>
                   <span class="properes-dia display">{e.data.data.getDate()}</span>
                   <span class="properes-mes">{mes.format(e.data.data)}</span>
@@ -147,9 +151,10 @@ const album = albums
                 {detallsEsdeveniment(e.data.hora, e.data.lloc, e.data.poblacio) && (
                   <span class="properes-meta">{detallsEsdeveniment(e.data.hora, e.data.lloc, e.data.poblacio)}</span>
                 )}
-              </a>
+              </Rengle>
             </li>
-          ))}
+          );
+          })}
         </ol>
       ) : (
         <div class="properes-buit">
@@ -177,7 +182,7 @@ const album = albums
           <div class="castells-cap">
             <h2 id="castells-titol">Últims castells</h2>
             <p class="castells-diada">
-              <a href={`${base}agenda/${ultimaActuacio!.id}`}>{ultimaActuacio!.data.nom}</a>, <time datetime={ultimaActuacio!.data.data.toISOString().slice(0, 10)}>{formatDateShort(ultimaActuacio!.data.data)}</time>
+              <a href={enllacDiada(base, ultimaActuacio!)}>{ultimaActuacio!.data.nom}</a>, <time datetime={ultimaActuacio!.data.data.toISOString().slice(0, 10)}>{formatDateShort(ultimaActuacio!.data.data)}</time>
             </p>
           </div>
           <ul class="castells-llista">
@@ -411,10 +416,11 @@ const album = albums
     text-decoration: none;
     transition: background-color var(--dur-short) var(--ease-out);
   }
-  .properes-row:hover { background: var(--color-paper-3); color: var(--color-ink); }
-  .properes-row:active { background: var(--color-accent-wash); }
+  a.properes-row:hover { background: var(--color-paper-3); color: var(--color-ink); }
+  a.properes-row:active { background: var(--color-accent-wash); }
   .properes-row.primera { background: var(--color-signal-wash); }
-  .properes-row.primera:hover { background: color-mix(in oklab, var(--color-signal-wash) 85%, var(--color-signal)); }
+  a.properes-row .properes-nom { color: var(--color-accent-deep); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  a.properes-row.primera:hover { background: color-mix(in oklab, var(--color-signal-wash) 85%, var(--color-signal)); }
   .properes-data { grid-area: data; display: flex; flex-direction: column; }
   .properes-dia { font-size: var(--text-2xl); line-height: 1; font-variant-numeric: tabular-nums; }
   .properes-mes { font-size: var(--text-xs); color: var(--color-ink-2); }
