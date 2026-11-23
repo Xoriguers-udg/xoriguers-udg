@@ -2,15 +2,66 @@
 const base = import.meta.env.BASE_URL;
 ---
 <!doctype html>
-<html>
+<html lang="ca">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
   <title>Contingut · Xoriguers</title>
+  <link rel="icon" type="image/png" href={`${base}images/escut-xoriguers.png`} />
   <link href={`${base}admin/config.yml`} type="text/yaml" rel="cms-config-url" />
+  <script is:inline>window.CMS_MANUAL_INIT = true;</script>
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@3.16.2/dist/decap-cms.js"></script>
+  {/* the guide is one tap away from every screen of the CMS */}
+  <a class="guia-boto" href={`${base}admin/guia/`} target="_blank" rel="noreferrer">Guia<span class="guia-ocult"> (s’obre en una pestanya nova)</span></a>
+  <style is:inline>
+    .guia-boto {
+      position: fixed; right: 16px; bottom: 16px; z-index: 300;
+      display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+      border-radius: 999px; background: #e1a800; color: #1a1400;
+      font: 600 15px/1 system-ui, sans-serif; text-decoration: none;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
+    }
+    .guia-boto:hover { background: #c99700; }
+    .guia-boto:focus-visible { outline: 2px solid #0b4f73; outline-offset: 2px; }
+    .guia-ocult { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  </style>
+  <script is:inline src="https://unpkg.com/decap-cms@3.16.2/dist/decap-cms.js"></script>
+  {/* Decap's Catalan leaves some buttons in English ("Add castell", "Expand").
+      These fill in the ones an editor meets, on top of Decap's own Catalan; the
+      notes and review strings are left out because this CMS uses neither. */}
+  <script is:inline>
+    (() => {
+      const falten = {
+        collection: { collectionTop: { viewAsList: 'Veure com a llista', viewAsGrid: 'Veure com a graella' } },
+        editor: {
+          editorControl: { field: { widgetLabel: 'Camp %{widgetLabel}' } },
+          editorInterface: { toggleScrollSync: 'Desplaçament sincronitzat' },
+          editorWidgets: {
+            markdown: {
+              strikethrough: 'Ratllat',
+              quote: 'Cita',
+              toggleMode: { rich: 'Canvia a text enriquit', markdown: 'Canvia a Markdown' },
+            },
+            image: { chooseMultiple: 'Escull imatges', addMore: 'Afegeix més imatges', removeAll: 'Treu totes les imatges' },
+            file: { chooseMultiple: 'Escull fitxers', addMore: 'Afegeix més fitxers', removeAll: 'Treu tots els fitxers' },
+            datetime: { setToNow: 'Posa-hi la data d’avui' },
+            list: { add: 'Afegeix %{item}', addType: 'Afegeix %{item}' },
+            object: { expand: 'Desplega', collapse: 'Plega' },
+          },
+        },
+        mediaLibrary: { mediaLibraryModal: { close: 'Tanca' } },
+        ui: { settingsDropdown: { account: 'Opcions del compte' } },
+      };
+      const fusiona = (a, b) => {
+        const r = { ...a };
+        for (const [k, v] of Object.entries(b)) r[k] = v && typeof v === 'object' ? fusiona(a?.[k] ?? {}, v) : v;
+        return r;
+      };
+      CMS.registerLocale('ca', fusiona(CMS.getLocale('ca'), falten));
+      CMS.init();
+    })();
+  </script>
 </body>
 </html>

@@ -1,6 +1,5 @@
 ---
 titol: Xoriguers UdG
-contacteEmail: xoriguers.udg@gmail.com
 contacteInstagram: "@xoriguersudg"
 imatge: /images/uploads/diada-primavera-2026-3d7a.jpg
 fotoColla: /images/uploads/colla-xoriguers-al-complet.jpg

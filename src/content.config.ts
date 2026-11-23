@@ -112,7 +112,6 @@ const pagines = defineCollection({
     presentacioTitol: z.preprocess(emptyToUndefined, z.string().optional()),
     properesTitol: z.preprocess(emptyToUndefined, z.string().optional()),
     assajos: z.array(assaig).default([]),
-    contacteEmail: z.string().optional(),
     contacteInstagram: z.string().optional(),
     /** Xorimúsics: the sheet music for the tocs, one PDF each. */
     partitures: z
@@ -206,10 +205,8 @@ const configuracio = defineCollection({
     youtubeUrl: z.string().optional(),
     facebookUrl: z.string().optional(),
     twitterUrl: z.string().optional(),
-    merchandiseEmail: z.string().optional(),
     googleCalendarEmbedUrl: z.string().optional(),
     contacteComercialEmail: z.string().optional(),
-    contacteComercialNom: z.string().optional(),
     capceleraImatge: z.string().optional(),
     descripcioGeneral: z.string().optional(),
   }),

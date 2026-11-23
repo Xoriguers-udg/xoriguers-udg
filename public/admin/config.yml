@@ -15,11 +15,13 @@ backend:
     deleteMedia: Delete “{{path}}” - {{author-name}} <{{author-login}}> via DecapBridge
     openAuthoring: Message {{message}} - {{author-name}} <{{author-login}}> via DecapBridge
 
-# Better Decap + Bridge logo (optional)
-logo_url: https://decapbridge.com/decapcms-with-bridge.svg
-
-# Add site links in Decap CMS (optional)
-site_url: https://iochoa808.github.io
+# The people who edit this are the colla's comunicació, not developers: the
+# interface is in Catalan, it carries the colla's escut, and every button that
+# says "view on site" lands on the right page.
+locale: "ca"
+logo_url: https://iochoa808.github.io/xoriguers-udg/images/escut-xoriguers.png
+site_url: https://iochoa808.github.io/xoriguers-udg
+display_url: https://iochoa808.github.io/xoriguers-udg
 
 # local_backend still lets `npm run dev:all` test against your local
 # git checkout without touching DecapBridge/GitHub — Decap only honors
@@ -30,20 +32,41 @@ local_backend: true
 # straight to main and the deploy takes it live. Nothing to mark ready, nothing
 # to review, no pull request in between.
 
+# file names made from a title lose their accents: "Comença" becomes "comenca"
+slug:
+  encoding: "ascii"
+  clean_accents: true
+  sanitize_replacement: "-"
+
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
 
+# No preview pane on any form: Decap's preview is the raw fields with no styling,
+# which reads as broken. «Veure publicació» at the top opens the real page.
+#
+# The sidebar runs in the order people reach for things: the agenda and its
+# photos first, the settings nobody needs to touch last. Every collection keeps
+# its `name`, which is what the files and the commit messages use; only the
+# labels, the order and the help changed.
 collections:
   - name: "agenda"
     label: "Agenda"
+    editor: { preview: false }
+    label_singular: "actuació"
+    description: "Una entrada per a cada actuació, diada o assaig, del 1998 ençà. Les noves arriben soles cada nit des del Google Calendar de la colla; aquí s'hi afegeixen els castells, les fotos i les notes. Els canvis es veuen a la web en un parell de minuts."
     folder: "src/content/agenda"
     create: true
+    # the agenda is 25 years of history: an entry that should not show is
+    # set to Esborrany or Cancel·lada, never deleted
+    delete: false
+    preview_path: "agenda/{{slug}}"
     identifier_field: "nom"
     slug: "{{fields.data}}-{{fields.nom}}"
     # Decap only infers sortable fields called title/date/author/description, so
     # with 280-odd diades and Catalan field names the list arrived unsorted.
     summary: "{{data}} · {{nom}}"
-    sortable_fields: ["data", "nom", "tipus"]
+    # newest first: what people open the agenda for is this season, not 1999
+    sortable_fields: [{ field: "data", default_sort: "desc" }, "nom", "tipus"]
     view_groups:
       - label: "Any"
         field: "data"
@@ -64,18 +87,25 @@ collections:
         field: "observacio"
         pattern: "."
     fields:
-      - { label: "Nom", name: "nom", widget: "string" }
-      - { label: "Data", name: "data", widget: "date" }
-      - { label: "Hora", name: "hora", widget: "string", required: false }
-      - { label: "Lloc", name: "lloc", widget: "string", required: false }
-      - { label: "Població", name: "poblacio", widget: "string", required: false }
+      # the nightly import rewrites these five from Google Calendar (see
+      # scripts/import-calendar.mjs, DEL_CALENDARI), so the hint sends people there
+      - { label: "Nom", name: "nom", widget: "string", hint: "Si l'actuació ve del Google Calendar, canvia el nom allà: cada nit es torna a copiar del calendari." }
+      - { label: "Data", name: "data", widget: "datetime", date_format: "DD/MM/YYYY", time_format: false, format: "YYYY-MM-DD", hint: "Si ve del Google Calendar, canvia-la allà." }
+      - { label: "Hora", name: "hora", widget: "string", required: false, hint: "Ex: 12:30. Si ve del Google Calendar, canvia-la allà." }
+      - { label: "Lloc", name: "lloc", widget: "string", required: false, hint: "Ex: Església de Sant Domènec. Si ve del Google Calendar, canvia'l allà." }
+      - { label: "Població", name: "poblacio", widget: "string", required: false, hint: "Ex: Girona. Si ve del Google Calendar, canvia-la allà." }
       - label: "Tipus"
         name: "tipus"
         widget: "select"
-        options: ["Actuacio", "Assaig", "Diada", "Trobada", "Altres"]
-      - { label: "Cartell", name: "cartell", widget: "image", required: false }
-      - { label: "Colles participants", name: "collesParticipants", widget: "list", required: false }
-      - { label: "Mostrar a portada", name: "mostrarPortada", widget: "boolean", default: false, hint: "Si es marca, aquesta actuació es mostra a la portada com a propera actuació (encara que no sigui la més propera en data). Si cap actuació ho té marcat, es mostra automàticament la que ve abans." }
+        options:
+          - { label: "Actuació", value: "Actuacio" }
+          - { label: "Assaig", value: "Assaig" }
+          - { label: "Diada", value: "Diada" }
+          - { label: "Trobada", value: "Trobada" }
+          - { label: "Altres", value: "Altres" }
+      - { label: "Cartell", name: "cartell", widget: "image", required: false, hint: "El cartell de l'actuació, si n'hi ha. Surt a la seva fitxa." }
+      - { label: "Colles participants", name: "collesParticipants", widget: "list", required: false, hint: "Les altres colles que hi actuen, separades per comes. Ex: Arreplegats, Ganàpies" }
+      - { label: "Mostrar a portada", name: "mostrarPortada", widget: "boolean", default: false, hint: "Si ho marques, surt la primera a «Pròximes actuacions» de la portada, encara que n'hi hagi una altra abans. Si no en marques cap, surten per ordre de data." }
       - label: "Estat"
         name: "estat"
         widget: "select"
@@ -83,72 +113,57 @@ collections:
           - { label: "Publicat (es veu a la web)", value: "publicat" }
           - { label: "Esborrany (no es publica)", value: "esborrany" }
         default: "publicat"
-      - { label: "Cancel·lada", name: "cancelada", widget: "boolean", default: false }
-      - { label: "Descripció", name: "body", widget: "markdown" }
+      - { label: "Cancel·lada", name: "cancelada", widget: "boolean", default: false, hint: "Surt a la web amb l'etiqueta «Cancel·lada». Si ve del Google Calendar, es marca sola quan s'hi cancel·la." }
+      - { label: "Descripció", name: "body", widget: "markdown", hint: "Opcional. Què hi passarà o què hi va passar, en un parell de frases." }
       - label: "Castells"
         name: "castells"
         widget: "list"
         required: false
+        label_singular: "castell"
         summary: "{{fields.castell}} · {{fields.estat}}"
+        hint: "Un per castell, en l'ordre en què es van fer. Omplen l'historial, els millors castells de «La colla» i «Últims castells» de la portada."
         fields:
-          - { label: "Castell", name: "castell", widget: "string", hint: "Notació: 4d8, 3d7, 2d6..." }
+          - { label: "Castell", name: "castell", widget: "string", hint: "Com s'escriu: 3d8f, 4d7, 5d7, 3d7a, Pd6f, 2d6..." }
           - label: "Estat"
             name: "estat"
             widget: "select"
-            options: ["descarregat", "carregat", "intent"]
-          - { label: "Ronda", name: "ronda", widget: "number", required: false, value_type: "int" }
-          - { label: "Foto", name: "foto", widget: "image", required: false }
+            options:
+              - { label: "Descarregat (fet i desfet sencer)", value: "descarregat" }
+              - { label: "Carregat (coronat, però va caure en baixar)", value: "carregat" }
+              - { label: "Intent (no es va coronar)", value: "intent" }
+          - { label: "Ronda", name: "ronda", widget: "number", required: false, value_type: "int", hint: "Opcional. 1, 2, 3..." }
+          - { label: "Foto", name: "foto", widget: "image", required: false, hint: "Una foto d'aquest castell. Surt a la fitxa de la diada i, si és dels millors de la colla, a «La colla»." }
       - { label: "Observació", name: "observacio", widget: "string", required: false, hint: "Fites i notes: «Primer 5d7 de la història», «Cancel·lat per pluja». Es destaca a la fitxa i a l'historial." }
-      - { label: "Compta per al CCCC", name: "cccc", widget: "boolean", default: false, required: false }
-      - { label: "Notació original", name: "notacioOriginal", widget: "string", required: false, hint: "Els castells tal com es van escriure al registre antic. No cal tocar-ho." }
-      - { label: "Identificador del calendari", name: "calendarUid", widget: "string", required: false, hint: "L'omple la importació de Google Calendar. No el canviïs: és el que evita que es dupliqui l'esdeveniment." }
-
-  - name: "noticies"
-    label: "Notícies"
-    folder: "src/content/noticies"
-    create: true
-    identifier_field: "titol"
-    slug: "{{fields.titol}}"
-    summary: "{{data}} · {{titol}}"
-    sortable_fields: ["data", "titol"]
-    view_groups:
-      - label: "Any"
-        field: "data"
-        pattern: '\d{4}'
-    fields:
-      - { label: "Títol", name: "titol", widget: "string" }
-      - { label: "Data", name: "data", widget: "date" }
-      - { label: "Resum", name: "resum", widget: "text" }
-      - { label: "Imatge", name: "imatge", widget: "image", required: false }
-      - label: "Estat"
-        name: "estat"
-        widget: "select"
-        options:
-          - { label: "Publicat (es veu a la web)", value: "publicat" }
-          - { label: "Esborrany (no es publica)", value: "esborrany" }
-        default: "publicat"
-      - { label: "Cos", name: "body", widget: "markdown" }
+      - { label: "Compta per al CCCC", name: "cccc", widget: "boolean", default: false, required: false, hint: "No cal tocar-ho. Una marca que ve del registre antic; ara mateix no surt enlloc de la web." }
+      - { label: "Notació original", name: "notacioOriginal", widget: "string", required: false, hint: "No cal tocar-ho. Els castells tal com es van escriure al registre antic." }
+      - { label: "Identificador del calendari", name: "calendarUid", widget: "string", required: false, hint: "No el toquis mai. L'omple la importació del Google Calendar i és el que evita que l'actuació surti repetida." }
 
   - name: "galeria"
     label: "Galeria"
+    editor: { preview: false }
+    label_singular: "àlbum"
+    description: "Un àlbum per a cada diada o activitat. Un àlbum només surt a la web quan té almenys una foto, i a la portada quan en té tres o més."
     folder: "src/content/galeria"
     create: true
+    preview_path: "galeria/{{slug}}"
     identifier_field: "nom"
     slug: "{{fields.nom}}"
     summary: "{{data}} · {{nom}}"
-    sortable_fields: ["data", "nom"]
+    sortable_fields: [{ field: "data", default_sort: "desc" }, "nom"]
     view_groups:
       - label: "Any"
         field: "data"
         pattern: '\d{4}'
     fields:
-      - { label: "Nom", name: "nom", widget: "string" }
-      - { label: "Data", name: "data", widget: "date" }
-      - { label: "Portada", name: "portada", widget: "image", required: false }
+      - { label: "Nom", name: "nom", widget: "string", hint: "Ex: Diada de Primavera 2026" }
+      - { label: "Data", name: "data", widget: "datetime", date_format: "DD/MM/YYYY", time_format: false, format: "YYYY-MM-DD", hint: "El dia de l'activitat. L'àlbum més recent és el que surt a la portada." }
+      - { label: "Portada", name: "portada", widget: "image", required: false, hint: "La foto que representa l'àlbum a la Galeria. Si la deixes buida, es fa servir la primera foto." }
       - label: "Fotos"
         name: "fotos"
         widget: "list"
         required: false
+        label_singular: "foto"
+        hint: "Prem «Afegeix foto» per a cada foto. Surten en aquest ordre; es poden arrossegar per canviar-lo."
         field: { label: "Foto", name: "foto", widget: "image" }
       - label: "Estat"
         name: "estat"
@@ -158,35 +173,71 @@ collections:
           - { label: "Esborrany (no es publica)", value: "esborrany" }
         default: "publicat"
 
+  - name: "noticies"
+    label: "Notícies"
+    editor: { preview: false }
+    label_singular: "notícia"
+    description: "Les dues notícies publicades més recents surten a la portada. Mentre no n'hi ha cap de publicada, la secció Notícies queda amagada de tota la web."
+    folder: "src/content/noticies"
+    create: true
+    preview_path: "noticies/{{slug}}"
+    identifier_field: "titol"
+    slug: "{{fields.titol}}"
+    summary: "{{data}} · {{titol}}"
+    sortable_fields: [{ field: "data", default_sort: "desc" }, "titol"]
+    view_groups:
+      - label: "Any"
+        field: "data"
+        pattern: '\d{4}'
+    fields:
+      - { label: "Títol", name: "titol", widget: "string" }
+      - { label: "Data", name: "data", widget: "datetime", date_format: "DD/MM/YYYY", time_format: false, format: "YYYY-MM-DD" }
+      - { label: "Resum", name: "resum", widget: "text", hint: "Una o dues frases. És el que surt a la portada i a la llista de notícies." }
+      - { label: "Imatge", name: "imatge", widget: "image", required: false }
+      - label: "Estat"
+        name: "estat"
+        widget: "select"
+        hint: "Amb «Esborrany» la pots desar i acabar-la un altre dia sense que surti a la web."
+        options:
+          - { label: "Publicat (es veu a la web)", value: "publicat" }
+          - { label: "Esborrany (no es publica)", value: "esborrany" }
+        default: "publicat"
+      - { label: "Cos", name: "body", widget: "markdown", hint: "El text sencer de la notícia." }
+
   - name: "pagines"
     label: "Pàgines"
+    editor: { preview: false }
+    label_singular: "pàgina"
+    description: "Els textos i les fotos de cada pàgina de la web. Les pàgines no es poden crear ni esborrar, només editar."
     files:
       - name: "inici"
         label: "Inici (portada)"
         file: "src/content/pagines/inici.md"
+        preview_path: ""
         fields:
-          - { label: "Titular principal", name: "titol", widget: "string", hint: "Es mostra en majúscules a la portada. No cal salt de línia, s'ajusta sol." }
-          - { label: "Text del botó", name: "ctaText", widget: "string", required: false, hint: "Per defecte: 'Vine a assajar'" }
-          - { label: "Fotografia de portada", name: "imatge", widget: "image", required: false, hint: "Si no se'n puja cap, es mostra un patró decoratiu." }
-          - { label: "Títol de la presentació", name: "presentacioTitol", widget: "string", required: false, hint: "Petit títol a sobre del text de presentació, a l'esquerra. Es pot deixar buit." }
-          - { label: "Text de presentació", name: "body", widget: "markdown", required: false, hint: "El text que explica qui som. Surt a l'esquerra, al costat de les pròximes actuacions." }
-          - { label: "Títol de les pròximes actuacions", name: "properesTitol", widget: "string", required: false, hint: "Per defecte: 'Pròximes actuacions'. Surt a la dreta del text de presentació." }
+          - { label: "Titular principal", name: "titol", widget: "string", hint: "La frase gran en blanc sobre el blau, a dalt de tot. Com més curta, millor." }
+          - { label: "Text del botó", name: "ctaText", widget: "string", required: false, hint: "Per defecte: «Vine a assajar»." }
+          - { label: "Fotografia de portada", name: "imatge", widget: "image", required: false, hint: "La foto gran de la dreta, a dalt de tot." }
+          - { label: "Títol de la presentació", name: "presentacioTitol", widget: "string", required: false, hint: "Per defecte: «Qui som»." }
+          - { label: "Text de presentació", name: "body", widget: "markdown", required: false, hint: "Qui som, en un parell de frases. Surt a l'esquerra, al costat de les pròximes actuacions." }
+          - { label: "Títol de les pròximes actuacions", name: "properesTitol", widget: "string", required: false, hint: "Per defecte: «Pròximes actuacions»." }
       - name: "la_colla"
-        label: "La colla"
+        label: "La colla (Qui som)"
         file: "src/content/pagines/la-colla.md"
+        preview_path: "la-colla"
         fields:
           - { label: "Títol", name: "titol", widget: "string" }
-          - { label: "Text principal", name: "body", widget: "markdown" }
-          - { label: "Fotografia", name: "imatge", widget: "image", required: false }
-          - { label: "Foto de tota la colla", name: "fotoColla", widget: "image", required: false, hint: "Una foto de grup. Surt a La colla i a la portada, al costat de la crida a apuntar-se." }
-          - { label: "Email de contacte", name: "contacteEmail", widget: "string" }
-          - { label: "Instagram", name: "contacteInstagram", widget: "string" }
+          - { label: "Text principal", name: "body", widget: "markdown", hint: "El primer paràgraf surt en gran a dalt de tot; la resta, a sota de la foto de tota la colla." }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
+          - { label: "Foto de tota la colla", name: "fotoColla", widget: "image", required: false, hint: "Una foto de grup. Surt en gran a «La colla», i a la franja groga de la portada si Uneix-te no té foto pròpia." }
+          - { label: "Instagram", name: "contacteInstagram", widget: "string", hint: "El nom d'usuari, amb @. Ex: @xoriguersudg" }
       - name: "uneix_te"
         label: "Uneix-te"
         file: "src/content/pagines/uneix-te.md"
+        preview_path: "uneix-te"
         fields:
           - { label: "Títol", name: "titol", widget: "string" }
-          - { label: "Text de la crida", name: "body", widget: "markdown", hint: "Text d'entrada de la pàgina. Els horaris i els mapes surten dels blocs d'assaig de sota." }
+          - { label: "Text de la crida", name: "body", widget: "markdown", hint: "Text d'entrada de la pàgina. La primera frase també surt a la franja groga de la portada." }
           - label: "Curs de crèdits"
             name: "curs"
             widget: "object"
@@ -199,7 +250,7 @@ collections:
                 name: "dades"
                 widget: "list"
                 required: false
-                label_singular: "Dada"
+                label_singular: "dada"
                 summary: "{{fields.etiqueta}}: {{fields.valor}}"
                 hint: "Crèdits, preu… Cada dada surt com una etiqueta i el seu valor dins el quadre groc. Es poden afegir i treure lliurement."
                 fields:
@@ -209,155 +260,142 @@ collections:
             name: "assajos"
             widget: "list"
             required: false
-            label_singular: "Assaig"
+            label_singular: "assaig"
             summary: "{{fields.titol}} · {{fields.ubicacio}}"
-            hint: "Cada bloc surt amb el seu text i el seu mapa, en aquest ordre. El text també es mostra a «La colla», i el bloc amb la clau 'musics' a la pàgina dels Xorimúsics."
+            hint: "Aquí és l'únic lloc on s'escriuen els horaris d'assaig: surten aquí, a «La colla», a la portada i, el dels músics, a «Xorimúsics»."
             fields:
-              - { label: "Títol", name: "titol", widget: "string" }
-              - { label: "Text", name: "text", widget: "text", required: false, hint: "Curt: quan s'assaja." }
-              - { label: "Ubicació", name: "ubicacio", widget: "string", required: false, hint: "Coordenades 'latitud,longitud' o el nom del lloc. És el que busca el mapa." }
-              - { label: "Clau", name: "clau", widget: "string", required: false, hint: "Només si una altra pàgina ha d'apuntar aquí. 'musics' és el que fa servir la pàgina dels Xorimúsics." }
+              - { label: "Títol", name: "titol", widget: "string", hint: "Ex: Castellers, Músics" }
+              - { label: "Text", name: "text", widget: "text", required: false, hint: "Curt: quan s'assaja. La primera línia és la que surt a la portada." }
+              - { label: "Ubicació", name: "ubicacio", widget: "string", required: false, hint: "El nom del lloc o les coordenades 'latitud,longitud'. És el que busca el mapa." }
+              - { label: "Clau", name: "clau", widget: "string", required: false, hint: "No cal tocar-ho. 'castellers' és l'assaig que surt a la portada i 'musics' el que surt a «Xorimúsics»." }
               - label: "Fotografies"
                 name: "fotos"
                 widget: "list"
                 required: false
-                label_singular: "Fotografia"
+                label_singular: "fotografia"
                 hint: "Surten en una filera a sota del bloc. Es poden deixar buides."
                 field: { label: "Fotografia", name: "foto", widget: "image" }
-          - { label: "Fotografia", name: "imatge", widget: "image", required: false }
-      - name: "merchandising"
-        label: "Merchandising"
-        file: "src/content/pagines/merchandising.md"
-        fields:
-          - { label: "Titular", name: "titol", widget: "string" }
-          - { label: "Text", name: "body", widget: "markdown" }
-          - { label: "Fotografia", name: "imatge", widget: "image", required: false }
-      - name: "col_laboradors_intro"
-        label: "Col·laboradors (introducció)"
-        file: "src/content/pagines/col-laboradors-intro.md"
-        fields:
-          - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol, abans de la llista." }
-      - name: "col_laboradors"
-        label: "Col·laboradors (text de contacte)"
-        file: "src/content/pagines/col-laboradors.md"
-        fields:
-          - { label: "Titular", name: "titol", widget: "string" }
-          - { label: "Text", name: "body", widget: "markdown" }
-          - { label: "Fotografia", name: "imatge", widget: "image", required: false }
-      - name: "mallarengues"
-        label: "Mallarengues"
-        file: "src/content/pagines/mallarengues.md"
-        fields:
-          - { label: "Títol", name: "titol", widget: "string" }
-          - { label: "Text", name: "body", widget: "markdown" }
-          - { label: "Fotografia", name: "imatge", widget: "image", required: false }
+          - { label: "Fotografia", name: "imatge", widget: "image", required: false, hint: "Surt a la capçalera d'aquesta pàgina i a la franja groga de la portada." }
       - name: "xorimusics"
         label: "Xorimúsics"
         file: "src/content/pagines/xorimusics.md"
+        preview_path: "xorimusics"
         fields:
           - { label: "Títol", name: "titol", widget: "string" }
           - { label: "Text", name: "body", widget: "markdown" }
-          - { label: "Fotografia", name: "imatge", widget: "image", required: false }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - label: "Partitures"
             name: "partitures"
             widget: "list"
             required: false
+            label_singular: "partitura"
             summary: "{{fields.titol}}"
-            hint: "Les partitures dels tocs, en PDF. Surten a la pàgina dels Xorimúsics."
+            hint: "Les partitures dels tocs, en PDF. Quan n'hi ha alguna, surt una llista a la pàgina."
             fields:
               - { label: "Títol", name: "titol", widget: "string", hint: "Ex: Toc de castells" }
               - { label: "Instrument", name: "instrument", widget: "select", options: ["Gralla", "Tabal", "Gralla i tabal"], required: false }
-              - { label: "Fitxer", name: "fitxer", widget: "file" }
+              - { label: "Fitxer", name: "fitxer", widget: "file", hint: "El PDF de la partitura." }
+      - name: "mallarengues"
+        label: "Mallarengues"
+        file: "src/content/pagines/mallarengues.md"
+        preview_path: "mallarengues"
+        fields:
+          - { label: "Títol", name: "titol", widget: "string" }
+          - { label: "Text", name: "body", widget: "markdown" }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
+      - name: "merchandising"
+        label: "Botiga (text de la pàgina)"
+        file: "src/content/pagines/merchandising.md"
+        preview_path: "merchandising"
+        fields:
+          - { label: "Titular", name: "titol", widget: "string" }
+          - { label: "Text", name: "body", widget: "markdown", hint: "Com es reserva i es recull. Els productes s'editen a «Botiga: productes»." }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
+      - name: "col_laboradors"
+        label: "Col·laboradors i Contacta'ns"
+        file: "src/content/pagines/col-laboradors.md"
+        preview_path: "col-laboradors"
+        fields:
+          - { label: "Titular", name: "titol", widget: "string", hint: "El títol de la secció Contacta'ns." }
+          - { label: "Text", name: "body", widget: "markdown", hint: "El text de Contacta'ns, al costat dels botons de correu i d'Instagram. El correu es canvia a «Configuració»." }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
+      - name: "col_laboradors_intro"
+        label: "Col·laboradors (text sobre els patrocinadors)"
+        file: "src/content/pagines/col-laboradors-intro.md"
+        preview_path: "col-laboradors"
+        fields:
+          - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Només surt quan hi ha algun patrocinador, a sobre dels seus logotips." }
+
+  # the list pages have no text of their own besides a banner photo and an
+  # intro, so they sit apart from the real pages
+  - name: "capcaleres"
+    label: "Capçaleres de les llistes"
+    editor: { preview: false }
+    label_singular: "capçalera"
+    description: "La foto de capçalera i el text d'entrada de les pàgines que són llistes (Agenda, Galeria...). Si no hi poses foto, es fa servir la de «Configuració»."
+    files:
       - name: "agenda"
-        label: "Capçalera: Agenda"
+        label: "Agenda"
         file: "src/content/pagines/agenda.md"
+        preview_path: "agenda"
         fields:
-          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false, hint: "Si no se'n puja cap, es fa servir la de Configuració general." }
-          - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
-      - name: "noticies"
-        label: "Capçalera: Notícies"
-        file: "src/content/pagines/noticies.md"
-        fields:
-          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false, hint: "Si no se'n puja cap, es fa servir la de Configuració general." }
-          - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
-      - name: "galeria"
-        label: "Capçalera: Galeria"
-        file: "src/content/pagines/galeria.md"
-        fields:
-          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false, hint: "Si no se'n puja cap, es fa servir la de Configuració general." }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
       - name: "castells"
-        label: "Capçalera: Historial de castells"
+        label: "Historial de castells"
         file: "src/content/pagines/castells.md"
+        preview_path: "castells"
         fields:
           - { label: "Títol", name: "titol", widget: "string", required: false }
-          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false, hint: "Si no se'n puja cap, es fa servir la de Configuració general." }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
+          - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
+      - name: "galeria"
+        label: "Galeria"
+        file: "src/content/pagines/galeria.md"
+        preview_path: "galeria"
+        fields:
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
+          - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
+      - name: "noticies"
+        label: "Notícies"
+        file: "src/content/pagines/noticies.md"
+        preview_path: "noticies"
+        fields:
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - { label: "Text introductori", name: "body", widget: "markdown", required: false, hint: "Text curt que es mostra a sota del títol. Es pot deixar buit." }
       - name: "documents"
-        label: "Capçalera: Documents"
+        label: "Documents"
         file: "src/content/pagines/documents.md"
+        preview_path: "documents"
         fields:
-          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false, hint: "Si no se'n puja cap, es fa servir la de Configuració general." }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - { label: "Text introductori", name: "body", widget: "markdown", required: false }
       - name: "junta_directiva_capcalera"
-        label: "Capçalera: Junta Directiva"
+        label: "Junta directiva"
         file: "src/content/pagines/junta-directiva.md"
+        preview_path: "junta-directiva"
         fields:
-          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false, hint: "Si no se'n puja cap, es fa servir la de Configuració general." }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - { label: "Text introductori", name: "body", widget: "markdown", required: false }
       - name: "junta_tecnica_capcalera"
-        label: "Capçalera: Junta Tècnica"
+        label: "Junta tècnica"
         file: "src/content/pagines/junta-tecnica.md"
+        preview_path: "junta-tecnica"
         fields:
-          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false, hint: "Si no se'n puja cap, es fa servir la de Configuració general." }
+          - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false }
           - { label: "Text introductori", name: "body", widget: "markdown", required: false }
 
-  - name: "junta_directiva"
-    label: "Junta Directiva"
-    folder: "src/content/junta-directiva"
-    create: true
-    identifier_field: "numeroTemporada"
-    slug: "temporada-{{fields.numeroTemporada}}"
-    fields:
-      - { label: "Número de temporada", name: "numeroTemporada", widget: "number", value_type: "int", hint: "Ex: 29 (es mostra com a XXIXè)" }
-      - label: "Membres"
-        name: "membres"
-        widget: "list"
-        required: false
-        summary: "{{fields.carrec}} · {{fields.nom}} {{fields.cognom}}"
-        fields:
-          - { label: "Càrrec", name: "carrec", widget: "string", hint: "Ex: Presidenta, Secretari, Tresorer..." }
-          - { label: "Nom", name: "nom", widget: "string" }
-          - { label: "Cognom", name: "cognom", widget: "string" }
-          - { label: "Malnom", name: "malnom", widget: "string", required: false }
-          - { label: "Foto", name: "foto", widget: "image", required: false }
-
-  - name: "junta_tecnica"
-    label: "Junta Tècnica"
-    folder: "src/content/junta-tecnica"
-    create: true
-    identifier_field: "numeroTemporada"
-    slug: "temporada-{{fields.numeroTemporada}}"
-    fields:
-      - { label: "Número de temporada", name: "numeroTemporada", widget: "number", value_type: "int", hint: "Ex: 29 (es mostra com a XXIXè)" }
-      - label: "Membres"
-        name: "membres"
-        widget: "list"
-        required: false
-        summary: "{{fields.carrec}} · {{fields.nom}} {{fields.cognom}}"
-        fields:
-          - { label: "Càrrec", name: "carrec", widget: "string", hint: "Ex: Cap de colla, Sotscap, Graller, Timbaler..." }
-          - { label: "Nom", name: "nom", widget: "string" }
-          - { label: "Cognom", name: "cognom", widget: "string" }
-          - { label: "Malnom", name: "malnom", widget: "string", required: false }
-          - { label: "Foto", name: "foto", widget: "image", required: false }
-
   - name: "productes"
-    label: "Merchandising"
+    label: "Botiga: productes"
+    editor: { preview: false }
+    label_singular: "producte"
+    description: "Els productes de la botiga. Les reserves arriben al correu de contacte de «Configuració»."
     folder: "src/content/productes"
     create: true
+    preview_path: "merchandising/{{slug}}"
     identifier_field: "nom"
     slug: "{{fields.nom}}"
+    summary: "{{nom}} · {{estat}}"
     fields:
       - { label: "Nom", name: "nom", widget: "string" }
       - { label: "Preu (€)", name: "preu", widget: "number" }
@@ -370,37 +408,106 @@ collections:
         widget: "select"
         options: ["Disponible", "Fora de termini"]
         default: "Disponible"
+        hint: "«Fora de termini» el deixa a la botiga però sense poder-lo reservar."
       - label: "Fotos"
         name: "fotos"
         widget: "list"
         required: false
+        label_singular: "foto"
+        hint: "La primera és la que surt a la llista. Sense fotos, surt l'escut."
         field: { label: "Foto", name: "foto", widget: "image" }
       - label: "Talles i estoc"
         name: "talles"
         widget: "list"
         required: false
+        label_singular: "talla"
         summary: "{{fields.talla}} · {{fields.estoc}}"
         fields:
           - { label: "Talla", name: "talla", widget: "string", hint: "Ex: S, M, L, XL, XXL, o Única" }
-          - { label: "Estoc", name: "estoc", widget: "number", required: false, value_type: "int" }
-      - { label: "Ordre", name: "ordre", widget: "number", required: false, value_type: "int" }
+          - { label: "Estoc", name: "estoc", widget: "number", required: false, value_type: "int", hint: "Quantes en queden. Amb 0, la talla surt com a esgotada." }
+      - { label: "Ordre", name: "ordre", widget: "number", required: false, value_type: "int", hint: "Ordre a la botiga, de més petit a més gran." }
 
-  - name: "patrocinadors"
-    label: "Patrocinadors"
-    folder: "src/content/patrocinadors"
+  - name: "documents"
+    label: "Documents"
+    editor: { preview: false }
+    label_singular: "document"
+    description: "Els PDF de la pàgina Documents: estatuts, reglament, protocols."
+    folder: "src/content/documents"
     create: true
-    identifier_field: "nom"
-    slug: "{{fields.nom}}"
+    preview_path: "documents"
+    identifier_field: "titol"
+    slug: "{{fields.titol}}"
     fields:
-      - { label: "Nom", name: "nom", widget: "string" }
-      - { label: "Logotip", name: "logo", widget: "image", required: false }
-      - { label: "Web", name: "url", widget: "string", required: false }
-      - { label: "Ordre", name: "ordre", widget: "number", required: false, value_type: "int" }
+      - { label: "Títol", name: "titol", widget: "string" }
+      - label: "Categoria"
+        name: "categoria"
+        widget: "select"
+        options: ["Estatuts", "Reglament", "Protocol", "Altres"]
+      - { label: "Fitxer (PDF)", name: "fitxer", widget: "file" }
+      - { label: "Data", name: "data", widget: "datetime", date_format: "DD/MM/YYYY", time_format: false, format: "YYYY-MM-DD", required: false, hint: "Opcional. La data d'aprovació o de l'última versió." }
+
+  - name: "junta_directiva"
+    label: "Junta directiva"
+    editor: { preview: false }
+    label_singular: "temporada"
+    description: "Una entrada per temporada. A l'inici de cada temporada, crea'n una de nova amb el número següent: la web mostra sempre la més recent."
+    folder: "src/content/junta-directiva"
+    create: true
+    delete: false
+    preview_path: "junta-directiva"
+    identifier_field: "numeroTemporada"
+    slug: "temporada-{{fields.numeroTemporada}}"
+    summary: "Temporada {{numeroTemporada}}"
+    fields:
+      - { label: "Número de temporada", name: "numeroTemporada", widget: "number", value_type: "int", hint: "Ex: 29 (es mostra com a XXIXè)" }
+      - label: "Membres"
+        name: "membres"
+        widget: "list"
+        required: false
+        label_singular: "membre"
+        summary: "{{fields.carrec}} · {{fields.nom}} {{fields.cognom}}"
+        fields:
+          - { label: "Càrrec", name: "carrec", widget: "string", hint: "Ex: Presidenta, Secretari, Tresorer..." }
+          - { label: "Nom", name: "nom", widget: "string" }
+          - { label: "Cognom", name: "cognom", widget: "string" }
+          - { label: "Malnom", name: "malnom", widget: "string", required: false }
+          - { label: "Foto", name: "foto", widget: "image", required: false, hint: "Opcional. Sense foto, surt el nom amb una ratlla groga." }
+
+  - name: "junta_tecnica"
+    label: "Junta tècnica"
+    editor: { preview: false }
+    label_singular: "temporada"
+    description: "Una entrada per temporada. A l'inici de cada temporada, crea'n una de nova amb el número següent: la web mostra sempre la més recent."
+    folder: "src/content/junta-tecnica"
+    create: true
+    delete: false
+    preview_path: "junta-tecnica"
+    identifier_field: "numeroTemporada"
+    slug: "temporada-{{fields.numeroTemporada}}"
+    summary: "Temporada {{numeroTemporada}}"
+    fields:
+      - { label: "Número de temporada", name: "numeroTemporada", widget: "number", value_type: "int", hint: "Ex: 29 (es mostra com a XXIXè)" }
+      - label: "Membres"
+        name: "membres"
+        widget: "list"
+        required: false
+        label_singular: "membre"
+        summary: "{{fields.carrec}} · {{fields.nom}} {{fields.cognom}}"
+        fields:
+          - { label: "Càrrec", name: "carrec", widget: "string", hint: "Ex: Cap de colla, Sotscap, Graller, Timbaler..." }
+          - { label: "Nom", name: "nom", widget: "string" }
+          - { label: "Cognom", name: "cognom", widget: "string" }
+          - { label: "Malnom", name: "malnom", widget: "string", required: false }
+          - { label: "Foto", name: "foto", widget: "image", required: false, hint: "Opcional. Sense foto, surt el nom amb una ratlla groga." }
 
   - name: "activitats"
     label: "Activitats"
+    editor: { preview: false }
+    label_singular: "activitat"
+    description: "Les festes i activitats de la colla que surten a la portada, a «No només fem castells»."
     folder: "src/content/activitats"
     create: true
+    preview_path: ""
     identifier_field: "nom"
     slug: "{{fields.nom}}"
     summary: "{{fields.ordre}}. {{fields.nom}}"
@@ -412,39 +519,40 @@ collections:
       - { label: "Fotografia", name: "imatge", widget: "image", required: false }
       - { label: "Ordre", name: "ordre", widget: "number", required: false, value_type: "int", hint: "Ordre a la portada, de més petit a més gran." }
 
-  - name: "documents"
-    label: "Documents"
-    folder: "src/content/documents"
+  - name: "patrocinadors"
+    label: "Patrocinadors"
+    editor: { preview: false }
+    label_singular: "patrocinador"
+    description: "Els logotips de la pàgina Col·laboradors. Mentre no n'hi ha cap, la pàgina només mostra Contacta'ns."
+    folder: "src/content/patrocinadors"
     create: true
-    identifier_field: "titol"
-    slug: "{{fields.titol}}"
+    preview_path: "col-laboradors"
+    identifier_field: "nom"
+    slug: "{{fields.nom}}"
     fields:
-      - { label: "Títol", name: "titol", widget: "string" }
-      - label: "Categoria"
-        name: "categoria"
-        widget: "select"
-        options: ["Estatuts", "Reglament", "Protocol", "Altres"]
-      - { label: "Fitxer (PDF)", name: "fitxer", widget: "file" }
-      - { label: "Data", name: "data", widget: "date", required: false }
+      - { label: "Nom", name: "nom", widget: "string" }
+      - { label: "Logotip", name: "logo", widget: "image", required: false, hint: "Millor en PNG o SVG amb el fons transparent." }
+      - { label: "Web", name: "url", widget: "string", required: false, hint: "L'adreça sencera, amb https://" }
+      - { label: "Ordre", name: "ordre", widget: "number", required: false, value_type: "int", hint: "Ordre a la pàgina, de més petit a més gran." }
 
   - name: "configuracio"
     label: "Configuració"
+    editor: { preview: false }
+    description: "Xarxes socials, correu de contacte i ajustos generals. No cal tocar-ho gaire sovint."
     files:
       - name: "general"
         label: "Configuració general"
         file: "src/content/configuracio/general.md"
         fields:
-          - { label: "URL Instagram", name: "instagramUrl", widget: "string", required: false }
+          - { label: "Email de contacte", name: "contacteComercialEmail", widget: "string", required: false, hint: "L'únic correu de la web: surt a Contacta'ns i hi arriben les reserves de la botiga." }
+          - { label: "URL Instagram", name: "instagramUrl", widget: "string", required: false, hint: "L'adreça sencera, amb https://. Deixa buida qualsevol xarxa que no feu servir i no sortirà." }
           - { label: "URL YouTube", name: "youtubeUrl", widget: "string", required: false }
           - { label: "URL Facebook", name: "facebookUrl", widget: "string", required: false }
           - { label: "URL Twitter", name: "twitterUrl", widget: "string", required: false }
-          - { label: "Email per a reserves de merchandising", name: "merchandiseEmail", widget: "string", required: false, hint: "Rep les reserves que es facin des de la fitxa de cada producte" }
+          - { label: "Fotografia de capçalera", name: "capceleraImatge", widget: "image", required: false, hint: "La foto que fan servir totes les pàgines que no en tenen una de pròpia." }
+          - { label: "Descripció general (SEO)", name: "descripcioGeneral", widget: "text", required: false, hint: "El text que surt sota l'enllaç quan es comparteix la web o quan surt a Google. Una o dues frases curtes." }
           - label: "URL d'inserció de Google Calendar"
             name: "googleCalendarEmbedUrl"
             widget: "string"
             required: false
-            hint: "URL del calendari de Google Calendar en mode 'Insereix' (Configuració > Integra el calendari)"
-          - { label: "Email de contacte", name: "contacteComercialEmail", widget: "string", required: false, hint: "L'únic correu que surt al web, a la secció Contacta'ns de Col·laboradors." }
-          - { label: "Nom del responsable de patrocinis", name: "contacteComercialNom", widget: "string", required: false, hint: "Ex: Responsable de patrocinis" }
-          - { label: "Fotografia de capçalera", name: "capceleraImatge", widget: "image", required: false, hint: "Imatge de fons que es mostra a la capçalera de totes les pàgines (llevat de l'inici)" }
-          - { label: "Descripció general (SEO)", name: "descripcioGeneral", widget: "text", required: false, hint: "S'utilitza com a meta descripció a les pàgines que no en tenen una de pròpia (per exemple quan es comparteix l'enllaç a xarxes). Recomanat: 1-2 frases curtes." }
+            hint: "No cal tocar-ho. És el calendari d'on l'agenda s'omple sola cada nit."

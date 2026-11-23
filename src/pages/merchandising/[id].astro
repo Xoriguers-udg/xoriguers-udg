@@ -21,12 +21,8 @@ const disponible = entry.data.estat === 'Disponible';
 const talles = entry.data.talles;
 
 const config = await getEntry('configuracio', 'general');
-const laColla = await getEntry('pagines', 'la-colla');
-const email = isRealUrl(config?.data.merchandiseEmail)
-  ? config!.data.merchandiseEmail
-  : isRealUrl(laColla?.data.contacteEmail)
-    ? laColla!.data.contacteEmail
-    : undefined;
+// reservations go to the colla's one contact email, the same as Contacta'ns
+const email = isRealUrl(config?.data.contacteComercialEmail) ? config!.data.contacteComercialEmail : undefined;
 
 const primeraDisponible = talles.findIndex((t) => t.estoc > 0);
 const totsEsgotats = talles.length > 0 && primeraDisponible === -1;

@@ -2,7 +2,10 @@
 
 Who edits this site, what they see, and how to change what they see.
 [`public/admin/config.yml`](../public/admin/config.yml) is the whole of it:
-eleven collections' worth of form definitions, no build step, no plugins.
+twelve collections' worth of form definitions, no build step, no plugins.
+The people who use it run the colla's comunicació; the guide written for them
+is [`src/pages/admin/guia.astro`](../src/pages/admin/guia.astro), served at
+`/admin/guia/` and linked from a yellow «Guia» button on every CMS screen.
 
 ## How it is wired
 
@@ -18,6 +21,34 @@ removed on purpose: one or two people run this site and there is nobody to
 review for. Save commits, and the commit deploys. The only visibility control is
 the `estat` field — `publicat` (the default) or `esborrany`, which keeps an
 entry out of the build entirely.
+
+## What the editor sees
+
+- **Catalan.** `locale: "ca"`. Decap's Catalan misses some strings ("Add
+  castell", "Expand"), so [`admin/index.astro`](../src/pages/admin/index.astro)
+  starts Decap by hand (`CMS_MANUAL_INIT`) and merges the missing ones into
+  its locale first. Both Decap scripts must stay `is:inline`: without it Astro
+  turns the CDN script into a deferred module and the merge runs before `CMS`
+  exists.
+- **No preview pane.** Every collection has `editor: { preview: false }`.
+  Decap's preview is the raw fields with no styling, which reads as broken;
+  «Veure publicació» opens the real page instead, through `site_url` plus each
+  collection's `preview_path`.
+- **Dates are `datetime` with `time_format: false` and `format: YYYY-MM-DD`.**
+  Decap 3 removed the old `date` widget: a field still declared as `date` shows
+  "No existeix un control per al widget 'date'" and cannot be edited at all.
+  The `format` keeps files exactly as they were (`data: 2026-05-14`).
+- **Newest first.** Agenda, Galeria and Notícies sort by `data` descending by
+  default (`default_sort: "desc"`).
+- **Safety.** `delete: false` on the agenda and both juntes; slugs are
+  ASCII with accents cleaned, so a title never becomes a file name with a `ç`.
+- **Every collection has a one-line `description`** at the top of its list,
+  saying what it is for and where it shows. Treat these like the hints.
+
+Galeria's photos stay a list of single images. The image widget's
+`multiple: true` was tried: the default media library still uploads one file
+at a time, and «Escull una imatge diferent» replaces the whole selection, so
+adding one photo meant re-picking the album.
 
 Locally, `local_backend: true` makes Decap talk to `decap-server` instead of
 DecapBridge, so `npm run dev:all` gives you the real CMS writing to your own
@@ -50,13 +81,14 @@ way, or give up.
 | In the CMS | Files | Notes |
 |---|---|---|
 | **Agenda** | `src/content/agenda/` | Every event, past and future. The one collection editors spend real time in. |
-| **Notícies** | `src/content/noticies/` | The two most recent show on the homepage. |
-| **Galeria** | `src/content/galeria/` | Albums. Photos are uploads; anything that is not an uploaded path renders as a striped placeholder. |
-| **Pàgines** | `src/content/pagines/` | A *file* collection, not a folder: one fixed form per page, so editors cannot create or delete pages. Includes the per-page header images and intro texts ("Capçalera: …"). |
+| **Notícies** | `src/content/noticies/` | The two most recent show on the homepage. With none published, Notícies is unlinked everywhere (nav, footer, homepage). |
+| **Galeria** | `src/content/galeria/` | Albums. An album is listed once it has one uploaded photo; the newest with three or more goes on the homepage. |
+| **Pàgines** | `src/content/pagines/` | A *file* collection, not a folder: one fixed form per page, so editors cannot create or delete pages. |
+| **Capçaleres de les llistes** | `src/content/pagines/` too | The banner photo and intro of the list pages (Agenda, Historial, Galeria…). Same folder as Pàgines; a second file collection only so the sidebar separates real pages from banners. |
 | **Junta Directiva / Tècnica** | `src/content/junta-*/` | One entry per season, numbered; the number is rendered as a Roman ordinal. |
-| **Merchandising** | `src/content/productes/` | Sizes and stock per product. |
+| **Botiga: productes** | `src/content/productes/` | Sizes and stock per product. Reservations go to Configuració's contact email. |
 | **Patrocinadors**, **Activitats**, **Documents** | | Sponsor logos, the social calendar shown on the homepage, and PDFs. |
-| **Configuració** | `src/content/configuracio/general.md` | Social URLs, the Google Calendar URL, the default header image, the SEO description. |
+| **Configuració** | `src/content/configuracio/general.md` | The one contact email (Contacta'ns and botiga reservations), social URLs, the Google Calendar URL, the default header image, the SEO description. |
 
 Uploads go to `public/images/uploads` and are referenced as
 `/images/uploads/…`; `mediaUrl()` prefixes the base path at render time, so a
@@ -77,13 +109,15 @@ If an editor says they cannot find a diada, that list is where to look.
 
 ## Fields the editor should leave alone
 
-Three agenda fields belong to the machine, and their hints say so:
+Three agenda fields belong to the machine, and their hints say so (they start
+with «No cal tocar-ho», which is also how the guide tells editors to spot them):
 
 - **`calendarUid`** — the join key the nightly import matches on. Changing it
   duplicates the event.
 - **`notacioOriginal`** — the castells as the old registre wrote them.
-- `nom`, `data`, `hora`, `lloc` — editable, but the nightly import overwrites
-  them from Google Calendar. The calendar is where to change them.
+- `nom`, `data`, `hora`, `lloc`, `poblacio`, `cancelada` — editable, but the
+  nightly import overwrites them from Google Calendar, and their hints now say
+  so. The calendar is where to change them.
 
 Everything else on an agenda entry is the editor's and is never touched by the
 importer. See [architecture.md](architecture.md#the-calendar-importer).

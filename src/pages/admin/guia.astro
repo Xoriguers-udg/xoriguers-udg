@@ -1,0 +1,264 @@
+---
+/**
+ * The guide for whoever runs the colla's comunicació: what the CMS is for, the
+ * jobs they will actually do, and the fields to leave alone. It sits beside the
+ * CMS, linked from a button on every CMS screen, and is kept out of search.
+ *
+ * Every button name quoted here is the one Decap shows in Catalan; when the CMS
+ * config changes a label, change it here too.
+ */
+import '../../styles/global.css';
+
+const base = import.meta.env.BASE_URL;
+const escut = `${base}images/escut-xoriguers.png`;
+const gestor = `${base}admin/`;
+
+const feines = [
+  { id: 'castells', curt: 'Castells d’una actuació' },
+  { id: 'album', curt: 'Un àlbum de fotos' },
+  { id: 'actuacio', curt: 'Actuacions noves i canvis' },
+  { id: 'noticia', curt: 'Una notícia' },
+  { id: 'assajos', curt: 'Horaris d’assaig' },
+  { id: 'junta', curt: 'La junta de la temporada' },
+  { id: 'partitura', curt: 'Una partitura' },
+  { id: 'capcalera', curt: 'Fotos de capçalera' },
+  { id: 'botiga', curt: 'Estoc de la botiga' },
+];
+---
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href={escut} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&display=swap">
+  <title>Guia de la web · Xoriguers UdG</title>
+</head>
+<body>
+  <header class="cap">
+    <div class="cap-dins">
+      <img src={escut} alt="" width="56" height="56" />
+      <div class="cap-text">
+        <h1 class="display">Com actualitzar la web</h1>
+        <p>La web dels Xoriguers s’edita des del gestor de continguts, sense saber programar. Aquí tens el que cal per a les feines de cada dia.</p>
+      </div>
+      <a class="btn btn-accent" href={gestor}>Obre el gestor</a>
+    </div>
+  </header>
+
+  <main class="guia">
+    <section class="calma" aria-labelledby="calma-titol">
+      <h2 id="calma-titol">Abans de res: no pots trencar res</h2>
+      <ul>
+        <li><strong>Tot queda guardat.</strong> Cada canvi que publiques queda a l’historial amb el teu nom, i qualsevol canvi es pot desfer.</li>
+        <li><strong>Els canvis triguen un parell de minuts</strong> a sortir a la web. Si no el veus, espera i torna a carregar la pàgina.</li>
+        <li><strong>Si no ho tens clar, desa-ho com a «Esborrany».</strong> No surt a la web fins que el canviïs a «Publicat».</li>
+        <li><strong>Sota de cada camp hi ha una explicació</strong> de què fa a la web. Si diu «No cal tocar-ho», no cal.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="funciona-titol">
+      <h2 id="funciona-titol">Com funciona, en quatre passos</h2>
+      <ol class="passos">
+        <li><strong>Entra</strong> a <a href={gestor}>el gestor</a> amb el teu correu i la teva contrasenya. El primer cop, et cal la invitació que t’arribarà per correu.</li>
+        <li><strong>Tria la secció</strong> a la columna de l’esquerra: Agenda, Galeria, Notícies, Pàgines… Les entrades més recents surten primer, i amb «Buscar tots» trobes qualsevol cosa pel nom.</li>
+        <li><strong>Fes els canvis</strong> al formulari.</li>
+        <li><strong>Prem «Publicar»</strong>, a dalt, i després <strong>«Publicar ara»</strong>. Per veure com ha quedat, prem «Veure publicació».</li>
+      </ol>
+    </section>
+
+    <nav class="index" aria-labelledby="index-titol">
+      <h2 id="index-titol">Què vols fer?</h2>
+      <ul>
+        {feines.map((f) => <li><a href={`#${f.id}`}>{f.curt}</a></li>)}
+      </ul>
+    </nav>
+
+    <section class="feina" id="castells" aria-labelledby="castells-titol">
+      <h2 id="castells-titol">Després d’una actuació: els castells i les fotos</h2>
+      <ol class="passos">
+        <li>Ves a <span class="boto">Agenda</span> i obre l’actuació. Les més recents surten a dalt de tot.</li>
+        <li>A «Castells», prem <span class="boto">Afegeix castell</span> per a cada castell, en l’ordre en què es van fer.</li>
+        <li>Escriu el castell (mira <a href="#notacio">com s’escriuen</a>) i tria com va anar: <em>Descarregat</em>, <em>Carregat</em> o <em>Intent</em>.</li>
+        <li>Si en tens una foto: <span class="boto">Escull una imatge</span>, després <span class="boto">Penjar nou</span>, tria la foto, selecciona-la i prem <span class="boto">Confirmar selecció</span>.</li>
+        <li>Si és una fita, com el primer 3d8f de la història, escriu-ho a «Observació»: es destaca a la web.</li>
+        <li><span class="boto">Publicar</span> i <span class="boto">Publicar ara</span>.</li>
+      </ol>
+      <p class="nota">Amb això s’actualitzen sols l’historial de castells, «Últims castells» de la portada i, si és dels millors, «Els nostres millors castells» de La colla.</p>
+    </section>
+
+    <section class="feina" id="album" aria-labelledby="album-titol">
+      <h2 id="album-titol">Penjar un àlbum de fotos</h2>
+      <ol class="passos">
+        <li>Ves a <span class="boto">Galeria</span> i prem <span class="boto">+ àlbum</span>, a dalt a la dreta.</li>
+        <li>Posa-li un nom (per exemple, «Diada de Primavera 2026») i la data de l’activitat.</li>
+        <li>A «Fotos», prem <span class="boto">Afegeix foto</span> per a cada foto i puja-la amb <span class="boto">Penjar nou</span>. Les pots arrossegar per canviar-ne l’ordre.</li>
+        <li>Si vols, tria una «Portada». Si no, es fa servir la primera foto.</li>
+        <li><span class="boto">Publicar</span> i <span class="boto">Publicar ara</span>.</li>
+      </ol>
+      <p class="nota">L’àlbum surt a la Galeria quan té almenys una foto. El més recent amb tres fotos o més surt també a la portada.</p>
+      <p class="nota"><strong>Mida de les fotos:</strong> les que arriben per WhatsApp ja tenen bona mida. Si són de càmera o del mòbil directament, millor reduir-les abans a menys d’1 MB cadascuna, perquè la web carregui ràpid.</p>
+    </section>
+
+    <section class="feina" id="actuacio" aria-labelledby="actuacio-titol">
+      <h2 id="actuacio-titol">Una actuació nova, o un canvi d’hora o de lloc</h2>
+      <p>Les actuacions s’apunten al <strong>Google Calendar de la colla</strong>, no al gestor. L’endemà al matí ja surten soles a l’agenda de la web.</p>
+      <p>Per això <strong>el nom, la data, l’hora, el lloc i la població es canvien al calendari</strong>. Si els canvies al gestor, l’endemà tornen a ser com al calendari. El mateix passa amb les cancel·lacions: cancel·la-la al calendari i a la web surt com a cancel·lada.</p>
+      <p>Al gestor s’hi afegeix tota la resta: el cartell, una descripció, les colles que hi actuen, i «Mostrar a portada» si vols que surti la primera a «Pròximes actuacions».</p>
+    </section>
+
+    <section class="feina" id="noticia" aria-labelledby="noticia-titol">
+      <h2 id="noticia-titol">Publicar una notícia</h2>
+      <ol class="passos">
+        <li>Ves a <span class="boto">Notícies</span> i prem <span class="boto">+ notícia</span>.</li>
+        <li>Omple el títol, la data i el resum. El resum són una o dues frases, i és el que surt a la portada.</li>
+        <li>Si vols, una imatge. Després, el text sencer a «Cos».</li>
+        <li>Si encara no està llesta, posa l’estat a «Esborrany»: la pots acabar un altre dia.</li>
+        <li><span class="boto">Publicar</span> i <span class="boto">Publicar ara</span>.</li>
+      </ol>
+      <p class="nota">Ara mateix no hi ha cap notícia publicada, i per això la secció Notícies no surt enlloc de la web. Apareix sola, al menú i a la portada, amb la primera que publiquis.</p>
+    </section>
+
+    <section class="feina" id="assajos" aria-labelledby="assajos-titol">
+      <h2 id="assajos-titol">Canviar els horaris d’assaig</h2>
+      <p>Ves a <span class="boto">Pàgines</span>, obre <span class="boto">Uneix-te</span> i baixa fins a «Assajos». <strong>Només cal canviar-los aquí:</strong> surten a Uneix-te, a La colla, a la portada i, el dels músics, a Xorimúsics.</p>
+      <p>La primera línia de cada text és la que surt a la portada, així que posa-hi el més important: «Dimarts i dijous, de 12:30 a 14:30».</p>
+    </section>
+
+    <section class="feina" id="junta" aria-labelledby="junta-titol">
+      <h2 id="junta-titol">Nova temporada: la junta</h2>
+      <ol class="passos">
+        <li>Ves a <span class="boto">Junta directiva</span> (o <span class="boto">Junta tècnica</span>) i prem <span class="boto">+ temporada</span>.</li>
+        <li>Posa el número de la temporada nova: el següent al de l’última.</li>
+        <li>Prem <span class="boto">Afegeix membre</span> per a cada persona: càrrec, nom, cognom i, si en té, malnom. La foto és opcional.</li>
+        <li><span class="boto">Publicar</span> i <span class="boto">Publicar ara</span>.</li>
+      </ol>
+      <p class="nota">La web mostra sempre la temporada amb el número més alt. Les anteriors es queden guardades.</p>
+    </section>
+
+    <section class="feina" id="partitura" aria-labelledby="partitura-titol">
+      <h2 id="partitura-titol">Penjar una partitura</h2>
+      <p>Ves a <span class="boto">Pàgines</span>, obre <span class="boto">Xorimúsics</span> i, a «Partitures», prem <span class="boto">Afegeix partitura</span>. Posa-hi el títol del toc, l’instrument i puja el PDF a «Fitxer». Quan n’hi ha alguna, la pàgina dels Xorimúsics en mostra la llista.</p>
+    </section>
+
+    <section class="feina" id="capcalera" aria-labelledby="capcalera-titol">
+      <h2 id="capcalera-titol">Canviar la foto de capçalera d’una pàgina</h2>
+      <p>La capçalera és la franja blava de dalt de cada pàgina, amb el títol i una foto.</p>
+      <ul class="punts">
+        <li>Per a Inici, La colla, Uneix-te, Xorimúsics, Mallarengues, Botiga i Col·laboradors: <span class="boto">Pàgines</span>.</li>
+        <li>Per a Agenda, Historial, Galeria, Notícies, Documents i les juntes: <span class="boto">Capçaleres de les llistes</span>.</li>
+      </ul>
+      <p>Canvia «Fotografia de capçalera». Va millor una foto apaïsada, amb la gent cap al mig. Si la deixes buida, es fa servir la de «Configuració».</p>
+    </section>
+
+    <section class="feina" id="botiga" aria-labelledby="botiga-titol">
+      <h2 id="botiga-titol">Botiga: estoc i reserves</h2>
+      <p>A <span class="boto">Botiga: productes</span>, obre el producte i canvia el número de cada talla a «Talles i estoc». Amb 0, la talla surt com a esgotada. Per tancar les reserves d’un producte sense treure’l, posa l’estat a «Fora de termini».</p>
+      <p>Les reserves arriben al correu de contacte que hi ha a «Configuració».</p>
+    </section>
+
+    <section class="feina" id="notacio" aria-labelledby="notacio-titol">
+      <h2 id="notacio-titol">Com s’escriuen els castells</h2>
+      <p>Sempre igual, perquè la web en treu l’historial i els millors castells:</p>
+      <dl class="notacio">
+        <div><dt class="display">3d8</dt><dd>Tres de vuit: tres persones per pis, vuit pisos.</dd></div>
+        <div><dt class="display">3d8f</dt><dd>Amb folre. Les lletres del final són reforços: <strong>f</strong> folre, <strong>m</strong> manilles, <strong>a</strong> agulla.</dd></div>
+        <div><dt class="display">Pd5</dt><dd>Pilar de cinc: una sola persona per pis.</dd></div>
+        <div><dt class="display">2Pd4</dt><dd>Dos pilars de quatre alhora. El número del davant multiplica.</dd></div>
+      </dl>
+    </section>
+
+    <section class="feina" id="no-tocar" aria-labelledby="no-tocar-titol">
+      <h2 id="no-tocar-titol">El que no cal tocar</h2>
+      <p>Aquests camps els fa servir la mateixa web, i la seva explicació comença amb «No cal tocar-ho»:</p>
+      <ul class="punts">
+        <li>A l’Agenda: «Identificador del calendari», «Notació original» i «Compta per al CCCC».</li>
+        <li>A Uneix-te: la «Clau» de cada assaig.</li>
+        <li>A Configuració: «URL d’inserció de Google Calendar».</li>
+      </ul>
+    </section>
+
+    <section class="calma final" aria-labelledby="ajuda-titol">
+      <h2 id="ajuda-titol">Si alguna cosa no surt com esperaves</h2>
+      <p>Res és definitiu. Avisa qui porta la web, explica què has canviat i on, i es pot tornar enrere. Fins i tot quan sembla que alguna cosa ha desaparegut, encara és a l’historial.</p>
+      <a class="btn btn-accent" href={gestor}>Obre el gestor</a>
+    </section>
+  </main>
+</body>
+</html>
+
+<style>
+  body { background: var(--color-paper); color: var(--color-ink); }
+
+  .cap { background: var(--color-accent-deep); color: var(--color-on-dark); border-bottom: 6px solid var(--color-signal); }
+  .cap-dins {
+    max-width: var(--estret);
+    margin-inline: auto;
+    padding: var(--space-2xl) var(--gutter);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-md) var(--space-lg);
+    align-items: start;
+  }
+  .cap-dins .btn { grid-column: 2; justify-self: start; }
+  .cap h1 { font-size: var(--text-display-s); line-height: 1; color: var(--color-on-dark); overflow-wrap: break-word; min-width: 0; }
+  .cap p { margin-top: var(--space-sm); font-size: var(--text-lead); color: var(--color-on-dark-2); max-width: 52ch; }
+  .cap .btn:focus-visible { outline-color: var(--color-focus-on-dark); }
+
+  .guia {
+    max-width: var(--estret);
+    margin-inline: auto;
+    padding: var(--space-2xl) var(--gutter) var(--section-gap);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xl);
+  }
+  .guia h2 { font-size: var(--text-title); line-height: 1.15; overflow-wrap: break-word; min-width: 0; margin-bottom: var(--space-md); }
+  .guia p { line-height: 1.6; max-width: none; }
+  .guia p + p { margin-top: var(--space-sm); }
+
+  .calma { padding: var(--space-xl); border-radius: var(--radius-card); background: var(--color-signal-wash); }
+  .calma ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-sm); }
+  .calma.final .btn { margin-top: var(--space-lg); }
+
+  .passos { margin: 0; padding-left: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm); line-height: 1.6; }
+  .passos li::marker { font-weight: 600; color: var(--color-accent-deep); }
+  .guia strong { font-weight: 600; }
+  .punts { margin: var(--space-sm) 0; padding-left: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-xs); line-height: 1.6; }
+
+  .index { padding-top: var(--space-lg); border-top: 2px solid var(--color-ink); }
+  .index ul { list-style: none; margin: 0; padding: 0; columns: 2 16rem; column-gap: var(--space-xl); }
+  .index li { break-inside: avoid; }
+  .index a { display: flex; align-items: center; min-height: 44px; font-weight: 600; }
+  .index a:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+  .feina { scroll-margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--color-rule); }
+  .nota { margin-top: var(--space-md); font-size: var(--text-sm); color: var(--color-ink-2); }
+
+  /* a button as the CMS names it, so it can be found on screen */
+  .boto {
+    display: inline-block;
+    padding: 0 var(--space-xs);
+    border-radius: var(--radius-input);
+    background: var(--color-accent-wash);
+    color: var(--color-accent-deep);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .notacio { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--space-md); margin: var(--space-md) 0 0; }
+  .notacio div { padding: var(--space-md) var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-2); }
+  .notacio dt { font-size: var(--text-2xl); line-height: 1; color: var(--color-accent-deep); }
+  .notacio dd { margin: var(--space-xs) 0 0; font-size: var(--text-sm); color: var(--color-ink-2); }
+
+  a:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+  @media (max-width: 40rem) {
+    .cap-dins { grid-template-columns: minmax(0, 1fr); }
+    .cap-dins .btn { grid-column: 1; }
+    .cap-dins img { width: 44px; height: 44px; }
+  }
+</style>
