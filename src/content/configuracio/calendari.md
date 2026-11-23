@@ -26,7 +26,7 @@ categories:
     historial: sempre
   - color: groc
     agenda: true
-    historial: ambCastells
+    historial: mai
     nom: Event
     clau: event
     paraules: October, Calçotada, Calcotada, Barraques
