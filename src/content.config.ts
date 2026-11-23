@@ -42,6 +42,8 @@ const agenda = defineCollection({
     poblacio: z.preprocess(emptyToUndefined, z.string().optional()),
     /** a category's clau, as defined in Configuració → Calendari (src/lib/categories.ts) */
     tipus: z.string(),
+    /** the category the calendar sync last gave it; see tipusSincronitzat */
+    tipusCalendari: z.preprocess(emptyToUndefined, z.string().optional()),
     cartell: z.string().optional(),
     collesParticipants: z.array(z.string()).default([]),
     mostrarPortada: z.boolean().default(false),

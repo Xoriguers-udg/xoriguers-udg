@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alHistorial, CATEGORIES_PER_DEFECTE, categoriaDe, llegeixCategories, reglesDe } from './categories';
+import { alHistorial, CATEGORIES_PER_DEFECTE, categoriaDe, llegeixCategories, reglesDe, tipusSincronitzat } from './categories';
 import { classificaEsdeveniment } from './esdeveniment';
 
 describe('llegeixCategories', () => {
@@ -77,5 +77,33 @@ describe('the built-in categories classify as before', () => {
     ['OCTOBERFEST', 'Actuacio'],
   ])('%s → %s', (nom, tipus) => {
     expect(classificaEsdeveniment(nom, regles, 'Actuacio')).toBe(tipus);
+  });
+});
+
+describe('tipusSincronitzat', () => {
+  const ambEvent = llegeixCategories({
+    categories: [
+      { nom: 'Actuació', clau: 'Actuacio', paraules: 'actuació' },
+      { nom: 'Event', clau: 'event', paraules: 'October, Barraques', historial: 'mai' },
+    ],
+    tipusPerDefecte: 'Actuacio',
+  });
+
+  it('moves an event already imported when the words change', () => {
+    // OCTOBERFEST, filed as Actuació before «October» was a word, with no note yet
+    expect(tipusSincronitzat('OCTOBERFEST', { tipus: 'Actuacio' }, ambEvent)).toEqual({ tipus: 'event', tipusCalendari: 'event' });
+    expect(tipusSincronitzat('OCTOBERFEST', { tipus: 'Actuacio', tipusCalendari: 'Actuacio' }, ambEvent)).toEqual({ tipus: 'event', tipusCalendari: 'event' });
+  });
+
+  it('keeps the order of the categories: the first one whose word matches wins', () => {
+    expect(tipusSincronitzat('ACTUACIÓ BARRAQUES', {}, ambEvent)?.tipus).toBe('Actuacio');
+  });
+
+  it('leaves a category chosen by hand in the CMS', () => {
+    expect(tipusSincronitzat('OCTOBERFEST', { tipus: 'Actuacio', tipusCalendari: 'event' }, ambEvent)).toBeNull();
+  });
+
+  it('compares keys without case or accents', () => {
+    expect(tipusSincronitzat('OCTOBERFEST', { tipus: 'EVENT', tipusCalendari: 'event' }, ambEvent)).toEqual({ tipus: 'event', tipusCalendari: 'event' });
   });
 });

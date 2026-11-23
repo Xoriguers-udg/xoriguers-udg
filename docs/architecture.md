@@ -132,11 +132,15 @@ credentials anywhere — and then, for each event:
    rewrite the record. A response that is not a whole `VCALENDAR` stops the run
    before anything is written, so an outage cannot read as "everything was
    deleted".
-5. A **new** entry takes its `tipus` from the event's name, by the words of
-   the colla's categories (see *Categories* below): first category with a
+5. Every calendar entry takes its `tipus` from the event's name, by the words
+   of the colla's categories (see *Categories* below): first category with a
    word in the name wins, case and accents ignored, a word matching where a
-   word of the name starts (`classificaEsdeveniment`). An existing entry's
-   `tipus` is the editor's and is never reclassified.
+   word of the name starts (`classificaEsdeveniment`). This is redone on every
+   run, so editing the words refiles the events already imported. The sync
+   notes what it gave in `tipusCalendari` (a hidden CMS field); an entry whose
+   `tipus` no longer equals that note was set by hand in the CMS and is left
+   alone (`tipusSincronitzat`). Entries without a `calendarUid`, the whole
+   migrated registre, are never classified.
 6. It prints past actuacions with no castells recorded — the "needs writing up"
    queue.
 

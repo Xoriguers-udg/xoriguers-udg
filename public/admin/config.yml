@@ -105,7 +105,12 @@ collections:
         search_fields: ["categories.*.nom"]
         display_fields: ["categories.*.nom"]
         options_length: 50
-        hint: "Les categories i com es comporta cadascuna es canvien a «Configuració» → «Calendari: categories»."
+        hint: "Les actuacions del calendari es classifiquen soles amb les paraules de cada categoria («Configuració» → «Calendari: categories»). Si n'hi tries una aquí, es queda la teva."
+      # what the calendar sync last gave this entry: while «tipus» still equals
+      # it, the category follows the words; once they differ, it was chosen
+      # here and the sync leaves it (src/lib/categories.ts, tipusSincronitzat).
+      # Hidden, but declared so saving from the CMS keeps it
+      - { label: "Tipus posat pel calendari", name: "tipusCalendari", widget: "hidden", required: false }
       - { label: "Cartell", name: "cartell", widget: "image", required: false, hint: "El cartell de l'actuació, si n'hi ha. Surt a la seva fitxa." }
       - { label: "Colles participants", name: "collesParticipants", widget: "list", required: false, hint: "Les altres colles que hi actuen, separades per comes. Ex: Arreplegats, Ganàpies" }
       - { label: "Mostrar a portada", name: "mostrarPortada", widget: "boolean", default: false, required: false, hint: "Si ho marques, surt la primera a «Pròximes actuacions» de la portada, encara que n'hi hagi una altra abans. Si no en marques cap, surten per ordre de data." }

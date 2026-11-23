@@ -4,7 +4,8 @@ data: 2026-10-29
 hora: "18:00"
 lloc: "Carrer de les Hortes"
 poblacio: "Girona"
-tipus: Actuacio
+tipus: "Actuacio"
+tipusCalendari: "Actuacio"
 mostrarPortada: true
 estat: publicat
 cancelada: false

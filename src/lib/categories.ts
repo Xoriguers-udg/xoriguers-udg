@@ -13,7 +13,7 @@
  * form, and a half-filled category must not fail the build or stop the sync.
  */
 // with its extension: the calendar importer runs this file directly in Node
-import { llegeixParaules, type ReglaTipus } from './esdeveniment.ts';
+import { classificaEsdeveniment, llegeixParaules, type ReglaTipus } from './esdeveniment.ts';
 
 export const COLORS = ['blau', 'groc', 'verd', 'gris'] as const;
 export type Color = (typeof COLORS)[number];
@@ -129,3 +129,28 @@ export function alHistorial(categoria: Categoria, nombreCastells: number): boole
 /** The categories as classification rules, in their order. */
 export const reglesDe = (categories: Categoria[]): ReglaTipus[] =>
   categories.map((c) => ({ tipus: c.clau, paraules: c.paraules }));
+
+/**
+ * The category a calendar event should have on this run of the sync.
+ *
+ * The sync files each event by the words of the categories, and it keeps doing
+ * so: change the words in the CMS and the events already imported move too
+ * (OCTOBERFEST was an Actuació until «October» became a word of Event). It
+ * notes what it gave in `tipusCalendari`. An entry whose category no longer
+ * matches that note was changed by hand in the CMS, and that choice stands.
+ * An entry from before the note existed was filed by the sync, so it follows
+ * the words.
+ *
+ * Returns the two fields to write, or null to leave the entry as it is.
+ */
+export function tipusSincronitzat(
+  nom: string,
+  actual: { tipus?: string | null; tipusCalendari?: string | null },
+  classificacio: Pick<Classificacio, 'categories' | 'perDefecte'>
+): { tipus: string; tipusCalendari: string } | null {
+  const triatAMa =
+    !!actual.tipusCalendari && normalitzaClau(actual.tipus) !== normalitzaClau(actual.tipusCalendari);
+  if (triatAMa) return null;
+  const tipus = classificaEsdeveniment(nom, reglesDe(classificacio.categories), classificacio.perDefecte);
+  return { tipus, tipusCalendari: tipus };
+}

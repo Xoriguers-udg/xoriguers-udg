@@ -5,7 +5,10 @@
  *
  * The calendar owns when and where an event happens; everything an editor
  * records afterwards — the castells, the cartell, the observació, the estat —
- * belongs to the entry and is never touched here. Repeating events (the weekly
+ * belongs to the entry and is never touched here. The category follows the
+ * words set in the CMS on every run, so changing them refiles the events
+ * already imported, except one whose category was picked by hand
+ * (tipusSincronitzat, src/lib/categories.ts). Repeating events (the weekly
  * assaig, and any one occurrence of it changed on its own) are skipped: the
  * agenda page already shows them through the embed.
  *
@@ -18,8 +21,8 @@ import { join } from 'node:path';
 import yaml from 'js-yaml';
 
 const { parseIcal } = await import('../src/lib/ical.ts');
-const { classificaEsdeveniment, separaLloc } = await import('../src/lib/esdeveniment.ts');
-const { alHistorial, categoriaDe, llegeixCategories, reglesDe } = await import('../src/lib/categories.ts');
+const { separaLloc } = await import('../src/lib/esdeveniment.ts');
+const { alHistorial, categoriaDe, llegeixCategories, tipusSincronitzat } = await import('../src/lib/categories.ts');
 const { urlFeedIcal } = await import('../src/lib/calendari.ts');
 
 const DEST = 'src/content/agenda';
@@ -60,7 +63,6 @@ function llegeixClassificacio() {
   return resultat;
 }
 const classificacio = llegeixClassificacio();
-const regles = reglesDe(classificacio.categories);
 
 function slugify(text) {
   return text
@@ -114,10 +116,12 @@ function aplica(contingut, camps) {
   return `---\n${linies.join('\n')}\n---${cos}`;
 }
 
-function llegeixUid(contingut) {
-  const m = contingut.match(/^calendarUid:\s*["']?([^"'\n]+)["']?\s*$/m);
+/** A plain top-level field of the frontmatter, unquoted. */
+function llegeixCamp(contingut, camp) {
+  const m = contingut.match(new RegExp(`^${camp}:\\s*["']?([^"'\\n]+?)["']?\\s*$`, 'm'));
   return m ? m[1].trim() : null;
 }
+const llegeixUid = (contingut) => llegeixCamp(contingut, 'calendarUid');
 
 /* ---------- read what is already there ---------- */
 if (!existsSync(DEST)) mkdirSync(DEST, { recursive: true });
@@ -184,7 +188,14 @@ for (const e of puntuals) {
   if (fitxer) {
     const cami = join(DEST, fitxer);
     const abans = readFileSync(cami, 'utf8');
-    const despres = aplica(abans, camps);
+    // the category follows the words, unless someone chose it in the CMS
+    // (tipusSincronitzat, src/lib/categories.ts)
+    const tipus = tipusSincronitzat(
+      e.resum,
+      { tipus: llegeixCamp(abans, 'tipus'), tipusCalendari: llegeixCamp(abans, 'tipusCalendari') },
+      classificacio
+    );
+    const despres = aplica(abans, { ...camps, ...tipus });
     if (abans === despres) {
       igual++;
       continue;
@@ -201,6 +212,7 @@ for (const e of puntuals) {
   }
 
   const nom = `${e.data}-${slugify(e.resum) || 'actuacio'}.md`;
+  const { tipus: tipusNou } = tipusSincronitzat(e.resum, {}, classificacio);
   const linies = [
     '---',
     `nom: ${yamlString(e.resum)}`,
@@ -208,7 +220,8 @@ for (const e of puntuals) {
     ...(e.hora ? [`hora: ${yamlString(e.hora)}`] : []),
     ...(lloc ? [`lloc: ${yamlString(lloc)}`] : []),
     ...(poblacio ? [`poblacio: ${yamlString(poblacio)}`] : []),
-    `tipus: ${yamlString(classificaEsdeveniment(e.resum, regles, classificacio.perDefecte))}`,
+    `tipus: ${yamlString(tipusNou)}`,
+    `tipusCalendari: ${yamlString(tipusNou)}`,
     'estat: publicat',
     `cancelada: ${e.cancellat ? 'true' : 'false'}`,
     `calendarUid: ${yamlString(e.uid)}`,
@@ -249,7 +262,7 @@ const pendents = [];
 for (const f of readdirSync(DEST).filter((x) => x.endsWith('.md'))) {
   const contingut = readFileSync(join(DEST, f), 'utf8');
   const data = contingut.match(/^data:\s*(\d{4}-\d{2}-\d{2})/m)?.[1];
-  const tipus = contingut.match(/^tipus:\s*["']?([^"'\n]+?)["']?\s*$/m)?.[1] ?? '';
+  const tipus = llegeixCamp(contingut, 'tipus') ?? '';
   if (!data || data > avui) continue;
   if (/^castells:/m.test(contingut)) continue;
   // only what the historial always shows owes castells: an assaig with none is
