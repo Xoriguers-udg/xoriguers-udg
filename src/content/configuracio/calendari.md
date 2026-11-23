@@ -1,12 +1,34 @@
 ---
-classificacio:
-  - tipus: Assaig
+categories:
+  - nom: Assaig
+    clau: Assaig
     paraules: assaig, assajos
-  - tipus: Diada
+    color: gris
+    agenda: true
+    historial: ambCastells
+  - nom: Diada
+    clau: Diada
     paraules: diada
-  - tipus: Trobada
+    color: blau
+    agenda: true
+    historial: sempre
+  - nom: Trobada
+    clau: Trobada
     paraules: trobada
-  - tipus: Actuacio
+    color: blau
+    agenda: true
+    historial: sempre
+  - nom: Actuació
+    clau: Actuacio
     paraules: actuació
+    color: blau
+    agenda: true
+    historial: sempre
+  - nom: Altres
+    clau: Altres
+    paraules: ""
+    color: blau
+    agenda: true
+    historial: sempre
 tipusPerDefecte: Actuacio
 ---

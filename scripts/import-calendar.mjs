@@ -18,7 +18,8 @@ import { join } from 'node:path';
 import yaml from 'js-yaml';
 
 const { parseIcal } = await import('../src/lib/ical.ts');
-const { classificaEsdeveniment, llegeixParaules, separaLloc, REGLES_PER_DEFECTE, TIPUS } = await import('../src/lib/esdeveniment.ts');
+const { classificaEsdeveniment, separaLloc } = await import('../src/lib/esdeveniment.ts');
+const { alHistorial, categoriaDe, llegeixCategories, reglesDe } = await import('../src/lib/categories.ts');
 const { urlFeedIcal } = await import('../src/lib/calendari.ts');
 
 const DEST = 'src/content/agenda';
@@ -45,25 +46,21 @@ function urlDelFeed() {
 }
 
 /**
- * The words that give a new event its type, as the colla set them in the CMS
- * (Configuració → Calendari). Read leniently: this runs every hour unattended,
- * so a rule it cannot use is skipped with a warning rather than stopping the
- * sync, and with no usable rule at all the built-in words apply.
+ * The agenda's categories as the colla set them in the CMS (Configuració →
+ * Calendari): the words that give a new event its category, and which past
+ * entries count as owing castells. Read leniently: this runs every hour
+ * unattended, so what it cannot use is reported and skipped, and with no
+ * usable category the built-in ones apply.
  */
-function regles() {
-  if (!existsSync(CLASSIFICACIO)) return { regles: REGLES_PER_DEFECTE, perDefecte: 'Actuacio' };
-  const frontmatter = readFileSync(CLASSIFICACIO, 'utf8').replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
-  const dades = yaml.load(frontmatter) ?? {};
-  const valides = [];
-  for (const r of Array.isArray(dades.classificacio) ? dades.classificacio : []) {
-    const paraules = llegeixParaules(r?.paraules);
-    if (!TIPUS.includes(r?.tipus)) console.warn(`  avís: tipus desconegut a ${CLASSIFICACIO}: ${r?.tipus}`);
-    else if (paraules.length) valides.push({ tipus: r.tipus, paraules });
-  }
-  const perDefecte = TIPUS.includes(dades.tipusPerDefecte) ? dades.tipusPerDefecte : 'Actuacio';
-  return { regles: valides.length ? valides : REGLES_PER_DEFECTE, perDefecte };
+function llegeixClassificacio() {
+  const text = existsSync(CLASSIFICACIO) ? readFileSync(CLASSIFICACIO, 'utf8').replace(/\r\n/g, '\n') : '';
+  const frontmatter = text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
+  const resultat = llegeixCategories(yaml.load(frontmatter));
+  for (const avis of resultat.avisos) console.warn(`  avís (${CLASSIFICACIO}): ${avis}`);
+  return resultat;
 }
-const classificacio = regles();
+const classificacio = llegeixClassificacio();
+const regles = reglesDe(classificacio.categories);
 
 function slugify(text) {
   return text
@@ -211,7 +208,7 @@ for (const e of puntuals) {
     ...(e.hora ? [`hora: ${yamlString(e.hora)}`] : []),
     ...(lloc ? [`lloc: ${yamlString(lloc)}`] : []),
     ...(poblacio ? [`poblacio: ${yamlString(poblacio)}`] : []),
-    `tipus: ${classificaEsdeveniment(e.resum, classificacio.regles, classificacio.perDefecte)}`,
+    `tipus: ${yamlString(classificaEsdeveniment(e.resum, regles, classificacio.perDefecte))}`,
     'estat: publicat',
     `cancelada: ${e.cancellat ? 'true' : 'false'}`,
     `calendarUid: ${yamlString(e.uid)}`,
@@ -252,10 +249,12 @@ const pendents = [];
 for (const f of readdirSync(DEST).filter((x) => x.endsWith('.md'))) {
   const contingut = readFileSync(join(DEST, f), 'utf8');
   const data = contingut.match(/^data:\s*(\d{4}-\d{2}-\d{2})/m)?.[1];
-  const tipus = contingut.match(/^tipus:\s*(\w+)/m)?.[1];
+  const tipus = contingut.match(/^tipus:\s*["']?([^"'\n]+?)["']?\s*$/m)?.[1] ?? '';
   if (!data || data > avui) continue;
-  if (tipus === 'Assaig') continue;
   if (/^castells:/m.test(contingut)) continue;
+  // only what the historial always shows owes castells: an assaig with none is
+  // just an assaig
+  if (!alHistorial(categoriaDe(tipus, classificacio.categories), 0)) continue;
   pendents.push(`${data}  ${f}`);
 }
 if (pendents.length) {

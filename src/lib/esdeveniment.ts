@@ -1,7 +1,10 @@
-export const TIPUS = ['Actuacio', 'Assaig', 'Diada', 'Trobada', 'Altres'] as const;
-export type TipusEsdeveniment = (typeof TIPUS)[number];
+/**
+ * A category's key, as an agenda entry stores it. The categories themselves
+ * are the colla's, defined in the CMS (src/lib/categories.ts).
+ */
+export type TipusEsdeveniment = string;
 
-/** One type and the words in an event's name that mean it. */
+/** One category and the words in an event's name that mean it. */
 export interface ReglaTipus {
   tipus: TipusEsdeveniment;
   paraules: string[];
@@ -10,11 +13,11 @@ export interface ReglaTipus {
 /**
  * The calendar names events by their kind ("ASSAIG", "ACTUACIÓ RESA") and the
  * registre històric follows the same habit ("Diada hivern Xoriguers"), so the
- * name is enough to classify. The colla edits these words in the CMS
- * (Configuració → Calendari, src/content/configuracio/calendari.md); these are
- * the ones used when that file has none. Assaig goes first: it is the one kind
- * that is not a performance, and getting it wrong would put practices in the
- * archive.
+ * name is enough to classify. The colla edits the words per category in the
+ * CMS (src/lib/categories.ts); these are the rules used when nothing else is
+ * given, the same as the built-in categories. Assaig goes first: it is the one
+ * kind that is not a performance, and getting it wrong would put practices in
+ * the archive.
  */
 export const REGLES_PER_DEFECTE: ReglaTipus[] = [
   { tipus: 'Assaig', paraules: ['assaig', 'assajos'] },

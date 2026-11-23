@@ -123,14 +123,11 @@ credentials anywhere — and then, for each event:
    rewrite the record. A response that is not a whole `VCALENDAR` stops the run
    before anything is written, so an outage cannot read as "everything was
    deleted".
-5. A **new** entry takes its `tipus` from the event's name, by the words the
-   colla keeps in the CMS (Configuració → Calendari, i.e.
-   `src/content/configuracio/calendari.md`): an ordered list of rules, each a
-   type and a comma-separated line of words, first match wins, case and
-   accents ignored, a word matching where a word of the name starts
-   (`classificaEsdeveniment`). With no usable rule it falls back to the words
-   built into `REGLES_PER_DEFECTE`. An existing entry's `tipus` is the
-   editor's and is never reclassified.
+5. A **new** entry takes its `tipus` from the event's name, by the words of
+   the colla's categories (see *Categories* below): first category with a
+   word in the name wins, case and accents ignored, a word matching where a
+   word of the name starts (`classificaEsdeveniment`). An existing entry's
+   `tipus` is the editor's and is never reclassified.
 6. It prints past actuacions with no castells recorded — the "needs writing up"
    queue.
 
@@ -159,6 +156,28 @@ Operational notes, all learned the hard way:
 - GitHub switches scheduled workflows off after 60 days without a commit. The
   bot only commits when something changes, so after 50 quiet days it makes an
   empty commit to keep the schedule on through the summer.
+
+## Categories
+
+An agenda entry's `tipus` is the `clau` of one of the colla's categories,
+defined in the CMS (Configuració → «Calendari: categories», stored in
+`src/content/configuracio/calendari.md`) and read through
+[`src/lib/categories.ts`](../src/lib/categories.ts). Each category has a
+name, a key, the words that classify calendar events into it, a pill colour,
+whether it is listed as upcoming (`agenda`), and whether past entries belong to
+the historial (`historial`: `sempre`, `ambCastells`, `mai`). The historial rule
+also decides whose castells count for «Últims castells» and «Els nostres
+millors castells», and which past entries the importer lists as owing castells.
+
+Entries store the key, not the name, so a category can be renamed freely; the
+CMS's Tipus field is a relation to the list, showing names and storing keys.
+`llegeixCategories` is deliberately lenient (a half-filled category gets
+defaults, a repeated key is skipped, an empty list falls back to
+`CATEGORIES_PER_DEFECTE`, which is what the site did before), and
+`categoriaDe` shows an entry whose category was deleted under its own key
+rather than dropping it. `categories.ts` imports with `.ts` extensions because
+the importer runs it directly in Node; pages load it through
+`carrega-categories.ts`, which is the only part that needs `astro:content`.
 
 ## The arbre de xoriguers
 

@@ -1,6 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
+import { alHistorial, categoriaDe } from '../../lib/categories';
+import { carregaCategories } from '../../lib/carrega-categories';
 import { mediaUrl } from '../../lib/media';
 import { formatDateNumeric } from '../../lib/format';
 import { temporadaDe } from '../../lib/esdeveniment';
@@ -32,9 +34,11 @@ const capcalera = await getEntry('pagines', 'castells');
 const heroImage = mediaUrl(base, capcalera?.data.imatge);
 const { Content: IntroContent } = await render(capcalera!);
 
-// the archive is simply the past of the agenda. Practices are left out, unless
+// the archive is simply the past of the agenda, of the categories the colla
+// files there (Configuració → Calendari). An assaig, by default, only when
 // castells were actually recorded at one — then they are part of what the colla
 // has built, whatever the event was called.
+const { categories } = await carregaCategories();
 const ara = new Date();
 const temporadaActual = temporadaDe(ara);
 const passat = await getCollection(
@@ -42,7 +46,7 @@ const passat = await getCollection(
   ({ data }) =>
     data.estat === 'publicat' &&
     data.data <= ara &&
-    (data.tipus !== 'Assaig' || data.castells.length > 0)
+    alHistorial(categoriaDe(data.tipus, categories), data.castells.length)
 );
 
 const diades: Diada[] = passat.map((e) => ({

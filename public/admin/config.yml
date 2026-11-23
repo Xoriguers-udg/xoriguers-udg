@@ -95,18 +95,20 @@ collections:
       - { label: "Hora", name: "hora", widget: "string", required: false, hint: "Ex: 12:30. Si ve del Google Calendar, canvia-la allà." }
       - { label: "Lloc", name: "lloc", widget: "string", required: false, hint: "Ex: Església de Sant Domènec. Si ve del Google Calendar, canvia'l allà." }
       - { label: "Població", name: "poblacio", widget: "string", required: false, hint: "Ex: Girona. Si ve del Google Calendar, canvia-la allà." }
+      # the categories are the colla's own (Configuració → Calendari: categories)
       - label: "Tipus"
         name: "tipus"
-        widget: "select"
-        options:
-          - { label: "Actuació", value: "Actuacio" }
-          - { label: "Assaig", value: "Assaig" }
-          - { label: "Diada", value: "Diada" }
-          - { label: "Trobada", value: "Trobada" }
-          - { label: "Altres", value: "Altres" }
+        widget: "relation"
+        collection: "configuracio"
+        file: "calendari"
+        value_field: "categories.*.clau"
+        search_fields: ["categories.*.nom"]
+        display_fields: ["categories.*.nom"]
+        options_length: 50
+        hint: "Les categories i com es comporta cadascuna es canvien a «Configuració» → «Calendari: categories»."
       - { label: "Cartell", name: "cartell", widget: "image", required: false, hint: "El cartell de l'actuació, si n'hi ha. Surt a la seva fitxa." }
       - { label: "Colles participants", name: "collesParticipants", widget: "list", required: false, hint: "Les altres colles que hi actuen, separades per comes. Ex: Arreplegats, Ganàpies" }
-      - { label: "Mostrar a portada", name: "mostrarPortada", widget: "boolean", default: false, hint: "Si ho marques, surt la primera a «Pròximes actuacions» de la portada, encara que n'hi hagi una altra abans. Si no en marques cap, surten per ordre de data." }
+      - { label: "Mostrar a portada", name: "mostrarPortada", widget: "boolean", default: false, required: false, hint: "Si ho marques, surt la primera a «Pròximes actuacions» de la portada, encara que n'hi hagi una altra abans. Si no en marques cap, surten per ordre de data." }
       - label: "Estat"
         name: "estat"
         widget: "select"
@@ -114,8 +116,11 @@ collections:
           - { label: "Publicat (es veu a la web)", value: "publicat" }
           - { label: "Esborrany (no es publica)", value: "esborrany" }
         default: "publicat"
-      - { label: "Cancel·lada", name: "cancelada", widget: "boolean", default: false, hint: "Surt a la web amb l'etiqueta «Cancel·lada». Si ve del Google Calendar, es marca sola quan s'hi cancel·la." }
-      - { label: "Descripció", name: "body", widget: "markdown", hint: "Opcional. Què hi passarà o què hi va passar, en un parell de frases." }
+      - { label: "Cancel·lada", name: "cancelada", widget: "boolean", default: false, required: false, hint: "Surt a la web amb l'etiqueta «Cancel·lada». Si ve del Google Calendar, es marca sola quan s'hi cancel·la." }
+      # optional: the calendar importer creates entries with neither a description
+      # nor mostrarPortada, and a required field there made every imported
+      # actuació impossible to save from the CMS
+      - { label: "Descripció", name: "body", widget: "markdown", required: false, hint: "Opcional. Què hi passarà o què hi va passar, en un parell de frases." }
       - label: "Castells"
         name: "castells"
         widget: "list"
@@ -535,7 +540,7 @@ collections:
   - name: "configuracio"
     label: "Configuració"
     editor: { preview: false }
-    description: "Xarxes socials, correu de contacte, ajustos generals i com es classifiquen les actuacions que arriben del calendari. No cal tocar-ho gaire sovint."
+    description: "Xarxes socials, correu de contacte, ajustos generals i les categories de l'Agenda. No cal tocar-ho gaire sovint."
     files:
       - name: "general"
         label: "Configuració general"
@@ -553,42 +558,50 @@ collections:
             widget: "string"
             required: false
             hint: "No cal tocar-ho. És el calendari d'on l'agenda s'omple sola cada hora."
-      # read by the calendar importer only (scripts/import-calendar.mjs); a
-      # file of its own so the general form stays short
+      # the agenda's categories: how each shows and behaves on the site, and the
+      # words that classify calendar events into it (src/lib/categories.ts). An
+      # agenda entry stores a category's identificador, so the name can change
       - name: "calendari"
-        label: "Calendari: tipus d'esdeveniment"
+        label: "Calendari: categories"
         file: "src/content/configuracio/calendari.md"
         fields:
-          - label: "Paraules per classificar"
-            name: "classificacio"
+          - label: "Categories"
+            name: "categories"
             widget: "list"
-            required: false
-            label_singular: "tipus"
-            summary: "{{fields.tipus}}: {{fields.paraules}}"
-            hint: "Quan arriba una actuació nova del Google Calendar, el seu nom decideix de quin tipus és. Es miren els tipus en aquest ordre i guanya el primer que té alguna de les seves paraules al nom: arrossega'ls per canviar-ne l'ordre. No importen les majúscules ni els accents, i una paraula també troba les que comencen igual («actuació» troba «ACTUACIONS»). Només afecta les actuacions noves; el tipus de les que ja hi són es canvia a mà a l'Agenda."
+            label_singular: "categoria"
+            summary: "{{fields.nom}}"
+            collapsed: true
+            hint: "Les categories de l'Agenda: actuació, diada, assaig… Pots afegir-ne tantes com vulguis. Quan arriba una actuació nova del Google Calendar, es miren en aquest ordre i es queda la primera que té alguna de les seves paraules al nom; arrossega-les per canviar-ne l'ordre."
             fields:
-              - label: "Tipus"
-                name: "tipus"
+              - { label: "Nom", name: "nom", widget: "string", hint: "Com surt a la web. Ex: Actuació" }
+              - { label: "Identificador", name: "clau", widget: "string", hint: "Una paraula curta, sense espais, que no canviï mai: és el que guarda cada actuació de l'Agenda. Ex: cercavila. Si canvies el nom, deixa-ho igual." }
+              - { label: "Paraules", name: "paraules", widget: "string", required: false, hint: "Les paraules del nom al calendari que la fan d'aquesta categoria, separades per comes. Ex: cercavila, passacarrer. No importen les majúscules ni els accents, i una paraula també troba les que comencen igual («actuació» troba «ACTUACIONS»)." }
+              - label: "Color de l'etiqueta"
+                name: "color"
                 widget: "select"
+                default: "blau"
                 options:
-                  - { label: "Actuació", value: "Actuacio" }
-                  - { label: "Assaig", value: "Assaig" }
-                  - { label: "Diada", value: "Diada" }
-                  - { label: "Trobada", value: "Trobada" }
-                  - { label: "Altres", value: "Altres" }
-              - label: "Paraules"
-                name: "paraules"
-                widget: "string"
-                hint: "Separades per comes. Ex: assaig, assajos, xorifit. També hi caben expressions, com «festa major»."
-          - label: "Tipus si no hi ha cap paraula"
+                  - { label: "Blau", value: "blau" }
+                  - { label: "Groc", value: "groc" }
+                  - { label: "Verd", value: "verd" }
+                  - { label: "Gris", value: "gris" }
+              - { label: "Surt a l'agenda i a la portada", name: "agenda", widget: "boolean", default: true, hint: "Si no, les d'aquesta categoria no surten a «Pròximes actuacions» ni a la llista de l'Agenda (però sí al calendari)." }
+              - label: "A l'historial"
+                name: "historial"
+                widget: "select"
+                default: "sempre"
+                hint: "Quan ja han passat. També decideix si els seus castells compten per a «Últims castells» i «Els nostres millors castells»."
+                options:
+                  - { label: "Sempre", value: "sempre" }
+                  - { label: "Només si s'hi han fet castells", value: "ambCastells" }
+                  - { label: "Mai", value: "mai" }
+          - label: "Categoria si no hi ha cap paraula"
             name: "tipusPerDefecte"
-            widget: "select"
+            widget: "relation"
+            collection: "configuracio"
+            file: "calendari"
+            value_field: "categories.*.clau"
+            search_fields: ["categories.*.nom"]
+            display_fields: ["categories.*.nom"]
             required: false
-            default: "Actuacio"
-            hint: "El tipus d'una actuació nova amb un nom que no té cap de les paraules de dalt. Per exemple, «OCTOBERFEST»."
-            options:
-              - { label: "Actuació", value: "Actuacio" }
-              - { label: "Assaig", value: "Assaig" }
-              - { label: "Diada", value: "Diada" }
-              - { label: "Trobada", value: "Trobada" }
-              - { label: "Altres", value: "Altres" }
+            hint: "La categoria d'una actuació nova amb un nom que no té cap de les paraules. Per exemple, «OCTOBERFEST». Si acabes d'afegir una categoria, desa primer perquè surti aquí."

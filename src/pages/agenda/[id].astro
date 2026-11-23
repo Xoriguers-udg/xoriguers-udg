@@ -5,6 +5,8 @@ import { mediaUrl } from '../../lib/media';
 import { formatDate } from '../../lib/format';
 import { detallsEsdeveniment, llocComplet, temporadaDe } from '../../lib/esdeveniment';
 import { llegeixCastellsRegistrats, notacioAmbEstat } from '../../lib/historial';
+import { CLASSE_PILL, categoriaDe } from '../../lib/categories';
+import { carregaCategories } from '../../lib/carrega-categories';
 
 export async function getStaticPaths() {
   const agenda = await getCollection('agenda', ({ data }) => data.estat === 'publicat');
@@ -28,6 +30,7 @@ const lloc = detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.po
 
 const temporada = temporadaDe(entry.data.data);
 const castells = llegeixCastellsRegistrats(entry.data.castells);
+const categoria = categoriaDe(entry.data.tipus, (await carregaCategories()).categories);
 
 // a past diada belongs to the historial; the agenda only lists what is still to
 // come, so sending someone back there would be a dead end
@@ -49,7 +52,7 @@ const ambFotos = entry.data.castells.some((c) => c.foto);
           {lloc && <span>{lloc}</span>}
         </div>
         <div class="etiquetes">
-          <span class="pill pill-blue">{entry.data.tipus}</span>
+          <span class={`pill ${CLASSE_PILL[categoria.color]}`}>{categoria.nom}</span>
           {entry.data.cancelada && <span class="pill pill-danger">Cancel·lada</span>}
           <a class="pill pill-neutral temporada" href={`${base}castells#t-${temporada}`}>Temporada {temporada}</a>
         </div>

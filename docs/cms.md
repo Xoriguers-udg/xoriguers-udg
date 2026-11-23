@@ -54,11 +54,23 @@ entry out of the build entirely.
 - **Every collection has a one-line `description`** at the top of its list,
   saying what it is for and where it shows. Treat these like the hints.
 
-The words that classify calendar events (Configuració → «Calendari: tipus
-d'esdeveniment») are a plain string per rule, split on commas by
-`llegeixParaules`, not Decap's comma-separated `list` widget: that widget
-drops a comma typed before a space, so «assajos, xorifit» was saved as
-«assajosxorifit».
+The agenda's categories (Configuració → «Calendari: categories», see
+[architecture.md](architecture.md#categories)) are a list the colla edits
+freely. Two things about that form:
+
+- Each category's words are a plain string, split on commas by
+  `llegeixParaules`, not Decap's comma-separated `list` widget: that widget
+  drops a comma typed before a space, so «assajos, xorifit» was saved as
+  «assajosxorifit».
+- The agenda's Tipus and the category for unmatched names are `relation`
+  widgets into that same file (`value_field: categories.*.clau`), so a new
+  category is selectable as soon as it is saved, and the entry stores the
+  key while the editor sees the name.
+
+The agenda's Descripció, «Mostrar a portada» and Cancel·lada are
+`required: false`: the importer writes entries without the first two, and as
+required fields they made every imported actuació unsaveable («Descripció és
+obligatori»).
 
 Galeria's photos stay a list of single images. The image widget's
 `multiple: true` was tried: the default media library still uploads one file

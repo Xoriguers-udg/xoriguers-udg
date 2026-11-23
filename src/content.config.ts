@@ -12,7 +12,7 @@
  */
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
-import { TIPUS } from './lib/esdeveniment';
+import { COLORS, HISTORIAL } from './lib/categories.ts';
 
 /** The CMS writes "" for a cleared field; the schemas want it to be absent. */
 const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
@@ -40,7 +40,8 @@ const agenda = defineCollection({
     hora: z.preprocess(emptyToUndefined, z.string().optional()),
     lloc: z.preprocess(emptyToUndefined, z.string().optional()),
     poblacio: z.preprocess(emptyToUndefined, z.string().optional()),
-    tipus: z.enum(TIPUS),
+    /** a category's clau, as defined in Configuració → Calendari (src/lib/categories.ts) */
+    tipus: z.string(),
     cartell: z.string().optional(),
     collesParticipants: z.array(z.string()).default([]),
     mostrarPortada: z.boolean().default(false),
@@ -211,20 +212,26 @@ const configuracio = defineCollection({
     capceleraImatge: z.string().optional(),
     descripcioGeneral: z.string().optional(),
     /**
-     * calendari.md: the words in an event's name that give its type, read by
-     * the calendar importer (src/lib/esdeveniment.ts, classificaEsdeveniment).
-     * The order is the priority. The site itself never reads them.
+     * calendari.md: the agenda's categories, in order, with how each behaves
+     * on the site and the words that classify calendar events into it. Kept
+     * loose here on purpose and read through llegeixCategories
+     * (src/lib/categories.ts), which fills in what a half-edited category
+     * lacks instead of failing the build.
      */
-    classificacio: z
+    categories: z
       .array(
         z.object({
-          tipus: z.enum(TIPUS),
+          nom: z.preprocess(emptyToUndefined, z.string().optional()),
+          clau: z.preprocess(emptyToUndefined, z.string().optional()),
           // one line separated by commas, as the CMS writes it; see llegeixParaules
-          paraules: z.union([z.string(), z.array(z.string())]).optional(),
+          paraules: z.union([z.string(), z.array(z.string())]).nullish(),
+          color: z.preprocess(emptyToUndefined, z.enum(COLORS).optional()),
+          agenda: z.boolean().optional(),
+          historial: z.preprocess(emptyToUndefined, z.enum(HISTORIAL).optional()),
         }),
       )
       .optional(),
-    tipusPerDefecte: z.preprocess(emptyToUndefined, z.enum(TIPUS).optional()),
+    tipusPerDefecte: z.preprocess(emptyToUndefined, z.string().optional()),
   }),
 });
 

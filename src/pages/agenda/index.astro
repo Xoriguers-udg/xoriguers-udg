@@ -5,13 +5,17 @@ import { formatDate } from '../../lib/format';
 import { mediaUrl } from '../../lib/media';
 import { detallsEsdeveniment } from '../../lib/esdeveniment';
 import { urlEmbedMensual } from '../../lib/calendari';
+import { CLASSE_PILL, categoriaDe } from '../../lib/categories';
+import { carregaCategories } from '../../lib/carrega-categories';
 
-// only what is still to come; everything past belongs to the historial
+// only what is still to come, of the categories the colla lists here (Configuració
+// → Calendari); everything past belongs to the historial
+const { categories } = await carregaCategories();
 const avui = new Date();
 avui.setHours(0, 0, 0, 0);
 const agenda = await getCollection(
   'agenda',
-  ({ data }) => data.estat === 'publicat' && data.data >= avui
+  ({ data }) => data.estat === 'publicat' && data.data >= avui && categoriaDe(data.tipus, categories).agenda
 );
 const sorted = agenda.sort((a, b) => a.data.data.getTime() - b.data.data.getTime());
 
@@ -44,7 +48,10 @@ const { Content: IntroContent } = await render(capcalera!);
               </div>
               <div class="estats">
                 {entry.data.cancelada && <span class="pill pill-danger">Cancel·lada</span>}
-                <span class={`pill ${entry.data.tipus === 'Assaig' ? 'pill-neutral' : 'pill-blue'}`}>{entry.data.tipus}</span>
+                {(() => {
+                  const categoria = categoriaDe(entry.data.tipus, categories);
+                  return <span class={`pill ${CLASSE_PILL[categoria.color]}`}>{categoria.nom}</span>;
+                })()}
               </div>
             </a>
           </li>
