@@ -1,7 +1,7 @@
 # Use DecapBridge classic auth (required)
 backend:
   name: git-gateway
-  repo: iochoa808/xoriguers-udg
+  repo: Xoriguers-udg/xoriguers-udg
   branch: main
   identity_url: https://auth.decapbridge.com/sites/527cd3bc-1fbf-4d38-96e7-c294c4cec610
   gateway_url: https://gateway.decapbridge.com
@@ -19,9 +19,9 @@ backend:
 # interface is in Catalan, it carries the colla's escut, and every button that
 # says "view on site" lands on the right page.
 locale: "ca"
-logo_url: https://iochoa808.github.io/xoriguers-udg/images/escut-xoriguers.png
-site_url: https://iochoa808.github.io/xoriguers-udg
-display_url: https://iochoa808.github.io/xoriguers-udg
+logo_url: https://xoriguers-udg.github.io/xoriguers-udg/images/escut-xoriguers.png
+site_url: https://xoriguers-udg.github.io/xoriguers-udg
+display_url: https://xoriguers-udg.github.io/xoriguers-udg
 
 # local_backend still lets `npm run dev:all` test against your local
 # git checkout without touching DecapBridge/GitHub — Decap only honors

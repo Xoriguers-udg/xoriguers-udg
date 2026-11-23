@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-Sitemap: https://iochoa808.github.io/xoriguers-udg/sitemap-index.xml
+Sitemap: https://xoriguers-udg.github.io/xoriguers-udg/sitemap-index.xml

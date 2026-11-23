@@ -30,7 +30,7 @@ function rewriteArbre(req, _res, next) {
 // actual deploy — local dev keeps running at the root.
 export default defineConfig({
   vite: { plugins: [arbreIndex] },
-  site: 'https://iochoa808.github.io',
+  site: 'https://xoriguers-udg.github.io',
   base: process.env.GITHUB_ACTIONS ? '/xoriguers-udg/' : '/',
   integrations: [
     sitemap({

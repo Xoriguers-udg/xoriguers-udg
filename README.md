@@ -3,7 +3,7 @@
 The website of **Xoriguers UdG**, the university castellers colla of the
 Universitat de Girona. Astro builds a static site; [Decap CMS](https://decapcms.org)
 edits its content as files in this repository; GitHub Pages serves it at
-<https://iochoa808.github.io/xoriguers-udg/>.
+<https://xoriguers-udg.github.io/xoriguers-udg/>.
 
 The people who run the site are one or two members of the colla. They never see
 GitHub: they open `/admin`, fill in forms, press Save, and a commit plus a deploy

@@ -153,7 +153,7 @@ file is committed, so the site build never runs the generator. See
 
 `astro.config.mjs` sets `base` to `/xoriguers-udg/` when `GITHUB_ACTIONS` is
 set, and `/` otherwise, because the site is not served from the root of
-`iochoa808.github.io`. **Every internal link must be built from
+`xoriguers-udg.github.io`. **Every internal link must be built from
 `import.meta.env.BASE_URL`.** A bare `href="/agenda"` works locally and 404s in
 production, which is the single easiest mistake to make here.
 
