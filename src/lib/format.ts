@@ -23,3 +23,13 @@ export function formatDateNumeric(d: Date): string {
     timeZone: 'UTC',
   }).format(d);
 }
+
+/**
+ * Dijous, Dissabte: the day of the week, as a line on its own (so capitalised).
+ * Read in UTC, as the dates are stored, so it names the right day wherever the
+ * site is built.
+ */
+export function formatDiaSetmana(d: Date): string {
+  const dia = new Intl.DateTimeFormat('ca-ES', { weekday: 'long', timeZone: 'UTC' }).format(d);
+  return dia.charAt(0).toUpperCase() + dia.slice(1);
+}

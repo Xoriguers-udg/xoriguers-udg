@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { idCalendari, urlEmbedMensual, urlFeedIcal } from './calendari';
+import { idCalendari, urlEmbedMensual, urlFeedIcal, urlSubscripcioGoogle, urlSubscripcioWebcal } from './calendari';
 
 const EMBED =
   'https://calendar.google.com/calendar/embed?src=abc123%40group.calendar.google.com&ctz=Europe%2FMadrid';
@@ -70,5 +70,20 @@ describe('urlEmbedMensual', () => {
   it('is undefined when the field holds a placeholder', () => {
     expect(urlEmbedMensual('[URL DEL CALENDARI]')).toBeUndefined();
     expect(urlEmbedMensual(undefined)).toBeUndefined();
+  });
+});
+
+describe('subscribing', () => {
+  it('adds the calendar to Google Calendar by its address', () => {
+    expect(urlSubscripcioGoogle(EMBED)).toBe(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(idCalendari(EMBED)!)}`);
+  });
+
+  it('hands the feed to any other calendar app as webcal:', () => {
+    expect(urlSubscripcioWebcal(EMBED)).toBe(urlFeedIcal(EMBED)!.replace('https://', 'webcal://'));
+  });
+
+  it('gives nothing for a placeholder', () => {
+    expect(urlSubscripcioGoogle('[URL DEL CALENDARI]')).toBeUndefined();
+    expect(urlSubscripcioWebcal('[URL DEL CALENDARI]')).toBeUndefined();
   });
 });

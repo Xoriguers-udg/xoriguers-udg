@@ -5,6 +5,7 @@ import { mediaUrl } from '../../lib/media';
 import { isRealUrl } from '../../lib/config';
 import { buildMailto } from '../../lib/mailto';
 import { paginaActiva } from '../../lib/carrega-estructura';
+import Visor from '../../components/Visor.astro';
 
 export async function getStaticPaths() {
   // switched off in Configuració → Estructura del web: none of them is built
@@ -39,12 +40,22 @@ const descripcio = disponible ? `${entry.data.nom}, ${entry.data.preu} €` : `$
 
     <div class="producte">
       <div class="fotos">
-        {principal ? <img class="foto-principal" src={principal} alt={entry.data.nom} width="900" height="900" /> : <div class="foto-principal placeholder"></div>}
+        {/* each photo opens whole in the viewer (src/components/Visor.astro) */}
+        {principal ? (
+          <a class="foto-enllac" href={principal} data-visor>
+            <img class="foto-principal" src={principal} alt={fotos.length > 1 ? `${entry.data.nom}, foto 1 de ${fotos.length}` : entry.data.nom} width="900" height="900" />
+          </a>
+        ) : <div class="foto-principal placeholder"></div>}
         {extra.length > 0 && (
           <div class="thumbs">
-            {extra.map((f) => <img src={f} alt="" width="160" height="160" loading="lazy" />)}
+            {extra.map((f, i) => (
+              <a class="foto-enllac" href={f} data-visor>
+                <img src={f} alt={`${entry.data.nom}, foto ${i + 2} de ${fotos.length}`} width="160" height="160" loading="lazy" />
+              </a>
+            ))}
           </div>
         )}
+        {principal && <Visor />}
       </div>
 
       <div class="compra">
@@ -64,7 +75,7 @@ const descripcio = disponible ? `${entry.data.nom}, ${entry.data.preu} €` : `$
                 return (
                   <label class="talla-btn">
                     <input type="radio" name="talla" value={t.talla} checked={i === primeraDisponible} disabled={esgotat} />
-                    <span class="talla-content">{t.talla} <span class="estoc">{esgotat ? 'Esgotat' : t.estoc}</span></span>
+                    <span class="talla-content">{t.talla} <span class="estoc">{esgotat ? 'Esgotat' : <>{t.estoc}<span class="visually-hidden"> {t.estoc === 1 ? 'disponible' : 'disponibles'}</span></>}</span></span>
                   </label>
                 );
               })}
@@ -106,7 +117,12 @@ const descripcio = disponible ? `${entry.data.nom}, ${entry.data.preu} €` : `$
   .foto-principal { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-card); }
   .foto-principal.placeholder { background: var(--color-paper-3); }
   .thumbs { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-sm); }
-  .thumbs img { width: 80px; height: 80px; object-fit: cover; border-radius: var(--space-xs); }
+  .thumbs img { display: block; width: 80px; height: 80px; object-fit: cover; border-radius: var(--space-xs); }
+  .foto-enllac { display: block; border-radius: var(--radius-card); }
+  .thumbs .foto-enllac { border-radius: var(--space-xs); }
+  .foto-enllac img { transition: opacity var(--dur-micro) var(--ease-out); }
+  .foto-enllac:hover img { opacity: 0.88; }
+  .foto-enllac:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
   .compra { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-lg); }
   .preu { font-size: var(--text-3xl); line-height: 1; color: var(--color-accent-deep); }
   .talles { border: 0; margin: 0; padding: 0; }

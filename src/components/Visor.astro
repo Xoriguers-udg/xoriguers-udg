@@ -1,0 +1,165 @@
+---
+/**
+ * The photo viewer. Every link on the page marked data-visor (pointing at its
+ * photo, with the caption in data-peu) opens that photo whole, over the page,
+ * with the page's other photos a step away: ← and →, or Anterior and Següent.
+ * Escape, Tanca or a click on the dark around the photo closes it.
+ *
+ * It is a native <dialog>, so while it is open focus stays inside it, and the
+ * rest of the page is out of reach of a screen reader; on closing, focus goes
+ * back to the photo it was opened from. Without JavaScript the links still
+ * open the photo itself, and a click with Ctrl or ⌘ still opens a new tab.
+ */
+---
+<dialog class="visor" aria-labelledby="visor-compte">
+  <div class="visor-barra">
+    <p id="visor-compte" class="visor-compte" aria-live="polite"></p>
+    <button type="button" class="visor-boto" data-visor-tanca>
+      Tanca
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </button>
+  </div>
+  <figure class="visor-figura">
+    <img class="visor-img" alt="" />
+    <figcaption class="visor-peu" hidden></figcaption>
+  </figure>
+  <div class="visor-nav">
+    <button type="button" class="visor-boto" data-visor-pas="-1">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+      Anterior
+    </button>
+    <button type="button" class="visor-boto" data-visor-pas="1">
+      Següent
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+    </button>
+  </div>
+</dialog>
+
+<script>
+  const visor = document.querySelector<HTMLDialogElement>('dialog.visor');
+  const enllacos = [...document.querySelectorAll<HTMLAnchorElement>('a[data-visor]')];
+
+  if (visor && enllacos.length > 0) {
+    const img = visor.querySelector<HTMLImageElement>('.visor-img')!;
+    const peu = visor.querySelector<HTMLElement>('.visor-peu')!;
+    const figura = visor.querySelector<HTMLElement>('.visor-figura')!;
+    const compte = visor.querySelector<HTMLElement>('.visor-compte')!;
+    let ara = 0;
+    let origen: HTMLElement | null = null;
+
+    const mostra = (i: number) => {
+      ara = (i + enllacos.length) % enllacos.length;
+      const a = enllacos[ara];
+      img.src = a.href;
+      // the caption is read from the figure; the photo itself needs no more
+      peu.textContent = a.dataset.peu ?? '';
+      peu.hidden = !a.dataset.peu;
+      compte.textContent = `Foto ${ara + 1} de ${enllacos.length}`;
+    };
+
+    visor.classList.toggle('sola', enllacos.length === 1);
+    enllacos.forEach((a, i) => {
+      a.setAttribute('aria-haspopup', 'dialog');
+      a.addEventListener('click', (e) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        origen = a;
+        mostra(i);
+        visor.showModal();
+      });
+    });
+
+    visor.querySelectorAll<HTMLButtonElement>('[data-visor-pas]').forEach((boto) =>
+      boto.addEventListener('click', () => mostra(ara + Number(boto.dataset.visorPas)))
+    );
+    visor.querySelector('[data-visor-tanca]')!.addEventListener('click', () => visor.close());
+    visor.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        mostra(ara + (e.key === 'ArrowRight' ? 1 : -1));
+      }
+    });
+    visor.addEventListener('click', (e) => {
+      if (e.target === visor || e.target === figura) visor.close();
+    });
+    visor.addEventListener('close', () => origen?.focus());
+  }
+</script>
+
+<style>
+  .visor {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: var(--space-md) var(--gutter);
+    border: 0;
+    background: var(--color-ink);
+    color: var(--color-on-dark);
+  }
+  .visor[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: var(--space-sm);
+  }
+  .visor::backdrop { background: var(--color-ink); }
+  /* the page underneath does not scroll while a photo is open */
+  :global(html:has(dialog.visor[open])) { overflow: hidden; }
+
+  .visor-barra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+  }
+  .visor-compte {
+    font-size: var(--text-sm);
+    color: var(--color-on-dark-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .visor-figura {
+    margin: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+  }
+  /* the whole photo, as large as the screen allows, never cropped */
+  .visor-img {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .visor-peu {
+    max-width: 60ch;
+    text-align: center;
+    font-size: var(--text-md);
+    color: var(--color-on-dark);
+  }
+
+  .visor-nav { display: flex; justify-content: center; gap: var(--space-sm); }
+  .visor.sola .visor-nav { display: none; }
+  .visor-boto {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-height: 44px;
+    padding: 0 var(--space-md);
+    border: 1px solid var(--color-on-dark-rule);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-on-dark);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--dur-micro) var(--ease-out);
+  }
+  .visor-boto:hover { background: color-mix(in oklab, var(--color-on-dark) 14%, transparent); }
+  .visor-boto:active { transform: translateY(1px); }
+  .visor-boto:focus-visible { outline: 2px solid var(--color-focus-on-dark); outline-offset: 2px; }
+</style>

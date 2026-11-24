@@ -5,6 +5,7 @@ import { getEntry, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
 import { isRealUrl } from '../lib/config';
 import { carregaEstructura, siApagada } from '../lib/carrega-estructura';
+import NovaPestanya from '../components/NovaPestanya.astro';
 
 // switched off in Configuració → Estructura del web: the address sends people home
 const apagada = await siApagada('la-colla', Astro.site);
@@ -76,7 +77,7 @@ const mesCollaActius = mesColla.flatMap((m) => (enllac(m.clau) ? [{ ...m, href: 
           <dt class="dada-etiqueta">Contacte</dt>
           <dd class="dada-valor">
             {isRealUrl(pagina.data.contacteInstagram) && (
-              <a class="contacte" href={`https://instagram.com/${pagina.data.contacteInstagram!.replace(/^@/, '')}`} target="_blank" rel="noreferrer">{pagina.data.contacteInstagram}</a>
+              <a class="contacte" href={`https://instagram.com/${pagina.data.contacteInstagram!.replace(/^@/, '')}`} target="_blank" rel="noreferrer">{pagina.data.contacteInstagram}<NovaPestanya /></a>
             )}
             {enllac('col-laboradors') && <a class="contacte" href={`${enllac('col-laboradors')}#contacte`}>Contacta’ns</a>}
           </dd>

@@ -1,4 +1,6 @@
 ---
+import NovaPestanya from './NovaPestanya.astro';
+
 interface Props {
   ubicacio: string;
   label?: string;
@@ -19,7 +21,7 @@ const query = encodeURIComponent(ubicacio);
     referrerpolicy="no-referrer-when-downgrade"
   ></iframe>
   <a class="map-link" href={`https://www.google.com/maps?q=${query}`} target="_blank" rel="noreferrer">
-    Obre a Google Maps
+    Obre a Google Maps<NovaPestanya />
   </a>
 </div>
 

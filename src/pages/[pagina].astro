@@ -6,12 +6,12 @@
  */
 import Base from '../layouts/Base.astro';
 import Blocs from '../components/Blocs.astro';
-import { getCollection } from 'astro:content';
 import { mediaUrl } from '../lib/media';
 import { ADRECES_RESERVADES, llegeixBlocs } from '../lib/blocs';
+import { paginesNoves } from '../lib/carrega-estructura';
 
 export async function getStaticPaths() {
-  const pagines = await getCollection('paginesNoves', ({ id, data }) => data.estat === 'publicat' && !ADRECES_RESERVADES.has(id));
+  const pagines = await paginesNoves(({ id, data }) => data.estat === 'publicat' && !ADRECES_RESERVADES.has(id));
   return pagines.map((pagina) => ({ params: { pagina: pagina.id }, props: { pagina } }));
 }
 

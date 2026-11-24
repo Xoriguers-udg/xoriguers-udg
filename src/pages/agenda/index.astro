@@ -1,10 +1,11 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
-import { formatDate } from '../../lib/format';
+import { formatDate, formatDiaSetmana } from '../../lib/format';
+import NovaPestanya from '../../components/NovaPestanya.astro';
 import { mediaUrl } from '../../lib/media';
 import { detallsEsdeveniment } from '../../lib/esdeveniment';
-import { urlEmbedMensual } from '../../lib/calendari';
+import { urlEmbedMensual, urlSubscripcioGoogle, urlSubscripcioWebcal } from '../../lib/calendari';
 import { CLASSE_PILL, categoriaDe } from '../../lib/categories';
 import { carregaCategories } from '../../lib/carrega-categories';
 import { ancoraAgenda, teFitxa } from '../../lib/fitxa';
@@ -28,6 +29,8 @@ const sorted = agenda.sort((a, b) => a.data.data.getTime() - b.data.data.getTime
 
 const config = await getEntry('configuracio', 'general');
 const embedUrl = urlEmbedMensual(config?.data.googleCalendarEmbedUrl);
+const subscripcioGoogle = urlSubscripcioGoogle(config?.data.googleCalendarEmbedUrl);
+const subscripcioWebcal = urlSubscripcioWebcal(config?.data.googleCalendarEmbedUrl);
 
 const base = import.meta.env.BASE_URL;
 const capcalera = await getEntry('pagines', 'agenda');
@@ -50,7 +53,10 @@ const { Content: IntroContent } = await render(capcalera!);
           return (
           <li id={ancoraAgenda(entry.id)}>
             <Rengle class={`fila row${i === 0 ? ' propera' : ''}`} href={Rengle === 'a' ? `${base}agenda/${entry.id}` : undefined}>
-              <time class="date" datetime={entry.data.data.toISOString().slice(0, 10)}>{formatDate(entry.data.data)}</time>
+              <div class="date">
+                <span class="dia">{formatDiaSetmana(entry.data.data)}</span>
+                <time datetime={entry.data.data.toISOString().slice(0, 10)}>{formatDate(entry.data.data)}</time>
+              </div>
               <div class="info">
                 <h2 class="fila-titol">{entry.data.nom}</h2>
                 {detallsEsdeveniment(entry.data.hora, entry.data.lloc, entry.data.poblacio) && (
@@ -75,23 +81,31 @@ const { Content: IntroContent } = await render(capcalera!);
       </p>
     )}
 
-    <section class="calendari" aria-labelledby="calendari-titol">
-      <h2 id="calendari-titol" class="section-title">Calendari</h2>
-      {embedUrl ? (
-        <iframe class="calendar-embed" src={embedUrl} loading="lazy" title="Calendari de la colla"></iframe>
-      ) : (
-        <div class="calendar-empty">
-          <p>Encara no s’ha configurat cap calendari de Google.</p>
-          <p class="hint">Es pot afegir des de <span class="mono">/admin, Configuració, URL d’inserció de Google Calendar</span>.</p>
+    {/* only once the colla has set its calendar (Configuració → URL
+        d’inserció de Google Calendar); until then the page simply has none */}
+    {embedUrl && (
+      <section class="calendari" aria-labelledby="calendari-titol">
+        <h2 id="calendari-titol" class="section-title">Calendari</h2>
+        {/* the month grid is Google's, and hard going with a keyboard or a
+            screen reader: the same actuacions can go into your own calendar
+            instead, where they keep themselves up to date */}
+        <div class="subscriu">
+          <p>Porta les actuacions al teu calendari: s’hi afegiran i s’actualitzaran soles.</p>
+          <div class="subscriu-botons">
+            {subscripcioGoogle && <a class="btn btn-outline" href={subscripcioGoogle} target="_blank" rel="noreferrer">Afegeix a Google Calendar<NovaPestanya /></a>}
+            {subscripcioWebcal && <a class="btn btn-outline" href={subscripcioWebcal}>Afegeix a Apple, Outlook o un altre</a>}
+          </div>
         </div>
-      )}
-    </section>
+        <iframe class="calendar-embed" src={embedUrl} loading="lazy" title="Calendari de la colla, per mesos"></iframe>
+      </section>
+    )}
   </div>
 </Base>
 
 <style>
   .fila { grid-template-columns: minmax(0, 3fr) minmax(0, 7fr) auto; }
-  .date { font-size: var(--text-md); font-weight: 600; color: var(--color-accent-deep); font-variant-numeric: tabular-nums; }
+  .date { display: flex; flex-direction: column; font-size: var(--text-md); font-weight: 600; color: var(--color-accent-deep); font-variant-numeric: tabular-nums; }
+  .date .dia { font-size: var(--text-sm); font-weight: 500; color: var(--color-ink-2); }
   .info { display: flex; flex-direction: column; gap: var(--space-2xs); min-width: 0; }
   .estats { display: flex; flex-wrap: wrap; gap: var(--space-xs); justify-content: flex-end; }
   /* the one coming up next, the only thing on this page worth the yellow */
@@ -113,12 +127,9 @@ const { Content: IntroContent } = await render(capcalera!);
     background: var(--color-paper);
   }
   .calendar-embed:focus, .calendari:focus-within .calendar-embed { outline: 2px solid var(--color-focus); outline-offset: 2px; }
-  .calendar-empty {
-    padding: var(--space-xl); border-radius: var(--radius-card);
-    background: var(--color-paper-2); color: var(--color-ink-2);
-  }
-  .calendar-empty p:first-child { color: var(--color-ink); font-size: var(--text-lead); }
-  .calendar-empty .hint { font-size: var(--text-sm); margin-top: var(--space-sm); }
+  .subscriu { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-md) var(--space-xl); margin-bottom: var(--space-lg); }
+  .subscriu p { max-width: 48ch; color: var(--color-ink-2); }
+  .subscriu-botons { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
   @media (max-width: 60rem) {
     .fila { grid-template-columns: minmax(0, 1fr); }
     .estats { justify-content: flex-start; }

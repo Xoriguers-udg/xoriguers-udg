@@ -50,6 +50,21 @@ export function urlFeedIcal(embedUrl?: string): string | undefined {
 }
 
 /**
+ * Subscribing, so the colla's actuacions turn up in a visitor's own calendar
+ * and stay up to date there. Google Calendar adds a public calendar from its
+ * address; Apple Calendar, Outlook and the rest open the feed from a webcal:
+ * link, which the device hands to its calendar app.
+ */
+export function urlSubscripcioGoogle(embedUrl?: string): string | undefined {
+  const id = idCalendari(embedUrl);
+  return id ? `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(id)}` : undefined;
+}
+
+export function urlSubscripcioWebcal(embedUrl?: string): string | undefined {
+  return urlFeedIcal(embedUrl)?.replace(/^https:/, 'webcal:');
+}
+
+/**
  * The same calendar as a month grid with Google's furniture stripped off,
  * whatever display options happened to be in the pasted URL.
  */

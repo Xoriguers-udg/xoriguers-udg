@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
-import { mediaUrl, isUploadedPath } from '../../lib/media';
+import { mediaUrl, isUploadedPath, fotosAlbum } from '../../lib/media';
 import { formatDate } from '../../lib/format';
 import { siApagada } from '../../lib/carrega-estructura';
 
@@ -13,7 +13,7 @@ const albums = await getCollection('galeria', ({ data }) => data.estat === 'publ
 // an album is listed once it holds at least one uploaded photo: one still waiting
 // for its pictures would only be an empty frame here
 const sorted = albums
-  .map((a) => ({ ...a, reals: a.data.fotos.filter(isUploadedPath) }))
+  .map((a) => ({ ...a, reals: fotosAlbum(a.data.fotos).filter((f) => isUploadedPath(f.foto)) }))
   .filter((a) => a.reals.length > 0)
   .sort((a, b) => b.data.data.getTime() - a.data.data.getTime());
 
@@ -32,7 +32,7 @@ const { Content: IntroContent } = await render(capcalera!);
     {sorted.length > 0 ? (
       <ul class="grid">
         {sorted.map((album) => {
-          const cover = mediaUrl(base, album.data.portada) ?? mediaUrl(base, album.reals[0]);
+          const cover = mediaUrl(base, album.data.portada) ?? mediaUrl(base, album.reals[0].foto);
           return (
             <li>
               <a class="album" href={`${base}galeria/${album.id}`}>

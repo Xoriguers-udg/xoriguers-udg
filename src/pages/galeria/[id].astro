@@ -2,9 +2,10 @@
 import Base from '../../layouts/Base.astro';
 import '../../styles/pagines/album.css';
 import { getCollection } from 'astro:content';
-import { mediaUrl, isUploadedPath } from '../../lib/media';
+import { mediaUrl, isUploadedPath, fotosAlbum } from '../../lib/media';
 import { formatDate } from '../../lib/format';
 import { paginaActiva } from '../../lib/carrega-estructura';
+import Visor from '../../components/Visor.astro';
 
 export async function getStaticPaths() {
   // switched off in Configuració → Estructura del web: none of them is built
@@ -18,25 +19,31 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const descripcio = `${entry.data.fotos.length} fotografies, ${formatDate(entry.data.data)}`;
+const fotos = fotosAlbum(entry.data.fotos);
+const descripcio = `${fotos.length} fotografies, ${formatDate(entry.data.data)}`;
 ---
 <Base title={entry.data.nom} description={descripcio} heroImage={mediaUrl(base, entry.data.portada)} showHeader={false}>
   <div class="pagina pg-album">
     <a class="tornar back" href={`${base}galeria`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Galeria</a>
     <h1 class="fitxa-titol">{entry.data.nom}</h1>
-    <p class="fitxa-meta"><time datetime={entry.data.data.toISOString().slice(0, 10)}>{formatDate(entry.data.data)}</time><span>{entry.data.fotos.length} fotografies</span></p>
-    {entry.data.fotos.length > 0 ? (
+    <p class="fitxa-meta"><time datetime={entry.data.data.toISOString().slice(0, 10)}>{formatDate(entry.data.data)}</time><span>{fotos.length} fotografies</span></p>
+    {fotos.length > 0 ? (
       <ul class="photo-grid">
-        {entry.data.fotos.map((foto) =>
+        {fotos.map(({ foto, peu }, i) =>
           <li>
             {isUploadedPath(foto) ? (
-              <img class="photo" src={mediaUrl(base, foto)} alt="" width="800" height="600" loading="lazy" />
+              // the grid crops; the link opens the photo whole (src/components/Visor.astro).
+              // Its caption is what a screen reader hears, else its place in the album
+              <a class="photo-enllac" href={mediaUrl(base, foto)} data-visor data-peu={peu}>
+                <img class="photo" src={mediaUrl(base, foto)} alt={peu ?? `Foto ${i + 1} de ${fotos.length}`} width="600" height="800" loading="lazy" />
+              </a>
             ) : (
               <div class="photo placeholder"></div>
             )}
           </li>
         )}
       </ul>
+      <Visor />
     ) : (
       <p class="buit-text empty">Encara no hi ha fotos en aquest àlbum.</p>
     )}

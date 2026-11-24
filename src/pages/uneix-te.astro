@@ -6,6 +6,7 @@ import { isRealUrl } from '../lib/config';
 import { mediaUrl } from '../lib/media';
 import MapEmbed from '../components/MapEmbed.astro';
 import { carregaEstructura, siApagada } from '../lib/carrega-estructura';
+import NovaPestanya from '../components/NovaPestanya.astro';
 
 // switched off in Configuració → Estructura del web: the address sends people home
 const apagada = await siApagada('uneix-te', Astro.site);
@@ -58,7 +59,7 @@ const curs = pagina?.data.curs;
       )}
       {instagramUrl && (
         <a class="btn btn-outline" href={instagramUrl} target="_blank" rel="noreferrer">
-          Segueix-nos a Instagram
+          Segueix-nos a Instagram<NovaPestanya />
         </a>
       )}
       {enllac('agenda') && (

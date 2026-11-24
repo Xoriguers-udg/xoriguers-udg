@@ -7,11 +7,12 @@
 import '../styles/blocs.css';
 import { getCollection, getEntry } from 'astro:content';
 import type { Bloc } from '../lib/blocs';
-import { mediaUrl, isUploadedPath } from '../lib/media';
+import { mediaUrl, isUploadedPath, fotosAlbum } from '../lib/media';
 import { formatDate } from '../lib/format';
 import { carregaEstructura } from '../lib/carrega-estructura';
 import MapEmbed from './MapEmbed.astro';
 import CapSeccio from './CapSeccio.astro';
+import NovaPestanya from './NovaPestanya.astro';
 
 interface Props {
   blocs: Bloc[];
@@ -59,7 +60,7 @@ const documents = blocs.some((b) => b.tipus === 'documents')
       const a = adreca(b.desti);
       return a && (
         <p class="bloc-boto">
-          <a class="btn btn-accent" href={a.href} target={a.extern ? '_blank' : undefined} rel={a.extern ? 'noreferrer' : undefined}>{b.text}</a>
+          <a class="btn btn-accent" href={a.href} target={a.extern ? '_blank' : undefined} rel={a.extern ? 'noreferrer' : undefined}>{b.text}{a.extern && <NovaPestanya />}</a>
         </p>
       );
     }
@@ -73,7 +74,7 @@ const documents = blocs.some((b) => b.tipus === 'documents')
 
     if (b.tipus === 'album') {
       const album = albums.get(b.album);
-      const fotos = album && album.data.estat === 'publicat' ? album.data.fotos.filter(isUploadedPath) : [];
+      const fotos = album && album.data.estat === 'publicat' ? fotosAlbum(album.data.fotos).filter((f) => isUploadedPath(f.foto)) : [];
       const veure = enllac('galeria') && `${enllac('galeria')}/${b.album}`;
       // a whole row: up to five side by side, or six in two rows of three
       const mostrades = fotos.length >= 6 ? fotos.slice(0, 6) : fotos;
@@ -82,7 +83,7 @@ const documents = blocs.some((b) => b.tipus === 'documents')
           <CapSeccio titol={album!.data.nom} enllac={veure || undefined} text="Veure l’àlbum" />
           <ul style={`--columnes: ${mostrades.length >= 6 ? 3 : mostrades.length}`}>
             {mostrades.map((f) => (
-              <li><img src={mediaUrl(base, f)} alt="" width="600" height="450" loading="lazy" /></li>
+              <li><img src={mediaUrl(base, f.foto)} alt={f.peu ?? ''} width="600" height="450" loading="lazy" /></li>
             ))}
           </ul>
         </section>
@@ -97,7 +98,7 @@ const documents = blocs.some((b) => b.tipus === 'documents')
           <ul>
             {llista.map((d) => (
               <li>
-                <a href={mediaUrl(base, d.data.fitxer)} target="_blank" rel="noreferrer">{d.data.titol}</a>
+                <a href={mediaUrl(base, d.data.fitxer)} target="_blank" rel="noreferrer">{d.data.titol}<NovaPestanya /></a>
                 {d.data.data && <span class="bloc-documents-data">{formatDate(d.data.data)}</span>}
               </li>
             ))}

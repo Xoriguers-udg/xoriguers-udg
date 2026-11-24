@@ -5,6 +5,7 @@ import { mediaUrl } from '../../lib/media';
 import { isRealUrl } from '../../lib/config';
 import { instagramDe, llegeixXarxes } from '../../lib/xarxes';
 import { siApagada } from '../../lib/carrega-estructura';
+import NovaPestanya from '../../components/NovaPestanya.astro';
 
 // switched off in Configuració → Estructura del web: the address sends people home
 const apagada = await siApagada('col-laboradors', Astro.site);
@@ -44,6 +45,7 @@ const { Content: IntroContent } = await render(introPagina!);
             <li>
               <Tag class="card" href={hasUrl ? p.data.url : undefined} target={hasUrl ? '_blank' : undefined} rel={hasUrl ? 'noreferrer' : undefined}>
                 {logo ? <img class="logo" src={logo} alt={p.data.nom} width="240" height="120" loading="lazy" /> : <span class="logo placeholder">{p.data.nom}</span>}
+                {hasUrl && <NovaPestanya />}
               </Tag>
             </li>
           );
@@ -62,7 +64,7 @@ const { Content: IntroContent } = await render(introPagina!);
             {comercialEmail && <a class="btn btn-accent" href={`mailto:${comercialEmail}`}>Escriu-nos</a>}
             {instagramUrl && (
               <a class="btn btn-on-dark" href={instagramUrl} target="_blank" rel="noreferrer">
-                Instagram<span class="visually-hidden"> (s’obre en una pestanya nova)</span>
+                Instagram<NovaPestanya />
               </a>
             )}
           </div>
@@ -71,7 +73,7 @@ const { Content: IntroContent } = await render(introPagina!);
               <div><dt>Correu</dt><dd><a href={`mailto:${comercialEmail}`}>{comercialEmail}</a></dd></div>
             )}
             {instagramUrl && (
-              <div><dt>Instagram</dt><dd><a href={instagramUrl} target="_blank" rel="noreferrer">{instagram ?? instagramUrl}</a></dd></div>
+              <div><dt>Instagram</dt><dd><a href={instagramUrl} target="_blank" rel="noreferrer">{instagram ?? instagramUrl}<NovaPestanya /></a></dd></div>
             )}
           </dl>
         </div>

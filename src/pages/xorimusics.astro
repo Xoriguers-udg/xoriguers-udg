@@ -5,6 +5,7 @@ import { getEntry, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
 import MapEmbed from '../components/MapEmbed.astro';
 import { siApagada } from '../lib/carrega-estructura';
+import NovaPestanya from '../components/NovaPestanya.astro';
 
 // switched off in Configuració → Estructura del web: the address sends people home
 const apagada = await siApagada('xorimusics', Astro.site);
@@ -56,7 +57,7 @@ const assaigMusics = uneixTe?.data.assajos?.find((a) => a.clau === 'musics');
                 <svg class="partitura-icona" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
                 <span class="fila-titol">{p.titol}</span>
                 {p.instrument && <span class="pill pill-blue">{p.instrument}</span>}
-                <span class="fila-meta partitura-obre">Obre el PDF<span class="visually-hidden"> (s’obre en una pestanya nova)</span></span>
+                <span class="fila-meta partitura-obre">Obre el PDF<NovaPestanya /></span>
               </a>
             </li>
           ))}

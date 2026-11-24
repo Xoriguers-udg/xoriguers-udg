@@ -174,7 +174,11 @@ collections:
         required: false
         label_singular: "foto"
         hint: "Prem «Afegeix foto» per a cada foto. Surten en aquest ordre; es poden arrossegar per canviar-lo."
-        field: { label: "Foto", name: "foto", widget: "image" }
+        collapsed: false
+        summary: "{{peu}}"
+        fields:
+          - { label: "Foto", name: "foto", widget: "image" }
+          - { label: "Peu de foto", name: "peu", widget: "string", required: false, hint: "Opcional. Què s'hi veu, en una frase: «El 3d8 amb folre a Sant Domènec». És el que llegeix en veu alta el lector de pantalla a qui no hi veu; sense peu, diu «Foto 3 de 12»." }
       - label: "Estat"
         name: "estat"
         widget: "select"

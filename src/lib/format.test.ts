@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDate, formatDateNumeric, formatDateShort, formatDayMonth } from './format';
+import { formatDate, formatDateNumeric, formatDateShort, formatDayMonth, formatDiaSetmana } from './format';
 
 describe('formatDate', () => {
   it('formats a date in long Catalan form', () => {
@@ -27,5 +27,12 @@ describe('formatDateNumeric', () => {
 
   it('reads the date in UTC, so it cannot slip a day on another machine', () => {
     expect(formatDateNumeric(new Date('2026-01-01T00:00:00Z'))).toBe('01/01/2026');
+  });
+});
+
+describe('formatDiaSetmana', () => {
+  it('names the day of the week, capitalised', () => {
+    expect(formatDiaSetmana(new Date('2026-11-26'))).toBe('Dijous');
+    expect(formatDiaSetmana(new Date('2026-12-05'))).toBe('Dissabte');
   });
 });

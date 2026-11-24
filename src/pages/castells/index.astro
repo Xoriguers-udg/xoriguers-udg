@@ -193,13 +193,13 @@ const pillClass: Record<string, string> = {
     <div class="controls">
       <div class="lenses" role="tablist" aria-label="Vistes de l'arxiu">
         <button class="lens-btn" id="tab-temporades" role="tab" aria-selected="true" aria-controls="panel-temporades">Per temporada</button>
-        <button class="lens-btn" id="tab-resum" role="tab" aria-selected="false" aria-controls="panel-resum">Resum històric</button>
-        <button class="lens-btn" id="tab-diades" role="tab" aria-selected="false" aria-controls="panel-diades">Diades</button>
+        <button class="lens-btn" id="tab-resum" role="tab" aria-selected="false" aria-controls="panel-resum" tabindex="-1">Resum històric</button>
+        <button class="lens-btn" id="tab-diades" role="tab" aria-selected="false" aria-controls="panel-diades" tabindex="-1">Diades</button>
       </div>
       <div class="search-wrap">
         <label class="visually-hidden" for="cerca">Filtra per castell o per nom de diada</label>
         <input type="search" id="cerca" placeholder="3d7, Marracos, Aniverfest…" />
-        <span class="hits" id="hits"></span>
+        <span class="hits" id="hits" role="status"></span>
       </div>
     </div>
 
@@ -224,7 +224,9 @@ const pillClass: Record<string, string> = {
           </div>
         ) : (
           <div id={`t-${f.temporada}`} class={`season${f.temporada === temporadaActual ? ' actual' : ''}`} data-temporada={f.temporada}>
-            <div class="season-head cols-temporades" role="button" tabindex="0" aria-expanded="false">
+            {/* the row reads as a string of figures when spoken (its column
+                heads are only drawn), so it is named and described in words */}
+            <div class="season-head cols-temporades" role="button" tabindex="0" aria-expanded="false" aria-label={`Temporada ${f.temporada}`} aria-describedby={`t-${f.temporada}-resum`}>
               <div class="season-year">{f.temporada}</div>
               <div class="season-n">{f.rows.length}</div>
               <div class="season-n forta">{f.nCastells}</div>
@@ -234,6 +236,11 @@ const pillClass: Record<string, string> = {
               </div>
               <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
             </div>
+            <p id={`t-${f.temporada}-resum`} hidden>
+              {f.rows.length} {f.rows.length === 1 ? 'diada' : 'diades'}, {f.nCastells} {f.nCastells === 1 ? 'castell' : 'castells'}.
+              {f.destacats.length > 0 && ` Destacats: ${f.destacats.map((c) => c.text).join(', ')}.`}
+              {f.fita && ` ${f.fita.observacio}.`}
+            </p>
             <div class="season-body" hidden>
               {f.rows.map((d) => {
                 const Rengle = etiqueta(d);
@@ -379,9 +386,27 @@ const pillClass: Record<string, string> = {
     tab(name).addEventListener('click', () => {
       panels.forEach((other) => {
         tab(other).setAttribute('aria-selected', String(other === name));
+        // one Tab stop for the three: the chosen one (the arrows move between them)
+        tab(other).tabIndex = other === name ? 0 : -1;
         (panel(other) as HTMLElement).hidden = other !== name;
       });
     });
+  });
+
+  // the tab pattern: ← → move to the next view and show it, Home and End to the ends
+  document.querySelector('.lenses')!.addEventListener('keydown', (e) => {
+    const key = (e as KeyboardEvent).key;
+    const ara = panels.findIndex((name) => tab(name) === document.activeElement);
+    if (ara < 0) return;
+    const quina =
+      key === 'ArrowRight' ? (ara + 1) % panels.length :
+      key === 'ArrowLeft' ? (ara - 1 + panels.length) % panels.length :
+      key === 'Home' ? 0 :
+      key === 'End' ? panels.length - 1 : -1;
+    if (quina < 0) return;
+    e.preventDefault();
+    tab(panels[quina]).click();
+    tab(panels[quina]).focus();
   });
 
   /* ---------- expand a season ---------- */

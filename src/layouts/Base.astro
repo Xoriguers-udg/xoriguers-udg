@@ -5,6 +5,7 @@ import { getEntry } from 'astro:content';
 import { mediaUrl } from '../lib/media';
 import { llegeixXarxes } from '../lib/xarxes';
 import { carregaEstructura } from '../lib/carrega-estructura';
+import NovaPestanya from '../components/NovaPestanya.astro';
 
 interface Props {
   title: string;
@@ -69,7 +70,7 @@ const dinsDesplegable = [...colla, ...organitzacio].some((l) => actual(l.href));
       <nav class="site-links" aria-label="Principal">
         {barra.map((p, i) =>
           p.tipus === 'enllac' ? (
-            <a href={p.enllac.href} aria-current={actual(p.enllac.href)} target={p.enllac.extern ? '_blank' : undefined} rel={p.enllac.extern ? 'noreferrer' : undefined}>{p.enllac.text}</a>
+            <a href={p.enllac.href} aria-current={actual(p.enllac.href)} target={p.enllac.extern ? '_blank' : undefined} rel={p.enllac.extern ? 'noreferrer' : undefined}>{p.enllac.text}{p.enllac.extern && <NovaPestanya />}</a>
           ) : (
             <details class={`nav-group${i === barra.length - 1 ? ' al-final' : ''}`}>
               <summary class={dinsDesplegable ? 'dins' : undefined}>{noms.desplegable}</summary>
@@ -77,55 +78,56 @@ const dinsDesplegable = [...colla, ...organitzacio].some((l) => actual(l.href));
                 {colla.length > 0 && (
                   <div class="nav-dropdown-col">
                     <span class="nav-dropdown-head">{noms.colla}</span>
-                    {colla.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+                    {colla.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}{l.extern && <NovaPestanya />}</a>)}
                   </div>
                 )}
                 {organitzacio.length > 0 && (
                   <div class="nav-dropdown-col">
                     <span class="nav-dropdown-head">{noms.organitzacio}</span>
-                    {organitzacio.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+                    {organitzacio.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}{l.extern && <NovaPestanya />}</a>)}
                   </div>
                 )}
               </div>
             </details>
           )
         )}
-        {boto && <a class="nav-join" href={boto.barra.href} aria-current={actual(boto.barra.href)} target={boto.barra.extern ? '_blank' : undefined} rel={boto.barra.extern ? 'noreferrer' : undefined}>{boto.barra.text}</a>}
+        {boto && <a class="nav-join" href={boto.barra.href} aria-current={actual(boto.barra.href)} target={boto.barra.extern ? '_blank' : undefined} rel={boto.barra.extern ? 'noreferrer' : undefined}>{boto.barra.text}{boto.barra.extern && <NovaPestanya />}</a>}
       </nav>
       {/* under 60rem the links above no longer fit on one line, so the same
           destinations fold into one menu */}
       <details class="nav-menu">
         <summary>Menú</summary>
         <nav class="nav-menu-panel" aria-label="Principal, mòbil">
-          {boto && <a class="nav-join" href={boto.barra.href} target={boto.barra.extern ? '_blank' : undefined} rel={boto.barra.extern ? 'noreferrer' : undefined}>{boto.barra.text}</a>}
+          {boto && <a class="nav-join" href={boto.barra.href} target={boto.barra.extern ? '_blank' : undefined} rel={boto.barra.extern ? 'noreferrer' : undefined}>{boto.barra.text}{boto.barra.extern && <NovaPestanya />}</a>}
           {barra.map((p) => p.tipus === 'enllac' && (
-            <a href={p.enllac.href} aria-current={actual(p.enllac.href)} target={p.enllac.extern ? '_blank' : undefined} rel={p.enllac.extern ? 'noreferrer' : undefined}>{p.enllac.text}</a>
+            <a href={p.enllac.href} aria-current={actual(p.enllac.href)} target={p.enllac.extern ? '_blank' : undefined} rel={p.enllac.extern ? 'noreferrer' : undefined}>{p.enllac.text}{p.enllac.extern && <NovaPestanya />}</a>
           ))}
           {colla.length > 0 && <span class="nav-menu-head">{noms.colla}</span>}
-          {colla.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+          {colla.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}{l.extern && <NovaPestanya />}</a>)}
           {organitzacio.length > 0 && <span class="nav-menu-head">{noms.organitzacio}</span>}
-          {organitzacio.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+          {organitzacio.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}{l.extern && <NovaPestanya />}</a>)}
         </nav>
       </details>
     </div>
   </header>
 
-  {showHeader && (
-    <header class="page-hero">
-      <div class={`page-hero-inner${bannerImage ? ' amb-foto' : ''}`}>
-        <div class="page-hero-text">
-          <h1 class="page-hero-title">{title}</h1>
-        </div>
-        {bannerImage && (
-          <div class="page-hero-photo">
-            <img src={bannerImage} alt="" width="1200" height="800" />
-          </div>
-        )}
-      </div>
-    </header>
-  )}
-
+  {/* the page's title opens <main>, so «Salta al contingut» lands on it,
+      and the page has one header landmark, the bar */}
   <main id="main">
+    {showHeader && (
+      <div class="page-hero">
+        <div class={`page-hero-inner${bannerImage ? ' amb-foto' : ''}`}>
+          <div class="page-hero-text">
+            <h1 class="page-hero-title">{title}</h1>
+          </div>
+          {bannerImage && (
+            <div class="page-hero-photo">
+              <img src={bannerImage} alt="" width="1200" height="800" />
+            </div>
+          )}
+        </div>
+      </div>
+    )}
     <slot />
   </main>
 
@@ -141,14 +143,14 @@ const dinsDesplegable = [...colla, ...organitzacio].some((l) => actual(l.href));
         ] as const).map(([titol, enllacos]) => enllacos.length > 0 && (
           <div class="footer-col">
             <h2 class="footer-head">{titol}</h2>
-            {enllacos.map((l) => <a href={l.href} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+            {enllacos.map((l) => <a href={l.href} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}{l.extern && <NovaPestanya />}</a>)}
           </div>
         ))}
         {(xarxes.length > 0 || peu.xarxes.length > 0) && (
           <div class="footer-col">
             <h2 class="footer-head">{noms.peuXarxes}</h2>
-            {xarxes.map((x) => <a href={x.url} target="_blank" rel="noreferrer">{x.nom}</a>)}
-            {peu.xarxes.map((l) => <a href={l.href} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+            {xarxes.map((x) => <a href={x.url} target="_blank" rel="noreferrer">{x.nom}<NovaPestanya /></a>)}
+            {peu.xarxes.map((l) => <a href={l.href} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}{l.extern && <NovaPestanya />}</a>)}
           </div>
         )}
       </nav>
@@ -158,11 +160,43 @@ const dinsDesplegable = [...colla, ...organitzacio].some((l) => actual(l.href));
           <p class="footer-brand display" aria-hidden="true">Xoriguers UdG</p>
           <p class="footer-note">Colla castellera universitària de Girona, des de 1998</p>
         </div>
-        {boto && <a class="btn btn-accent footer-join" href={boto.peu.href} target={boto.peu.extern ? '_blank' : undefined} rel={boto.peu.extern ? 'noreferrer' : undefined}>{boto.peu.text}</a>}
+        {boto && <a class="btn btn-accent footer-join" href={boto.peu.href} target={boto.peu.extern ? '_blank' : undefined} rel={boto.peu.extern ? 'noreferrer' : undefined}>{boto.peu.text}{boto.peu.extern && <NovaPestanya />}</a>}
       </div>
     </div>
   </footer>
 
+  {/* the dropdown and the phone menu are <details>, which open and close on
+      their own but stay open otherwise: they close here with Escape (focus back
+      on their button), on a click elsewhere, and when focus moves on out of
+      them, so an open panel never sits over the page. Opening one closes the
+      other. */}
+  <script is:inline>
+    (() => {
+      const menus = [...document.querySelectorAll('details.nav-group, details.nav-menu')];
+      const tanca = (menu, retornaFocus) => {
+        if (!menu.open) return;
+        menu.open = false;
+        if (retornaFocus) menu.querySelector('summary').focus();
+      };
+      for (const menu of menus) {
+        menu.addEventListener('toggle', () => {
+          if (menu.open) for (const altre of menus) if (altre !== menu) altre.open = false;
+        });
+        menu.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && menu.open) {
+            e.preventDefault();
+            tanca(menu, true);
+          }
+        });
+        menu.addEventListener('focusout', (e) => {
+          if (e.relatedTarget && !menu.contains(e.relatedTarget)) tanca(menu, false);
+        });
+      }
+      document.addEventListener('click', (e) => {
+        for (const menu of menus) if (!menu.contains(e.target)) tanca(menu, false);
+      });
+    })();
+  </script>
   {/* a cross-origin map or calendar takes focus without ever matching :focus,
       so the frame is marked while it holds it, and the ring shows */}
   {/* the arbre de xoriguers is linked from nowhere: three taps in a row on the
@@ -381,6 +415,14 @@ const dinsDesplegable = [...colla, ...organitzacio].some((l) => actual(l.href));
     @media (max-width: 60rem) {
       .site-links { display: none; }
       .nav-menu { display: block; }
+    }
+    /* at 320px (a phone, or a laptop zoomed to 400%) the wordmark and the menu
+       button did not fit side by side and the button ran off the edge: the
+       wordmark tightens and drops its tag, which the link's name still says */
+    @media (max-width: 24rem) {
+      .site-nav-inner { gap: var(--space-sm); }
+      .site-brand-tag { display: none; }
+      .nav-menu summary { padding: 0 var(--space-sm); }
     }
 
     /* ---------- the footer: every page, then the name set large ---------- */

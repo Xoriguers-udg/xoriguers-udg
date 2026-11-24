@@ -78,7 +78,22 @@ const galeria = defineCollection({
     nom: z.string(),
     data: z.coerce.date(),
     portada: z.string().optional(),
-    fotos: z.array(z.string()).default([]),
+    /**
+     * Each photo with an optional caption (peu), which is also what a screen
+     * reader hears. An album saved before captions existed is a plain list of
+     * paths; it reads the same.
+     */
+    fotos: z
+      .array(
+        z.union([
+          z.string().transform((foto) => ({ foto, peu: undefined as string | undefined })),
+          z.object({
+            foto: z.preprocess((v) => v ?? '', z.string()),
+            peu: z.preprocess(emptyToUndefined, z.string().trim().optional()),
+          }),
+        ])
+      )
+      .default([]),
     estat,
   }),
 });

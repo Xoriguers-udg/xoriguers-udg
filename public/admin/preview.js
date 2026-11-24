@@ -39,7 +39,7 @@
   const nota = (text) => h('p', { className: 'previa-nota' }, text);
 
   const Banner = ({ titol, foto }) =>
-    h('header', { className: 'page-hero' },
+    h('div', { className: 'page-hero' },
       h('div', { className: `page-hero-inner${foto ? ' amb-foto' : ''}` },
         h('div', { className: 'page-hero-text' }, h('h1', { className: 'page-hero-title display' }, titol)),
         foto && h('div', { className: 'page-hero-photo' }, h('img', { src: foto, alt: '' }))));
@@ -227,9 +227,11 @@
               const foto = imatge(getAsset, c.foto);
               const [classe, text] = estats[c.estat] || ['pill-neutral', c.estat || '—'];
               return h('li', { className: 'castell', key: i },
-                foto ? h('img', { className: 'castell-foto', src: foto, alt: '' })
-                  : ambFotos && h('span', { className: 'castell-marc' }),
-                h('span', { className: 'notation display' }, c.castell || '…'),
+                // the page's own three cases (src/pages/agenda/[id].astro): a photo
+                // with the name under it, a frame with the name set in it, or the name
+                foto ? [h('img', { className: 'castell-foto', src: foto, alt: '', key: 'f' }), h('span', { className: 'notation display', key: 'n' }, c.castell || '…')]
+                  : ambFotos ? h('span', { className: 'castell-marc' }, h('span', { className: 'notation display' }, c.castell || '…'))
+                  : h('span', { className: 'notation display' }, c.castell || '…'),
                 h('span', { className: 'castell-peu' },
                   h('span', { className: `pill ${classe}` }, text),
                   c.ronda && h('span', { className: 'ronda' }, `Ronda ${c.ronda}`)));
@@ -258,7 +260,11 @@
   // the page's own markup and classes (src/pages/galeria/[id].astro), drawn by
   // its own stylesheet (src/styles/pagines/album.css)
   const Album = ({ entry, getAsset }) => {
-    const fotos = llista(entry, 'fotos').map((f) => imatge(getAsset, f)).filter(Boolean);
+    // each photo is { foto, peu }; an album saved before captions, a plain path
+    const fotos = llista(entry, 'fotos')
+      .map((f) => (f && typeof f === 'object' ? f : { foto: f }))
+      .map((f) => ({ src: imatge(getAsset, f.foto), peu: f.peu }))
+      .filter((f) => f.src);
     return h('div', { className: 'previa' },
       h('div', { className: 'pagina pg-album' },
         h('h1', { className: 'fitxa-titol' }, dada(entry, 'nom')),
@@ -268,7 +274,7 @@
         fotos.length === 0
           ? nota('Un àlbum surt a la Galeria quan té almenys una foto.')
           : h('ul', { className: 'photo-grid' },
-            fotos.map((f, i) => h('li', { key: i }, h('img', { className: 'photo', src: f, alt: '' }))))));
+            fotos.map((f, i) => h('li', { key: i }, h('img', { className: 'photo', src: f.src, alt: f.peu || '' }))))));
   };
 
   /* ---------- Pàgines noves: src/components/Blocs.astro ---------- */

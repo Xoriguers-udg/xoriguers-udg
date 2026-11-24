@@ -4,7 +4,7 @@ import { getCollection, getEntry, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
 import { formatDateShort } from '../lib/format';
 import { detallsEsdeveniment } from '../lib/esdeveniment';
-import { isUploadedPath } from '../lib/media';
+import { isUploadedPath, fotosAlbum } from '../lib/media';
 import { alHistorial, categoriaDe } from '../lib/categories';
 import { carregaCategories } from '../lib/carrega-categories';
 import { enllacDiada, teFitxa } from '../lib/fitxa';
@@ -13,6 +13,7 @@ import { carregaEstructura } from '../lib/carrega-estructura';
 import { blocsDe, llegeixSeccions } from '../lib/portada';
 import { instagramDe, llegeixXarxes } from '../lib/xarxes';
 import CapSeccio from '../components/CapSeccio.astro';
+import NovaPestanya from '../components/NovaPestanya.astro';
 
 const base = import.meta.env.BASE_URL;
 const config = await getEntry('configuracio', 'general');
@@ -115,7 +116,7 @@ const heroImatge = mediaUrl(base, inici?.data.imatge);
 // the newest album that has real photos in it, for the strip above Instagram
 const albums = await getCollection('galeria', ({ data }) => data.estat === 'publicat');
 const album = albums
-  .map((a) => ({ ...a, reals: a.data.fotos.filter(isUploadedPath) }))
+  .map((a) => ({ ...a, reals: fotosAlbum(a.data.fotos).filter((f) => isUploadedPath(f.foto)) }))
   .filter((a) => a.reals.length >= 3)
   .sort((a, b) => b.data.data.getTime() - a.data.data.getTime())[0];
 ---
@@ -317,7 +318,7 @@ const album = albums
         <CapSeccio titol={titol ?? album.data.nom} id="album-titol" enllac={`${base}galeria/${album.id}`} text="Veure l’àlbum" />
         <ul class="album-tira">
           {album.reals.slice(0, 5).map((f) => (
-            <li><img src={mediaUrl(base, f)} alt="" width="600" height="800" loading="lazy" /></li>
+            <li><img src={mediaUrl(base, f.foto)} alt={f.peu ?? ''} width="600" height="800" loading="lazy" /></li>
           ))}
         </ul>
       </div>
@@ -330,9 +331,9 @@ const album = albums
     <div class="container insta-grid">
       <p class="insta-crida">{titol}</p>
       <h2 id="insta-titol" class="insta-handle">
-        <a href={instagramUrl ?? enllac('la-colla') ?? base} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>{instagramHandle ? `@${instagramHandle}` : 'Xoriguers UdG'}</a>
+        <a href={instagramUrl ?? enllac('la-colla') ?? base} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>{instagramHandle ? `@${instagramHandle}` : 'Xoriguers UdG'}{instagramUrl && <NovaPestanya />}</a>
       </h2>
-      <a class="btn btn-outline insta-btn" href={instagramUrl ?? enllac('la-colla') ?? base} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>Veure Instagram</a>
+      <a class="btn btn-outline insta-btn" href={instagramUrl ?? enllac('la-colla') ?? base} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>Veure Instagram{instagramUrl && <NovaPestanya />}</a>
     </div>
   </section>
   );

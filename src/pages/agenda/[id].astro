@@ -114,12 +114,18 @@ const ambFotos = entry.data.castells.some((c) => c.foto);
           {entry.data.castells.map((c, i) => (
             <li class="castell">
               {mediaUrl(base, c.foto) ? (
-                <img class="castell-foto" src={mediaUrl(base, c.foto)} alt={`El ${c.castell}`} width="900" height="1200" loading="lazy" />
-              ) : ambFotos && (
-                /* beside photographed castells, one without a photo keeps the same frame */
-                <span class="castell-marc" aria-hidden="true"></span>
+                <>
+                  <img class="castell-foto" src={mediaUrl(base, c.foto)} alt={`El ${c.castell}`} width="900" height="1200" loading="lazy" />
+                  <span class="notation display">{notacioAmbEstat(castells[i])}</span>
+                </>
+              ) : ambFotos ? (
+                /* beside photographed castells, one without a photo keeps the same
+                   frame, with its name set large in it, so the row stays even and
+                   the frame never reads as a photo that failed to load */
+                <span class="castell-marc"><span class="notation display">{notacioAmbEstat(castells[i])}</span></span>
+              ) : (
+                <span class="notation display">{notacioAmbEstat(castells[i])}</span>
               )}
-              <span class="notation display">{notacioAmbEstat(castells[i])}</span>
               <span class="castell-peu">
                 <span class={`pill ${pillClass[c.estat]}`}>{pillLabel[c.estat]}</span>
                 {c.ronda && <span class="ronda">Ronda {c.ronda}</span>}
