@@ -29,5 +29,8 @@ describe('enllacDiada', () => {
     const ambFoto = { id: 'barraques', data: { castells: [{ foto: 'x.jpg' }] } };
     expect(enllacDiada('/x/', ambFoto)).toBe('/x/agenda/barraques');
     expect(enllacDiada('/x/', { id: 'embos', data: buida })).toBe('/x/castells#d-embos');
+    // with the historial switched off, a diada without a page links nowhere
+    expect(enllacDiada('/x/', { id: 'embos', data: buida }, false)).toBeUndefined();
+    expect(enllacDiada('/x/', ambFoto, false)).toBe('/x/agenda/barraques');
   });
 });

@@ -19,6 +19,11 @@ import {
   valorBase,
   type CastellFet,
 } from '../../lib/historial';
+import { siApagada } from '../../lib/carrega-estructura';
+
+// switched off in Configuració → Estructura del web: the address sends people home
+const apagada = await siApagada('castells', Astro.site);
+if (apagada) return apagada;
 
 interface Diada {
   id: string;

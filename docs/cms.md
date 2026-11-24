@@ -135,7 +135,9 @@ way, or give up.
 | **Junta Directiva / Tècnica** | `src/content/junta-*/` | One entry per season, numbered; the number is rendered as a Roman ordinal. |
 | **Botiga: productes** | `src/content/productes/` | Sizes and stock per product. Reservations go to Configuració's contact email. |
 | **Patrocinadors**, **Activitats**, **Documents** | | Sponsor logos, the social calendar shown on the homepage, and PDFs. |
-| **Configuració** | `src/content/configuracio/general.md` | The one contact email (Contacta'ns and botiga reservations), social URLs, the Google Calendar URL, the default header image, the SEO description. |
+| **Configuració** | `src/content/configuracio/general.md` | The one contact email (Contacta'ns and botiga reservations), the social networks (a list), the Google Calendar URL, the default header image, the SEO description. |
+| | `src/content/configuracio/estructura.md` | «Estructura del web»: pages on/off, the menu list, the group names ([architecture.md](architecture.md#structure)). The destination selects list the page keys by hand: a new page template needs adding to `PAGINES` in `src/lib/estructura.ts` and to those selects. |
+| | `src/content/configuracio/calendari.md` | The agenda's categories. |
 
 Uploads go to `public/images/uploads` and are referenced as
 `/images/uploads/…`; `mediaUrl()` prefixes the base path at render time, so a

@@ -4,6 +4,12 @@ import { getEntry, render } from 'astro:content';
 import { isRealUrl } from '../lib/config';
 import { mediaUrl } from '../lib/media';
 import MapEmbed from '../components/MapEmbed.astro';
+import { carregaEstructura, siApagada } from '../lib/carrega-estructura';
+
+// switched off in Configuració → Estructura del web: the address sends people home
+const apagada = await siApagada('uneix-te', Astro.site);
+if (apagada) return apagada;
+const { enllac } = await carregaEstructura();
 
 const pagina = await getEntry('pagines', 'uneix-te');
 const { Content } = await render(pagina!);
@@ -44,17 +50,21 @@ const curs = pagina?.data.curs;
     </div>
 
     <div class="cta-row">
-      <a class="btn btn-accent" href={`${base}col-laboradors#contacte`}>
-        Escriu-nos
-      </a>
+      {enllac('col-laboradors') && (
+        <a class="btn btn-accent" href={`${enllac('col-laboradors')}#contacte`}>
+          Escriu-nos
+        </a>
+      )}
       {instagramUrl && (
         <a class="btn btn-outline" href={instagramUrl} target="_blank" rel="noreferrer">
           Segueix-nos a Instagram
         </a>
       )}
-      <a class="btn btn-outline" href={`${base}agenda`}>
-        Veure propers assajos
-      </a>
+      {enllac('agenda') && (
+        <a class="btn btn-outline" href={enllac('agenda')}>
+          Veure propers assajos
+        </a>
+      )}
     </div>
 
     <div class="assajos-grid">
@@ -63,8 +73,8 @@ const curs = pagina?.data.curs;
           <div class="assaig-text">
             <h2 class="assaig-titol">{assaig.titol}</h2>
             {assaig.text && <p>{assaig.text}</p>}
-            {assaig.clau === 'musics' && (
-              <a class="assaig-link" href={`${base}xorimusics`}>Més sobre els Xorimúsics<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+            {assaig.clau === 'musics' && enllac('xorimusics') && (
+              <a class="assaig-link" href={enllac('xorimusics')}>Més sobre els Xorimúsics<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
             )}
           </div>
           <div class="assaig-mapa">

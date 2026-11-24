@@ -24,6 +24,8 @@ const feines = [
   { id: 'capcalera', curt: 'Fotos de capçalera' },
   { id: 'botiga', curt: 'Estoc de la botiga' },
   { id: 'categories', curt: 'Les categories' },
+  { id: 'portada', curt: 'L’ordre de la portada' },
+  { id: 'menu', curt: 'El menú i les pàgines' },
 ];
 ---
 <!doctype html>
@@ -176,6 +178,29 @@ const feines = [
         <li><strong>Si surt a l’historial</strong> quan ja ha passat: sempre, només si s’hi han fet castells (com els assajos) o mai. Això també decideix si els seus castells compten com a «millors castells».</li>
       </ul>
       <p>L’ordre de la llista importa: una actuació nova es queda la primera categoria que té alguna paraula al seu nom. Arrossega-les per canviar-lo.</p>
+    </section>
+
+    <section class="feina" id="portada" aria-labelledby="portada-titol">
+      <h2 id="portada-titol">L’ordre i els títols de la portada</h2>
+      <ol class="passos">
+        <li>Ves a <span class="boto">Pàgines</span> → <span class="boto">Inici (portada)</span>.</li>
+        <li>A «Seccions de la portada», arrossega les seccions per canviar-ne l’ordre.</li>
+        <li>Per amagar-ne una, obre-la i marca «Amaga-la». Per canviar-ne el títol, escriu-lo a «Títol».</li>
+        <li>A dalt de tot pots canviar el text dels dos botons i a quina pàgina porta cadascun.</li>
+        <li><span class="boto">Publicar</span> i <span class="boto">Publicar ara</span>.</li>
+      </ol>
+      <p class="nota">«Qui som» i «Pròximes actuacions», si van una just després de l’altra, comparteixen fila. Si les separes, cadascuna ocupa la seva.</p>
+    </section>
+
+    <section class="feina" id="menu" aria-labelledby="menu-titol">
+      <h2 id="menu-titol">El menú i les pàgines</h2>
+      <p>Es canvien a <span class="boto">Configuració</span> → <span class="boto">Estructura del web: menú i pàgines</span>. Hi ha tres parts:</p>
+      <ul class="punts">
+        <li><strong>Pàgines apagades:</strong> marca una pàgina per apagar-la. Desapareix dels menús i de tots els enllaços, i qui en tingui l’adreça va a parar a la portada. El que hi ha escrit no s’esborra.</li>
+        <li><strong>Menú:</strong> totes les entrades dels menús, en ordre. De cadascuna tries on porta, on surt a dalt (a la barra, al desplegable o com a botó groc) i a quina columna del peu. Pot portar fora de la web, a TikTok per exemple, triant «Una altra adreça».</li>
+        <li><strong>Noms dels grups:</strong> el títol del desplegable i de les columnes del peu.</li>
+      </ul>
+      <p class="nota">Les xarxes socials del peu es canvien a <span class="boto">Configuració general</span> → «Xarxes socials». Una de nova és una fila més.</p>
     </section>
 
     <section class="feina" id="notacio" aria-labelledby="notacio-titol">

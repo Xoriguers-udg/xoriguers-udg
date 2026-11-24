@@ -116,24 +116,16 @@ const pagines = defineCollection({
     presentacioTitol: z.preprocess(emptyToUndefined, z.string().optional()),
     properesTitol: z.preprocess(emptyToUndefined, z.string().optional()),
     /**
-     * Inici: which sections the homepage shows, each switched in the CMS. A
-     * missing key means shown, so the page reads the same before anyone
-     * touches this. Some sections also hide themselves when they have nothing
-     * to show (no notícia published, no album with three photos…).
+     * Inici: the homepage's sections, in order, each with a checkbox and a
+     * heading. Loose here and read through llegeixSeccions
+     * (src/lib/portada.ts), which also reads the first form of it, an object
+     * of checkboxes.
      */
-    seccions: z
-      .object({
-        presentacio: z.boolean(),
-        properes: z.boolean(),
-        ultimsCastells: z.boolean(),
-        activitats: z.boolean(),
-        uneix: z.boolean(),
-        noticies: z.boolean(),
-        album: z.boolean(),
-        instagram: z.boolean(),
-      })
-      .partial()
-      .optional(),
+    seccions: z.unknown().optional(),
+    /** Inici: where the hero's two buttons go (a page's key), and the second one's text */
+    ctaPagina: z.preprocess(emptyToUndefined, z.string().optional()),
+    boto2Text: z.preprocess(emptyToUndefined, z.string().optional()),
+    boto2Pagina: z.preprocess(emptyToUndefined, z.string().optional()),
     assajos: z.array(assaig).default([]),
     contacteInstagram: z.string().optional(),
     /** Xorimúsics: the sheet music for the tocs, one PDF each. */
@@ -224,6 +216,11 @@ const documents = defineCollection({
 const configuracio = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/configuracio' }),
   schema: z.object({
+    /** general.md: the social networks, in the footer's order (src/lib/xarxes.ts) */
+    xarxes: z
+      .array(z.object({ nom: z.string().nullish(), url: z.string().nullish() }))
+      .optional(),
+    // the four fixed fields the networks were before the list; still read
     instagramUrl: z.string().optional(),
     youtubeUrl: z.string().optional(),
     facebookUrl: z.string().optional(),
@@ -253,6 +250,14 @@ const configuracio = defineCollection({
       )
       .optional(),
     tipusPerDefecte: z.preprocess(emptyToUndefined, z.string().optional()),
+    /**
+     * estructura.md: which pages are on, the menu entries and the group
+     * names. Loose here and read through resolEstructura
+     * (src/lib/estructura.ts), which fills in what is missing.
+     */
+    apagades: z.record(z.string(), z.boolean().nullish()).optional(),
+    menu: z.array(z.record(z.string(), z.unknown())).optional(),
+    noms: z.record(z.string(), z.unknown()).optional(),
   }),
 });
 

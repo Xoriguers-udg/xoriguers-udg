@@ -24,9 +24,12 @@
     return url.startsWith('/images/') ? BASE + url : url;
   };
   const dada = (entry, ...cami) => entry.getIn(['data', ...cami]);
+  // always an array: a field saved in some other shape (an older version of
+  // the form) must not take the whole preview down with it
   const llista = (entry, camp) => {
     const v = dada(entry, camp);
-    return v && v.toJS ? v.toJS() : Array.isArray(v) ? v : [];
+    const js = v && v.toJS ? v.toJS() : v;
+    return Array.isArray(js) ? js : [];
   };
   const dataLlarga = (v) => {
     if (!v) return '';
@@ -54,30 +57,40 @@
       h('div', { className: 'pagina' }, h('div', { className: 'cos' }, widgetFor('body'))));
   };
 
-  // the homepage's sections, as «Seccions de la portada» names them
+  // the homepage's sections, as «Seccions de la portada» lists them
+  // (src/lib/portada.ts): rows of section, checkbox and heading, in order
   const SECCIONS = [
     ['presentacio', 'Qui som'], ['properes', 'Pròximes actuacions'], ['ultimsCastells', 'Últims castells'],
-    ['activitats', 'No només fem castells'], ['uneix', 'Uneix-te'], ['noticies', 'Notícies'],
+    ['activitats', 'Activitats'], ['uneix', 'Uneix-te'], ['noticies', 'Notícies'],
     ['album', 'Últim àlbum'], ['instagram', 'Instagram'],
   ];
+  const clauDe = (v) => (SECCIONS.find(([clau, nom]) => v === clau || v === nom) || [])[0];
 
   const Inici = ({ entry, widgetFor, getAsset }) => {
     const foto = imatge(getAsset, dada(entry, 'imatge'));
-    const mostra = (clau) => dada(entry, 'seccions', clau) !== false;
+    const files = llista(entry, 'seccions').filter((f) => clauDe(f.seccio));
+    const fila = (clau) => files.find((f) => clauDe(f.seccio) === clau);
+    const amagada = (f) => f.amaga === true || f.mostra === false;
+    const mostra = (clau) => (files.length ? !!fila(clau) && !amagada(fila(clau)) : true);
+    const titol = (clau, perDefecte) => (fila(clau) && fila(clau).titol) || perDefecte;
+    const visibles = files.filter((f) => !amagada(f)).map((f) => f.seccio);
     const amagades = SECCIONS.filter(([clau]) => !mostra(clau)).map(([, nom]) => nom);
     return h('div', { className: 'previa' },
-      amagades.length > 0 && nota(`Amagades de la portada: ${amagades.join(', ')}.`),
+      files.length > 0 && nota(`Ordre de la portada: ${visibles.join(', ')}.`),
+      amagades.length > 0 && nota(`Amagades: ${amagades.join(', ')}.`),
       h('section', { className: 'inici-hero' },
         h('div', { className: 'inici-hero-text' },
           h('h1', { className: 'display' }, dada(entry, 'titol')),
-          h('span', { className: 'btn btn-accent' }, dada(entry, 'ctaText') || 'Vine a assajar')),
+          h('div', { className: 'previa-botons' },
+            h('span', { className: 'btn btn-accent' }, dada(entry, 'ctaText') || 'Vine a assajar'),
+            h('span', { className: 'btn btn-outline previa-boto-fosc' }, dada(entry, 'boto2Text') || 'Veure agenda'))),
         foto && h('div', { className: 'inici-hero-foto' }, h('img', { src: foto, alt: '' }))),
       h('div', { className: 'pagina' },
         mostra('presentacio') && h('section', null,
-          h('h2', { className: 'seccio' }, dada(entry, 'presentacioTitol') || 'Qui som'),
+          h('h2', { className: 'seccio' }, titol('presentacio', 'Qui som')),
           h('div', { className: 'cos' }, widgetFor('body'))),
         mostra('properes') && h('section', null,
-          h('h2', { className: 'seccio' }, dada(entry, 'properesTitol') || 'Pròximes actuacions'),
+          h('h2', { className: 'seccio' }, titol('properes', 'Pròximes actuacions')),
           nota('Aquí surten les pròximes actuacions de l’Agenda.'))));
   };
 

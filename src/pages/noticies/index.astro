@@ -3,6 +3,11 @@ import Base from '../../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
 import { mediaUrl } from '../../lib/media';
 import { formatDate } from '../../lib/format';
+import { siApagada } from '../../lib/carrega-estructura';
+
+// switched off in Configuració → Estructura del web: the address sends people home
+const apagada = await siApagada('noticies', Astro.site);
+if (apagada) return apagada;
 
 const noticies = await getCollection('noticies', ({ data }) => data.estat === 'publicat');
 const sorted = noticies.sort((a, b) => b.data.data.getTime() - a.data.data.getTime());

@@ -88,7 +88,7 @@ column.
 ## The libraries
 
 Everything in [`src/lib`](../src/lib) is a plain module with a `.test.ts` beside
-it. No framework, no mocks, 85 tests, under a second to run. Pages do the
+it. No framework, no mocks, 150-odd tests, under a second to run. Pages do the
 reading and the rendering; the libraries hold anything worth testing.
 
 | Module | Purpose |
@@ -101,6 +101,9 @@ reading and the rendering; the libraries hold anything worth testing.
 | `format.ts` | Catalan date formats. `formatDateNumeric` is pinned to UTC so a date cannot slip a day depending on where the site is built. |
 | `media.ts`, `config.ts` | Turn a stored path into a URL under the right base; tell a real URL from a `[PLACEHOLDER]`. |
 | `mailto.ts`, `roman-ordinal.ts` | A merchandising reservation link; `29` → `XXIXè`. |
+| `estructura.ts` | The site's structure from Configuració → Estructura del web: which pages are on, and the one menu list the bar, its dropdown, the phone menu and the footer are drawn from. See *Structure* below. |
+| `portada.ts` | The homepage's sections from Pàgines → Inici: order, checkbox and heading per section, and which ones share a row. |
+| `xarxes.ts` | The social networks, a list of name and URL; finds Instagram among them. |
 
 ## The calendar importer
 
@@ -191,6 +194,39 @@ defaults, a repeated key is skipped, an empty list falls back to
 rather than dropping it. `categories.ts` imports with `.ts` extensions because
 the importer runs it directly in Node; pages load it through
 `carrega-categories.ts`, which is the only part that needs `astro:content`.
+
+## Structure
+
+What a future editor is most likely to want to change without a developer:
+the menus, which pages exist, and the homepage's arrangement. All of it is
+data, read leniently, with defaults equal to the site as it was built, so a
+missing or half-filled form never breaks the build.
+
+- **Pages on and off** (`estructura.md`, `apagades`). The form ticks the pages
+  to switch *off*: Decap shows a checkbox it has no value for as unticked, so
+  a page added later, or the form opened before its file exists, must read as
+  on, or one save would switch the site off. A page switched off is
+  dropped from every menu and from every link that points at it
+  (`carregaEstructura().enllac(clau)` is `undefined`, and each link asks);
+  its address answers with a `noindex` redirect home (`siApagada`), routes
+  with many pages (an album, a product, a notícia) build none, and
+  `astro.config.mjs` leaves it out of the sitemap. Its content is untouched.
+  Notícies with nothing published counts as *empty*: built, but unlinked.
+- **Menus** (`estructura.md`, `menu`). One ordered list. Each entry has a
+  destination (a page, the homepage, a path on the site or an outside URL,
+  which opens in a new tab), a place in the header (bar, dropdown group one or
+  two, the yellow button, or none) and a footer column. The dropdown sits in
+  the bar where its first entry is; it opens towards the page when it is
+  last. An entry pointing at a page that is off shows nowhere.
+- **Homepage** (`pagines/inici.md`, `seccions`). A list of rows (section,
+  «Amaga-la», heading) in page order; hide-not-show for the same reason. Qui som and Pròximes actuacions share a row
+  when adjacent. The two hero buttons have their text and page. Sections that
+  depend on a page (Notícies, the album strip) go when it is off.
+- **Social networks** (`general.md`, `xarxes`). A list; the footer shows them
+  in order. The four fixed URL fields they replaced are still read.
+
+The only fixed points are the page templates themselves: new kinds of page
+still need code.
 
 ## The arbre de xoriguers
 

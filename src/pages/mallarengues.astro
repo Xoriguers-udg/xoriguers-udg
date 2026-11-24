@@ -2,6 +2,12 @@
 import Base from '../layouts/Base.astro';
 import { getEntry, getCollection, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
+import { carregaEstructura, siApagada } from '../lib/carrega-estructura';
+
+// switched off in Configuració → Estructura del web: the address sends people home
+const apagada = await siApagada('mallarengues', Astro.site);
+if (apagada) return apagada;
+const { enllac } = await carregaEstructura();
 
 const pagina = await getEntry('pagines', 'mallarengues');
 const { Content } = await render(pagina!);
@@ -28,7 +34,7 @@ const protocols = (await getCollection('documents', ({ data }) => data.categoria
         ))}
       </dl>
     )}
-    <a class="btn btn-accent contacta" href={`${base}col-laboradors#contacte`}>Contacta’ns</a>
+    {enllac('col-laboradors') && <a class="btn btn-accent contacta" href={`${enllac('col-laboradors')}#contacte`}>Contacta’ns</a>}
     </aside>
     </div>
   </div>

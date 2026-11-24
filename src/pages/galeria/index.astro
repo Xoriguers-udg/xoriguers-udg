@@ -3,6 +3,11 @@ import Base from '../../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
 import { mediaUrl, isUploadedPath } from '../../lib/media';
 import { formatDate } from '../../lib/format';
+import { siApagada } from '../../lib/carrega-estructura';
+
+// switched off in Configuració → Estructura del web: the address sends people home
+const apagada = await siApagada('galeria', Astro.site);
+if (apagada) return apagada;
 
 const albums = await getCollection('galeria', ({ data }) => data.estat === 'publicat');
 // an album is listed once it holds at least one uploaded photo: one still waiting

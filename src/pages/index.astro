@@ -2,17 +2,20 @@
 import Base from '../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
-import { isRealUrl } from '../lib/config';
 import { formatDateShort } from '../lib/format';
 import { detallsEsdeveniment } from '../lib/esdeveniment';
 import { isUploadedPath } from '../lib/media';
 import { alHistorial, categoriaDe } from '../lib/categories';
 import { carregaCategories } from '../lib/carrega-categories';
 import { enllacDiada, teFitxa } from '../lib/fitxa';
+import { esPagina } from '../lib/estructura';
+import { carregaEstructura } from '../lib/carrega-estructura';
+import { blocsDe, llegeixSeccions } from '../lib/portada';
+import { instagramDe, llegeixXarxes } from '../lib/xarxes';
 
 const base = import.meta.env.BASE_URL;
 const config = await getEntry('configuracio', 'general');
-const instagramUrl = isRealUrl(config?.data.instagramUrl) ? config!.data.instagramUrl : undefined;
+const instagramUrl = instagramDe(llegeixXarxes(config?.data));
 const instagramHandle = instagramUrl?.replace(/\/$/, '').split('/').pop();
 
 const inici = await getEntry('pagines', 'inici');
@@ -20,15 +23,21 @@ const heroTitol = inici?.data.titol ?? 'Fem castells. Fem universitat.';
 const heroCtaText = inici?.data.ctaText || 'Vine a assajar';
 // the homepage's own body text is the presentation
 const { Content: Presentacio } = await render(inici!);
-const presentacioTitol = inici?.data.presentacioTitol || 'Qui som';
-const properesTitol = inici?.data.properesTitol || 'Pròximes actuacions';
 
-// each section below the hero can be switched off in the CMS (Pàgines → Inici →
-// Seccions de la portada); a section not mentioned there is shown
-type Seccio = keyof NonNullable<NonNullable<typeof inici>['data']['seccions']>;
-const mostra = (seccio: Seccio) => inici?.data.seccions?.[seccio] !== false;
-const ambPresentacio = mostra('presentacio');
-const ambProperes = mostra('properes');
+// what links where: a page switched off in Configuració → Estructura del web
+// has no link pointing at it, so each one below asks first
+const { enllac } = await carregaEstructura();
+const enllacA = (clau: string | undefined, perDefecte: string) => {
+  const c = clau && esPagina(clau) ? clau : perDefecte;
+  return esPagina(c) ? enllac(c) : undefined;
+};
+const heroCtaHref = enllacA(inici?.data.ctaPagina, 'uneix-te');
+const boto2Text = inici?.data.boto2Text || 'Veure agenda';
+const boto2Href = enllacA(inici?.data.boto2Pagina, 'agenda');
+
+// the sections below the hero, in the colla's order, each switchable and with
+// its heading (Pàgines → Inici → Seccions de la portada; src/lib/portada.ts)
+const blocs = blocsDe(llegeixSeccions(inici?.data.seccions, inici?.data));
 
 // the hero's one sentence is when to come: the first line of the castellers'
 // assaig on Uneix-te, so it changes when the colla edits that page
@@ -84,6 +93,8 @@ const ultimaActuacio = pastAmbCastells[0];
 const ultimsCastells = ultimaActuacio?.data.castells ?? [];
 // a castell can carry its own photo; the first one that does stands beside the list
 const castellAmbFoto = ultimsCastells.find((c) => c.foto);
+// its own page if it has one, else its row in the historial, if that is on
+const enllacUltima = ultimaActuacio && enllacDiada(base, ultimaActuacio, !!enllac('castells'));
 
 // each activity's description is its markdown body, so render them all
 const activitats = (await getCollection('activitats')).sort((a, b) => a.data.ordre - b.data.ordre);
@@ -114,8 +125,8 @@ const album = albums
         <h1>{heroTitol}</h1>
         {heroFrase && <p class="lead hero-frase">{heroFrase}</p>}
         <div class="hero-accions">
-          <a class="btn btn-accent" href={`${base}uneix-te`}>{heroCtaText}</a>
-          <a class="btn btn-outline" href={`${base}agenda`}>Veure agenda</a>
+          {heroCtaHref && <a class="btn btn-accent" href={heroCtaHref}>{heroCtaText}</a>}
+          {boto2Href && <a class="btn btn-outline" href={boto2Href}>{boto2Text}</a>}
         </div>
       </div>
       <div class="hero-photo">
@@ -126,26 +137,30 @@ const album = albums
     </div>
   </section>
 
-  {/* who we are on the left, what is coming up on the right; either can be
-      switched off, and the other then takes the row */}
-  {(ambPresentacio || ambProperes) && (
+  {blocs.map((bloc) => {
+  // who we are on the left, what is coming up on the right, when they come one
+  // after the other; apart, or with one switched off, each takes the row
+  if (bloc.tipus === 'qui-som') {
+  const ambPresentacio = !!bloc.presentacio;
+  const ambProperes = !!bloc.properes;
+  return (
   <section class="qui-som" aria-labelledby={ambPresentacio ? 'qui-som-titol' : 'properes-titol'}>
     <div class={`container qui-som-grid${ambPresentacio && ambProperes ? '' : ' sola'}`}>
       {ambPresentacio && (
       <div class="presentacio">
-        <h2 id="qui-som-titol">{presentacioTitol}</h2>
+        <h2 id="qui-som-titol">{bloc.presentacio!.titol}</h2>
         <div class="presentacio-text">
           <Presentacio />
         </div>
-        <a class="cap-enllac" href={`${base}la-colla`}>Més sobre la colla</a>
+        {enllac('la-colla') && <a class="cap-enllac" href={enllac('la-colla')}>Més sobre la colla</a>}
       </div>
       )}
 
       {ambProperes && (
       <div class={`properes${properes.length === 0 ? ' buida' : ''}`}>
       <div class="properes-cap">
-        <h2 id="properes-titol">{properesTitol}</h2>
-        <a class="cap-enllac" href={`${base}agenda`}>Veure agenda</a>
+        <h2 id="properes-titol">{bloc.properes!.titol}</h2>
+        {enllac('agenda') && <a class="cap-enllac" href={enllac('agenda')}>Veure agenda</a>}
       </div>
       {properes.length > 0 ? (
         <ol class="properes-llista">
@@ -170,7 +185,7 @@ const album = albums
         </ol>
       ) : (
         <div class="properes-buit">
-          <p>Ara mateix no hi ha cap actuació programada. Les que ja s’han fet són a l’<a href={`${base}castells`}>historial de castells</a>.</p>
+          <p>Ara mateix no hi ha cap actuació programada.{enllac('castells') && <> Les que ja s’han fet són a l’<a href={enllac('castells')}>historial de castells</a>.</>}</p>
           {assajosCurts.length > 0 && (
             <div class="mentrestant">
               <p class="mentrestant-cap">Mentrestant, assagem</p>
@@ -187,16 +202,19 @@ const album = albums
       )}
     </div>
   </section>
-  )}
+  );
+  }
 
-  {mostra('ultimsCastells') && ultimsCastells.length > 0 && (
+  const { clau, titol } = bloc.seccio;
+
+  if (clau === 'ultimsCastells') return ultimsCastells.length > 0 && (
     <section class="castells" aria-labelledby="castells-titol">
       <div class={`castells-grid${castellAmbFoto ? ' amb-foto' : ''}`}>
         <div class="castells-cos">
           <div class="castells-cap">
-            <h2 id="castells-titol">Últims castells</h2>
+            <h2 id="castells-titol">{titol}</h2>
             <p class="castells-diada">
-              <a href={enllacDiada(base, ultimaActuacio!)}>{ultimaActuacio!.data.nom}</a>, <time datetime={ultimaActuacio!.data.data.toISOString().slice(0, 10)}>{formatDateShort(ultimaActuacio!.data.data)}</time>
+              {enllacUltima ? <a href={enllacUltima}>{ultimaActuacio!.data.nom}</a> : ultimaActuacio!.data.nom}, <time datetime={ultimaActuacio!.data.data.toISOString().slice(0, 10)}>{formatDateShort(ultimaActuacio!.data.data)}</time>
             </p>
           </div>
           <ul class="castells-llista">
@@ -207,7 +225,7 @@ const album = albums
               </li>
             ))}
           </ul>
-          <a class="castells-historial" href={`${base}castells`}>Tot l’historial de castells</a>
+          {enllac('castells') && <a class="castells-historial" href={enllac('castells')}>Tot l’historial de castells</a>}
         </div>
         {castellAmbFoto && (
           <figure class="castells-foto">
@@ -217,12 +235,12 @@ const album = albums
         )}
       </div>
     </section>
-  )}
+  );
 
-  {mostra('activitats') && activitatsAmbText.length > 0 && (
+  if (clau === 'activitats') return activitatsAmbText.length > 0 && (
     <section class="activitats" aria-labelledby="activitats-titol">
       <div class="container">
-        <h2 id="activitats-titol">No només fem castells</h2>
+        <h2 id="activitats-titol">{titol}</h2>
         <ul class="activitats-grid">
           {activitatsAmbText.map(({ dades, Cos }) => (
             <li class="activitat">
@@ -237,9 +255,9 @@ const album = albums
         </ul>
       </div>
     </section>
-  )}
+  );
 
-  {mostra('uneix') && (
+  if (clau === 'uneix') return (
   <section class="uneix" aria-labelledby="uneix-titol">
     <div class={`uneix-grid${fotoColla ? ' amb-foto' : ''}`}>
       {fotoColla && (
@@ -248,7 +266,7 @@ const album = albums
         </div>
       )}
       <div class="uneix-text">
-        <h2 id="uneix-titol">{uneixte?.data.titol ?? 'Uneix-te a la colla'}</h2>
+        <h2 id="uneix-titol">{titol ?? uneixte?.data.titol ?? 'Uneix-te a la colla'}</h2>
         {uneixFrase && <p class="uneix-frase">{uneixFrase}</p>}
         {assajosCurts.length > 0 && (
           <dl class="uneix-assajos">
@@ -260,18 +278,19 @@ const album = albums
         {curs?.titol && credits && (
           <p class="uneix-curs"><strong>{curs.titol}</strong> {credits.valor}.</p>
         )}
-        <a class="btn btn-ink" href={`${base}uneix-te`}>{heroCtaText}</a>
+        {enllac('uneix-te') && <a class="btn btn-ink" href={enllac('uneix-te')}>{heroCtaText}</a>}
       </div>
     </div>
   </section>
-  )}
+  );
 
-  {mostra('noticies') && ultimesNoticies.length > 0 && (
+  // the items link to their pages, so with Notícies off the section goes too
+  if (clau === 'noticies') return enllac('noticies') && ultimesNoticies.length > 0 && (
     <section class="noticies" aria-labelledby="noticies-titol">
       <div class="container">
         <div class="cap">
-          <h2 id="noticies-titol">Notícies</h2>
-          <a class="cap-enllac" href={`${base}noticies`}>Veure-les totes</a>
+          <h2 id="noticies-titol">{titol}</h2>
+          <a class="cap-enllac" href={enllac('noticies')}>Veure-les totes</a>
         </div>
         <ul class="noticies-llista">
           {ultimesNoticies.map((noticia) => (
@@ -291,13 +310,14 @@ const album = albums
         </ul>
       </div>
     </section>
-  )}
+  );
 
-  {mostra('album') && album && (
+  // an album's photos belong to the Galeria: with it off, the strip goes too
+  if (clau === 'album') return enllac('galeria') && album && (
     <section class="album" aria-labelledby="album-titol">
       <div class="container">
         <div class="cap">
-          <h2 id="album-titol">{album.data.nom}</h2>
+          <h2 id="album-titol">{titol ?? album.data.nom}</h2>
           <a class="cap-enllac" href={`${base}galeria/${album.id}`}>Veure l’àlbum</a>
         </div>
         <ul class="album-tira">
@@ -307,19 +327,21 @@ const album = albums
         </ul>
       </div>
     </section>
-  )}
+  );
 
-  {mostra('instagram') && (
+  // with no Instagram among the networks, the band sends people to the colla
+  if (clau === 'instagram') return (
   <section class="insta" aria-labelledby="insta-titol">
     <div class="container insta-grid">
-      <p class="insta-crida">Segueix-nos a Instagram</p>
+      <p class="insta-crida">{titol}</p>
       <h2 id="insta-titol" class="insta-handle">
-        <a href={instagramUrl ?? `${base}la-colla`} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>{instagramHandle ? `@${instagramHandle}` : 'Xoriguers UdG'}</a>
+        <a href={instagramUrl ?? enllac('la-colla') ?? base} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>{instagramHandle ? `@${instagramHandle}` : 'Xoriguers UdG'}</a>
       </h2>
-      <a class="btn btn-outline insta-btn" href={instagramUrl ?? `${base}la-colla`} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>Veure Instagram</a>
+      <a class="btn btn-outline insta-btn" href={instagramUrl ?? enllac('la-colla') ?? base} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>Veure Instagram</a>
     </div>
   </section>
-  )}
+  );
+  })}
 </Base>
 
 <style>

@@ -34,6 +34,8 @@
 .inici-hero-foto { position: relative; overflow: hidden; }
 .inici-hero-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
 .inici-hero .btn { align-self: flex-start; }
+.previa-botons { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+.inici-hero .previa-boto-fosc { background: transparent; border-color: var(--color-on-dark-rule); color: var(--color-on-dark); }
 
 /* ---------- page bodies ---------- */
 .previa .pagina { padding-top: var(--space-xl); }

@@ -9,8 +9,13 @@ import { alHistorial, CLASSE_PILL, categoriaDe } from '../../lib/categories';
 import { carregaCategories } from '../../lib/carrega-categories';
 import { ancoraAgenda, ancoraHistorial, teFitxa } from '../../lib/fitxa';
 import { paginaRedireccio } from '../../lib/redireccio';
+import { carregaEstructura } from '../../lib/carrega-estructura';
 
 export async function getStaticPaths() {
+  // an entry belongs to the agenda and then to the historial: with both
+  // switched off (Configuració → Estructura del web) there is nowhere for it
+  const { activa } = await carregaEstructura();
+  if (!activa('agenda') && !activa('castells')) return [];
   const agenda = await getCollection('agenda', ({ data }) => data.estat === 'publicat');
   return agenda.map((entry) => ({
     params: { id: entry.id },
@@ -31,12 +36,17 @@ const jaPassada = entry.data.data < avui;
 // Every entry keeps its address, but only one with something more than its row
 // has a page there (src/lib/fitxa.ts). The rest send the visitor to their row,
 // so a link shared on WhatsApp, or the CMS's «Veure a la web», still lands.
-const redireccio = teFitxa(entry)
-  ? null
-  : base +
-    (jaPassada
-      ? alHistorial(categoria, entry.data.castells.length) ? `castells#${ancoraHistorial(entry.id)}` : 'castells'
-      : categoria.agenda ? `agenda#${ancoraAgenda(entry.id)}` : 'agenda');
+// the agenda and the historial, unless switched off (Configuració → Estructura del web)
+const { enllac } = await carregaEstructura();
+const historial = enllac('castells');
+const llistaAgenda = enllac('agenda');
+const alSeuHistorial = alHistorial(categoria, entry.data.castells.length);
+
+// the entry's row, wherever it is listed
+const fila = jaPassada
+  ? historial && (alSeuHistorial ? `${historial}#${ancoraHistorial(entry.id)}` : historial)
+  : llistaAgenda && (categoria.agenda ? `${llistaAgenda}#${ancoraAgenda(entry.id)}` : llistaAgenda);
+const redireccio = teFitxa(entry) ? null : fila ?? historial ?? llistaAgenda ?? base;
 if (redireccio) {
   return new Response(paginaRedireccio(redireccio, new URL(redireccio, Astro.site).href), {
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -57,14 +67,14 @@ const temporada = temporadaDe(entry.data.data);
 const castells = llegeixCastellsRegistrats(entry.data.castells);
 // back to the very row this page opened from
 const tornarA = jaPassada
-  ? `${base}castells#${alHistorial(categoria, entry.data.castells.length) ? ancoraHistorial(entry.id) : `t-${temporada}`}`
-  : `${base}agenda`;
+  ? historial && `${historial}#${alSeuHistorial ? ancoraHistorial(entry.id) : `t-${temporada}`}`
+  : llistaAgenda;
 const tornarText = jaPassada ? 'Historial de castells' : 'Agenda';
 const ambFotos = entry.data.castells.some((c) => c.foto);
 ---
 <Base title={entry.data.nom} description={descripcio} heroImage={mediaUrl(base, entry.data.cartell)} showHeader={false}>
   <div class="pagina">
-    <a class="tornar back" href={tornarA}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>{tornarText}</a>
+    {tornarA && <a class="tornar back" href={tornarA}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>{tornarText}</a>}
     <div class={`fitxa${mediaUrl(base, entry.data.cartell) ? ' amb-cartell' : ''}`}>
       <div class="fitxa-cos">
         <h1 class="fitxa-titol">{entry.data.nom}</h1>
@@ -75,7 +85,9 @@ const ambFotos = entry.data.castells.some((c) => c.foto);
         <div class="etiquetes">
           <span class={`pill ${CLASSE_PILL[categoria.color]}`}>{categoria.nom}</span>
           {entry.data.cancelada && <span class="pill pill-danger">Cancel·lada</span>}
-          <a class="pill pill-neutral temporada" href={`${base}castells#t-${temporada}`}>Temporada {temporada}</a>
+          {historial
+            ? <a class="pill pill-neutral temporada" href={`${historial}#t-${temporada}`}>Temporada {temporada}</a>
+            : <span class="pill pill-neutral">Temporada {temporada}</span>}
         </div>
         {entry.data.collesParticipants.length > 0 && (
           <div class="chips">

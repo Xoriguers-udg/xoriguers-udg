@@ -3,8 +3,11 @@ import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 import { mediaUrl, isUploadedPath } from '../../lib/media';
 import { formatDate } from '../../lib/format';
+import { paginaActiva } from '../../lib/carrega-estructura';
 
 export async function getStaticPaths() {
+  // switched off in Configuració → Estructura del web: none of them is built
+  if (!(await paginaActiva('galeria'))) return [];
   const albums = await getCollection('galeria', ({ data }) => data.estat === 'publicat');
   return albums.map((entry) => ({
     params: { id: entry.id },

@@ -40,8 +40,13 @@ export const ancoraAgenda = (id: string) => `e-${id}`;
 
 /**
  * Where a link to a past diada goes: its page, or else its row in the
- * historial. For the links that name a diada (the best castells, the latest
- * castells on the home page), which always point at the historial's entries.
+ * historial; nowhere when it has no page and the historial is switched off.
+ * For the links that name a diada (the best castells, the latest castells on
+ * the home page), which always point at the historial's entries.
  */
-export const enllacDiada = (base: string, entry: DadesFitxa & { id: string }) =>
-  teFitxa(entry) ? `${base}agenda/${entry.id}` : `${base}castells#${ancoraHistorial(entry.id)}`;
+export const enllacDiada = (base: string, entry: DadesFitxa & { id: string }, historialActiu = true) =>
+  teFitxa(entry)
+    ? `${base}agenda/${entry.id}`
+    : historialActiu
+      ? `${base}castells#${ancoraHistorial(entry.id)}`
+      : undefined;

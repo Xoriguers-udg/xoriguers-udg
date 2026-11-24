@@ -8,6 +8,12 @@ import { urlEmbedMensual } from '../../lib/calendari';
 import { CLASSE_PILL, categoriaDe } from '../../lib/categories';
 import { carregaCategories } from '../../lib/carrega-categories';
 import { ancoraAgenda, teFitxa } from '../../lib/fitxa';
+import { carregaEstructura, siApagada } from '../../lib/carrega-estructura';
+
+// switched off in Configuració → Estructura del web: the address sends people home
+const apagada = await siApagada('agenda', Astro.site);
+if (apagada) return apagada;
+const { enllac } = await carregaEstructura();
 
 // only what is still to come, of the categories the colla lists here (Configuració
 // → Calendari); everything past belongs to the historial
@@ -65,7 +71,7 @@ const { Content: IntroContent } = await render(capcalera!);
       </ol>
     ) : (
       <p class="buit-text empty">
-        No hi ha cap actuació programada ara mateix. Les que ja s’han fet són a l’<a href={`${base}castells`}>historial de castells</a>.
+        No hi ha cap actuació programada ara mateix.{enllac('castells') && <> Les que ja s’han fet són a l’<a href={enllac('castells')}>historial de castells</a>.</>}
       </p>
     )}
 

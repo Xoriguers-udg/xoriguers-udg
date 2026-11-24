@@ -1,4 +1,9 @@
 ---
 import JuntaPage from '../../components/JuntaPage.astro';
+import { siApagada } from '../../lib/carrega-estructura';
+
+// switched off in Configuració → Estructura del web: the address sends people home
+const apagada = await siApagada('junta-tecnica', Astro.site);
+if (apagada) return apagada;
 ---
 <JuntaPage title="Junta Tècnica" paginaId="junta-tecnica" collection="juntaTecnica" />

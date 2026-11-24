@@ -1,8 +1,9 @@
 ---
 import '../styles/global.css';
-import { getCollection, getEntry } from 'astro:content';
-import { isRealUrl } from '../lib/config';
+import { getEntry } from 'astro:content';
 import { mediaUrl } from '../lib/media';
+import { llegeixXarxes } from '../lib/xarxes';
+import { carregaEstructura } from '../lib/carrega-estructura';
 
 interface Props {
   title: string;
@@ -14,33 +15,22 @@ interface Props {
 const { title, description, showHeader = true, heroImage } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const config = await getEntry('configuracio', 'general');
-const socials = config?.data;
+const xarxes = llegeixXarxes(config?.data);
 const bannerImage = heroImage ?? mediaUrl(base, config?.data.capceleraImatge);
 const pageTitle = `${title} · Xoriguers UdG`;
 const metaDescription = description ?? config?.data.descripcioGeneral;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageUrl = bannerImage ? new URL(bannerImage, Astro.site).toString() : undefined;
 const escut = `${base}images/escut-xoriguers.png`;
-// Notícies is only linked while there is something published in it: with every
-// item a draft the pages still build, but nothing on the site points at them
-const hiHaNoticies = (await getCollection('noticies', ({ data }) => data.estat === 'publicat')).length > 0;
 
-// one list of the colla's own pages, so the bar's dropdown, the phone menu and
-// the footer cannot drift apart
-const seccions = [
-  { href: `${base}la-colla`, text: 'Qui som' },
-  { href: `${base}xorimusics`, text: 'Xorimúsics' },
-  { href: `${base}mallarengues`, text: 'Mallarengues' },
-];
-const organitzacio = [
-  { href: `${base}junta-tecnica`, text: 'Junta tècnica' },
-  { href: `${base}junta-directiva`, text: 'Junta directiva' },
-  { href: `${base}documents`, text: 'Documents' },
-  { href: `${base}col-laboradors`, text: 'Col·laboradors' },
-];
+// the bar, its dropdown, the phone menu and the footer all come from one list,
+// the colla's (Configuració → Estructura del web; src/lib/estructura.ts), so
+// they cannot drift apart. A page switched off, or empty like Notícies with
+// every item a draft, is in none of them.
+const { barra, colla, organitzacio, boto, peu, noms } = await carregaEstructura();
 const ara = Astro.url.pathname.replace(/\/$/, '');
 const actual = (href: string) => (href.replace(/\/$/, '') === ara ? 'page' : undefined);
-const dinsLaColla = [...seccions, ...organitzacio].some((l) => actual(l.href));
+const dinsDesplegable = [...colla, ...organitzacio].some((l) => actual(l.href));
 ---
 <!doctype html>
 <html lang="ca">
@@ -76,42 +66,44 @@ const dinsLaColla = [...seccions, ...organitzacio].some((l) => actual(l.href));
         <span class="site-brand-tag">UdG</span>
       </a>
       <nav class="site-links" aria-label="Principal">
-        <a href={`${base}agenda`} aria-current={actual(`${base}agenda`)}>Agenda</a>
-        <a href={`${base}castells`} aria-current={actual(`${base}castells`)}>Historial</a>
-        <a href={`${base}galeria`} aria-current={actual(`${base}galeria`)}>Galeria</a>
-        {hiHaNoticies && <a href={`${base}noticies`} aria-current={actual(`${base}noticies`)}>Notícies</a>}
-        <details class="nav-group">
-          <summary class={dinsLaColla ? 'dins' : undefined}>La colla</summary>
-          <div class="nav-dropdown-panel">
-            <div class="nav-dropdown-col">
-              <span class="nav-dropdown-head">La colla</span>
-              {seccions.map((l) => <a href={l.href} aria-current={actual(l.href)}>{l.text}</a>)}
-            </div>
-            <div class="nav-dropdown-col">
-              <span class="nav-dropdown-head">Organització</span>
-              {organitzacio.map((l) => <a href={l.href} aria-current={actual(l.href)}>{l.text}</a>)}
-            </div>
-          </div>
-        </details>
-        <a href={`${base}merchandising`} aria-current={actual(`${base}merchandising`)}>Botiga</a>
-        <a class="nav-join" href={`${base}uneix-te`} aria-current={actual(`${base}uneix-te`)}>Uneix-te</a>
+        {barra.map((p, i) =>
+          p.tipus === 'enllac' ? (
+            <a href={p.enllac.href} aria-current={actual(p.enllac.href)} target={p.enllac.extern ? '_blank' : undefined} rel={p.enllac.extern ? 'noreferrer' : undefined}>{p.enllac.text}</a>
+          ) : (
+            <details class={`nav-group${i === barra.length - 1 ? ' al-final' : ''}`}>
+              <summary class={dinsDesplegable ? 'dins' : undefined}>{noms.desplegable}</summary>
+              <div class={`nav-dropdown-panel${colla.length && organitzacio.length ? '' : ' una-col'}`}>
+                {colla.length > 0 && (
+                  <div class="nav-dropdown-col">
+                    <span class="nav-dropdown-head">{noms.colla}</span>
+                    {colla.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+                  </div>
+                )}
+                {organitzacio.length > 0 && (
+                  <div class="nav-dropdown-col">
+                    <span class="nav-dropdown-head">{noms.organitzacio}</span>
+                    {organitzacio.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+                  </div>
+                )}
+              </div>
+            </details>
+          )
+        )}
+        {boto && <a class="nav-join" href={boto.barra.href} aria-current={actual(boto.barra.href)} target={boto.barra.extern ? '_blank' : undefined} rel={boto.barra.extern ? 'noreferrer' : undefined}>{boto.barra.text}</a>}
       </nav>
-
       {/* under 60rem the links above no longer fit on one line, so the same
           destinations fold into one menu */}
       <details class="nav-menu">
         <summary>Menú</summary>
         <nav class="nav-menu-panel" aria-label="Principal, mòbil">
-          <a class="nav-join" href={`${base}uneix-te`}>Uneix-te</a>
-          <a href={`${base}agenda`} aria-current={actual(`${base}agenda`)}>Agenda</a>
-          <a href={`${base}castells`} aria-current={actual(`${base}castells`)}>Historial</a>
-          <a href={`${base}galeria`} aria-current={actual(`${base}galeria`)}>Galeria</a>
-          {hiHaNoticies && <a href={`${base}noticies`} aria-current={actual(`${base}noticies`)}>Notícies</a>}
-          <a href={`${base}merchandising`} aria-current={actual(`${base}merchandising`)}>Botiga</a>
-          <span class="nav-menu-head">La colla</span>
-          {seccions.map((l) => <a href={l.href} aria-current={actual(l.href)}>{l.text}</a>)}
-          <span class="nav-menu-head">Organització</span>
-          {organitzacio.map((l) => <a href={l.href} aria-current={actual(l.href)}>{l.text}</a>)}
+          {boto && <a class="nav-join" href={boto.barra.href} target={boto.barra.extern ? '_blank' : undefined} rel={boto.barra.extern ? 'noreferrer' : undefined}>{boto.barra.text}</a>}
+          {barra.map((p) => p.tipus === 'enllac' && (
+            <a href={p.enllac.href} aria-current={actual(p.enllac.href)} target={p.enllac.extern ? '_blank' : undefined} rel={p.enllac.extern ? 'noreferrer' : undefined}>{p.enllac.text}</a>
+          ))}
+          {colla.length > 0 && <span class="nav-menu-head">{noms.colla}</span>}
+          {colla.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+          {organitzacio.length > 0 && <span class="nav-menu-head">{noms.organitzacio}</span>}
+          {organitzacio.map((l) => <a href={l.href} aria-current={actual(l.href)} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
         </nav>
       </details>
     </div>
@@ -141,30 +133,23 @@ const dinsLaColla = [...seccions, ...organitzacio].some((l) => actual(l.href));
       {/* every page of the site is listed here, so nothing depends on finding a
           submenu to be reachable */}
       <nav class="footer-index" aria-label="Totes les pàgines">
-        <div class="footer-col">
-          <h2 class="footer-head">La colla</h2>
-          {seccions.map((l) => <a href={l.href}>{l.text}</a>)}
-        </div>
-        <div class="footer-col">
-          <h2 class="footer-head">Castells</h2>
-          <a href={`${base}agenda`}>Agenda</a>
-          <a href={`${base}castells`}>Historial de castells</a>
-          <a href={`${base}galeria`}>Galeria</a>
-          {hiHaNoticies && <a href={`${base}noticies`}>Notícies</a>}
-        </div>
-        <div class="footer-col">
-          <h2 class="footer-head">Organització</h2>
-          {organitzacio.map((l) => <a href={l.href}>{l.text}</a>)}
-          <a href={`${base}merchandising`}>Botiga</a>
-        </div>
-        <div class="footer-col">
-          <h2 class="footer-head">Segueix-nos</h2>
-          {isRealUrl(socials?.instagramUrl) && <a href={socials!.instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
-          {isRealUrl(socials?.facebookUrl) && <a href={socials!.facebookUrl} target="_blank" rel="noreferrer">Facebook</a>}
-          {isRealUrl(socials?.twitterUrl) && <a href={socials!.twitterUrl} target="_blank" rel="noreferrer">Twitter</a>}
-          {isRealUrl(socials?.youtubeUrl) && <a href={socials!.youtubeUrl} target="_blank" rel="noreferrer">YouTube</a>}
-          <a href={`${base}col-laboradors#contacte`}>Contacta’ns</a>
-        </div>
+        {([
+          [noms.peuColla, peu.colla],
+          [noms.peuCastells, peu.castells],
+          [noms.peuOrganitzacio, peu.organitzacio],
+        ] as const).map(([titol, enllacos]) => enllacos.length > 0 && (
+          <div class="footer-col">
+            <h2 class="footer-head">{titol}</h2>
+            {enllacos.map((l) => <a href={l.href} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+          </div>
+        ))}
+        {(xarxes.length > 0 || peu.xarxes.length > 0) && (
+          <div class="footer-col">
+            <h2 class="footer-head">{noms.peuXarxes}</h2>
+            {xarxes.map((x) => <a href={x.url} target="_blank" rel="noreferrer">{x.nom}</a>)}
+            {peu.xarxes.map((l) => <a href={l.href} target={l.extern ? '_blank' : undefined} rel={l.extern ? 'noreferrer' : undefined}>{l.text}</a>)}
+          </div>
+        )}
       </nav>
       <div class="footer-mast">
         <img class="footer-escut" src={escut} alt="" width="96" height="96" loading="lazy" data-arbre={`${base}arbre/`} />
@@ -172,7 +157,7 @@ const dinsLaColla = [...seccions, ...organitzacio].some((l) => actual(l.href));
           <p class="footer-brand display" aria-hidden="true">Xoriguers UdG</p>
           <p class="footer-note">Colla castellera universitària de Girona, des de 1998</p>
         </div>
-        <a class="btn btn-accent footer-join" href={`${base}uneix-te`}>Uneix-te a la colla</a>
+        {boto && <a class="btn btn-accent footer-join" href={boto.peu.href} target={boto.peu.extern ? '_blank' : undefined} rel={boto.peu.extern ? 'noreferrer' : undefined}>{boto.peu.text}</a>}
       </div>
     </div>
   </footer>
@@ -319,6 +304,11 @@ const dinsLaColla = [...seccions, ...organitzacio].some((l) => actual(l.href));
       border-top: 4px solid var(--color-signal);
       border-radius: var(--radius-card);
     }
+    /* the colla can put the dropdown last in the bar, or leave one of its
+       groups empty (Configuració → Estructura del web): it then opens towards
+       the page, and with one column */
+    .nav-group.al-final .nav-dropdown-panel { left: auto; right: calc(-1 * var(--space-sm)); }
+    .nav-dropdown-panel.una-col { grid-template-columns: minmax(12rem, 1fr); }
     .nav-dropdown-col { display: flex; flex-direction: column; }
     .nav-dropdown-head {
       padding: var(--space-xs) var(--space-sm);

@@ -3,6 +3,12 @@ import Base from '../../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
 import { mediaUrl } from '../../lib/media';
 import { isRealUrl } from '../../lib/config';
+import { instagramDe, llegeixXarxes } from '../../lib/xarxes';
+import { siApagada } from '../../lib/carrega-estructura';
+
+// switched off in Configuració → Estructura del web: the address sends people home
+const apagada = await siApagada('col-laboradors', Astro.site);
+if (apagada) return apagada;
 
 const patrocinadors = (await getCollection('patrocinadors')).sort((a, b) => a.data.ordre - b.data.ordre);
 const base = import.meta.env.BASE_URL;
@@ -11,9 +17,8 @@ const config = await getEntry('configuracio', 'general');
 const comercialEmail = isRealUrl(config?.data.contacteComercialEmail) ? config!.data.contacteComercialEmail : undefined;
 const laColla = await getEntry('pagines', 'la-colla');
 const instagram = isRealUrl(laColla?.data.contacteInstagram) ? laColla!.data.contacteInstagram! : undefined;
-const instagramUrl = isRealUrl(config?.data.instagramUrl)
-  ? config!.data.instagramUrl
-  : instagram && `https://instagram.com/${instagram.replace(/^@/, '')}`;
+const instagramUrl =
+  instagramDe(llegeixXarxes(config?.data)) ?? (instagram && `https://instagram.com/${instagram.replace(/^@/, '')}`);
 
 const contactePagina = await getEntry('pagines', 'col-laboradors');
 const { Content: ContacteContent } = await render(contactePagina!);

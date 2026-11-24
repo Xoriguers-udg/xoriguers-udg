@@ -4,6 +4,12 @@ import MillorsCastells from '../components/MillorsCastells.astro';
 import { getEntry, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
 import { isRealUrl } from '../lib/config';
+import { carregaEstructura, siApagada } from '../lib/carrega-estructura';
+
+// switched off in Configuració → Estructura del web: the address sends people home
+const apagada = await siApagada('la-colla', Astro.site);
+if (apagada) return apagada;
+const { enllac } = await carregaEstructura();
 
 const pagina = await getEntry('pagines', 'la-colla');
 const { Content } = await render(pagina);
@@ -15,6 +21,15 @@ const fotoColla = mediaUrl(base, pagina.data.fotoColla);
 // this page shows them rather than keeping a second copy that can drift
 const uneixTe = await getEntry('pagines', 'uneix-te');
 const assajos = (uneixTe?.data.assajos ?? []).filter((a) => a.text);
+
+// the colla's other pages, each only while it is switched on
+const mesColla = [
+  { clau: 'xorimusics', nom: 'Xorimúsics', que: 'Gralles i tabals' },
+  { clau: 'mallarengues', nom: 'Mallarengues', que: 'Igualtat i diversitat' },
+  { clau: 'junta-tecnica', nom: 'Junta tècnica', que: 'Els tècnics de la temporada' },
+  { clau: 'junta-directiva', nom: 'Junta directiva', que: 'La directiva de la temporada' },
+] as const;
+const mesCollaActius = mesColla.flatMap((m) => (enllac(m.clau) ? [{ ...m, href: enllac(m.clau)! }] : []));
 ---
 <Base title={pagina.data.titol ?? 'La colla'} heroImage={imatge}>
   <div class="pagina">
@@ -26,12 +41,11 @@ const assajos = (uneixTe?.data.assajos ?? []).filter((a) => a.text);
         <Content />
       </div>
       <aside class="costat">
-        <nav class="mes-colla" aria-label="Més de la colla">
-          <a href={`${base}xorimusics`}><span class="display">Xorimúsics</span><span>Gralles i tabals</span></a>
-          <a href={`${base}mallarengues`}><span class="display">Mallarengues</span><span>Igualtat i diversitat</span></a>
-          <a href={`${base}junta-tecnica`}><span class="display">Junta tècnica</span><span>Els tècnics de la temporada</span></a>
-          <a href={`${base}junta-directiva`}><span class="display">Junta directiva</span><span>La directiva de la temporada</span></a>
-        </nav>
+        {mesCollaActius.length > 0 && (
+          <nav class="mes-colla" aria-label="Més de la colla">
+            {mesCollaActius.map((m) => <a href={m.href}><span class="display">{m.nom}</span><span>{m.que}</span></a>)}
+          </nav>
+        )}
       </aside>
     </div>
   </div>
@@ -64,11 +78,11 @@ const assajos = (uneixTe?.data.assajos ?? []).filter((a) => a.text);
             {isRealUrl(pagina.data.contacteInstagram) && (
               <a class="contacte" href={`https://instagram.com/${pagina.data.contacteInstagram!.replace(/^@/, '')}`} target="_blank" rel="noreferrer">{pagina.data.contacteInstagram}</a>
             )}
-            <a class="contacte" href={`${base}col-laboradors#contacte`}>Contacta’ns</a>
+            {enllac('col-laboradors') && <a class="contacte" href={`${enllac('col-laboradors')}#contacte`}>Contacta’ns</a>}
           </dd>
         </div>
       </dl>
-      <a class="btn btn-accent mes" href={`${base}uneix-te`}>Com venir a assajar</a>
+      {enllac('uneix-te') && <a class="btn btn-accent mes" href={enllac('uneix-te')}>Com venir a assajar</a>}
     </section>
   </div>
 </Base>

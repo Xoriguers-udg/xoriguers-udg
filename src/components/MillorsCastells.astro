@@ -11,6 +11,7 @@ import { formatDate } from '../lib/format';
 import { alHistorial, categoriaDe } from '../lib/categories';
 import { carregaCategories } from '../lib/carrega-categories';
 import { enllacDiada } from '../lib/fitxa';
+import { carregaEstructura } from '../lib/carrega-estructura';
 
 interface Props {
   quants?: number;
@@ -18,6 +19,8 @@ interface Props {
 }
 const { quants = 4, titol = 'Els nostres millors castells' } = Astro.props;
 const base = import.meta.env.BASE_URL;
+// the historial may be switched off (Configuració → Estructura del web)
+const historial = (await carregaEstructura()).enllac('castells');
 const ara = new Date();
 
 // the same entries the historial shows, so a castell counted here is one the
@@ -28,7 +31,7 @@ const agenda = await getCollection(
   ({ data }) => data.estat === 'publicat' && data.data <= ara && alHistorial(categoriaDe(data.tipus, categories), data.castells.length),
 );
 
-interface Millor { canonic: string; valor: number; primer: { id: string; nom: string; data: Date; enllac: string }; foto?: string; cops: number }
+interface Millor { canonic: string; valor: number; primer: { id: string; nom: string; data: Date; enllac?: string }; foto?: string; cops: number }
 const millors = new Map<string, Millor>();
 for (const e of agenda) {
   const llegits = llegeixCastellsRegistrats(e.data.castells);
@@ -39,11 +42,11 @@ for (const e of agenda) {
     const foto = e.data.castells[i].foto;
     const m = millors.get(c.canonic);
     if (!m) {
-      millors.set(c.canonic, { canonic: c.canonic, valor, primer: { id: e.id, nom: e.data.nom, data: e.data.data, enllac: enllacDiada(base, e) }, foto, cops: 1 });
+      millors.set(c.canonic, { canonic: c.canonic, valor, primer: { id: e.id, nom: e.data.nom, data: e.data.data, enllac: enllacDiada(base, e, !!historial) }, foto, cops: 1 });
       return;
     }
     m.cops++;
-    if (e.data.data < m.primer.data) m.primer = { id: e.id, nom: e.data.nom, data: e.data.data, enllac: enllacDiada(base, e) };
+    if (e.data.data < m.primer.data) m.primer = { id: e.id, nom: e.data.nom, data: e.data.data, enllac: enllacDiada(base, e, !!historial) };
     if (!m.foto && foto) m.foto = foto;
   });
 }
@@ -55,7 +58,7 @@ const escrit = (c: string) => c.replace(/^pd/, 'Pd');
   <section class="millors" aria-labelledby="millors-titol">
     <div class="millors-cap">
       <h2 id="millors-titol">{titol}</h2>
-      <a class="millors-enllac" href={`${base}castells`}>Tot l’historial</a>
+      {historial && <a class="millors-enllac" href={historial}>Tot l’historial</a>}
     </div>
     <ol class="millors-llista">
       {llista.map((c) => (
@@ -67,7 +70,7 @@ const escrit = (c: string) => c.replace(/^pd/, 'Pd');
           )}
           <p class="millor-notacio display">{escrit(c.canonic)}</p>
           <p class="millor-text">
-            Descarregat per primer cop el <time datetime={c.primer.data.toISOString().slice(0, 10)}>{formatDate(c.primer.data)}</time>, a la <a href={c.primer.enllac}>{c.primer.nom}</a>.
+            Descarregat per primer cop el <time datetime={c.primer.data.toISOString().slice(0, 10)}>{formatDate(c.primer.data)}</time>, a la {c.primer.enllac ? <a href={c.primer.enllac}>{c.primer.nom}</a> : c.primer.nom}.
             {c.cops > 1 && <> En total, {c.cops} cops.</>}
           </p>
         </li>

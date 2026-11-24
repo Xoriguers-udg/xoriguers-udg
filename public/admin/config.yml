@@ -224,25 +224,24 @@ collections:
         preview_path: ""
         fields:
           - { label: "Titular principal", name: "titol", widget: "string", hint: "La frase gran en blanc sobre el blau, a dalt de tot. Com més curta, millor." }
-          - { label: "Text del botó", name: "ctaText", widget: "string", required: false, hint: "Per defecte: «Vine a assajar»." }
+          - { label: "Text del botó groc", name: "ctaText", widget: "string", required: false, hint: "Per defecte: «Vine a assajar»." }
+          - { label: "On porta el botó groc", name: "ctaPagina", widget: "select", required: false, default: "uneix-te", options: [{ label: "Agenda", value: "agenda" }, { label: "Historial de castells", value: "castells" }, { label: "Galeria", value: "galeria" }, { label: "Notícies", value: "noticies" }, { label: "La colla (Qui som)", value: "la-colla" }, { label: "Xorimúsics", value: "xorimusics" }, { label: "Mallarengues", value: "mallarengues" }, { label: "Junta tècnica", value: "junta-tecnica" }, { label: "Junta directiva", value: "junta-directiva" }, { label: "Documents", value: "documents" }, { label: "Col·laboradors", value: "col-laboradors" }, { label: "Botiga", value: "merchandising" }, { label: "Uneix-te", value: "uneix-te" }] }
+          - { label: "Text del segon botó", name: "boto2Text", widget: "string", required: false, hint: "Per defecte: «Veure agenda»." }
+          - { label: "On porta el segon botó", name: "boto2Pagina", widget: "select", required: false, default: "agenda", options: [{ label: "Agenda", value: "agenda" }, { label: "Historial de castells", value: "castells" }, { label: "Galeria", value: "galeria" }, { label: "Notícies", value: "noticies" }, { label: "La colla (Qui som)", value: "la-colla" }, { label: "Xorimúsics", value: "xorimusics" }, { label: "Mallarengues", value: "mallarengues" }, { label: "Junta tècnica", value: "junta-tecnica" }, { label: "Junta directiva", value: "junta-directiva" }, { label: "Documents", value: "documents" }, { label: "Col·laboradors", value: "col-laboradors" }, { label: "Botiga", value: "merchandising" }, { label: "Uneix-te", value: "uneix-te" }] }
           - { label: "Fotografia de portada", name: "imatge", widget: "image", required: false, hint: "La foto gran de la dreta, a dalt de tot." }
-          - { label: "Títol de la presentació", name: "presentacioTitol", widget: "string", required: false, hint: "Per defecte: «Qui som»." }
-          - { label: "Text de presentació", name: "body", widget: "markdown", required: false, hint: "Qui som, en un parell de frases. Surt a l'esquerra, al costat de les pròximes actuacions." }
-          - { label: "Títol de les pròximes actuacions", name: "properesTitol", widget: "string", required: false, hint: "Per defecte: «Pròximes actuacions»." }
-          # src/pages/index.astro reads these; a section left out of the file shows
+          - { label: "Text de presentació", name: "body", widget: "markdown", required: false, hint: "Qui som, en un parell de frases. El títol d'aquesta part es canvia a «Seccions de la portada», a «Qui som»." }
+          # src/lib/portada.ts reads these; the order of the list is the page's
           - label: "Seccions de la portada"
             name: "seccions"
-            widget: "object"
-            hint: "Treu la marca d'una secció per amagar-la de la portada. No s'esborra res: torna-la a marcar i tornarà a sortir."
+            widget: "list"
+            label_singular: "secció"
+            collapsed: true
+            summary: "{{fields.seccio}}"
+            hint: "Les parts de la portada sota la foto gran, en l'ordre en què surten: arrossega-les per canviar-lo. Per amagar-ne una, marca «Amaga-la»; no s'esborra res. «Qui som» i «Pròximes actuacions», si van una just després de l'altra, comparteixen fila."
             fields:
-              - { label: "Qui som (la presentació)", name: "presentacio", widget: "boolean", default: true, required: false }
-              - { label: "Pròximes actuacions", name: "properes", widget: "boolean", default: true, required: false, hint: "Si no n'hi ha cap de programada, surten els horaris d'assaig." }
-              - { label: "Últims castells", name: "ultimsCastells", widget: "boolean", default: true, required: false, hint: "Els castells de l'última actuació que en té d'apuntats." }
-              - { label: "No només fem castells (activitats)", name: "activitats", widget: "boolean", default: true, required: false }
-              - { label: "Uneix-te (la franja groga)", name: "uneix", widget: "boolean", default: true, required: false }
-              - { label: "Notícies", name: "noticies", widget: "boolean", default: true, required: false, hint: "Només surt quan hi ha alguna notícia publicada." }
-              - { label: "Últim àlbum de fotos", name: "album", widget: "boolean", default: true, required: false, hint: "Només surt quan hi ha un àlbum amb tres fotos o més." }
-              - { label: "Instagram", name: "instagram", widget: "boolean", default: true, required: false }
+              - { label: "Secció", name: "seccio", widget: "select", options: ["Qui som", "Pròximes actuacions", "Últims castells", "Activitats", "Uneix-te", "Notícies", "Últim àlbum", "Instagram"] }
+              - { label: "Amaga-la", name: "amaga", widget: "boolean", default: false }
+              - { label: "Títol", name: "titol", widget: "string", required: false, hint: "Buit: el de sempre. A «Uneix-te», el títol de la pàgina Uneix-te; a «Últim àlbum», el nom de l'àlbum. Notícies només surt si n'hi ha alguna de publicada, i l'àlbum si en té tres fotos o més." }
       - name: "la_colla"
         label: "La colla (Qui som)"
         file: "src/content/pagines/la-colla.md"
@@ -559,17 +558,24 @@ collections:
   - name: "configuracio"
     label: "Configuració"
     editor: { preview: false }
-    description: "Xarxes socials, correu de contacte, ajustos generals i les categories de l'Agenda. No cal tocar-ho gaire sovint."
+    description: "Xarxes socials, correu de contacte, el menú i les pàgines del web, i les categories de l'Agenda. No cal tocar-ho gaire sovint."
     files:
       - name: "general"
         label: "Configuració general"
         file: "src/content/configuracio/general.md"
         fields:
           - { label: "Email de contacte", name: "contacteComercialEmail", widget: "string", required: false, hint: "L'únic correu de la web: surt a Contacta'ns i hi arriben les reserves de la botiga." }
-          - { label: "URL Instagram", name: "instagramUrl", widget: "string", required: false, hint: "L'adreça sencera, amb https://. Deixa buida qualsevol xarxa que no feu servir i no sortirà." }
-          - { label: "URL YouTube", name: "youtubeUrl", widget: "string", required: false }
-          - { label: "URL Facebook", name: "facebookUrl", widget: "string", required: false }
-          - { label: "URL Twitter", name: "twitterUrl", widget: "string", required: false }
+          # src/lib/xarxes.ts reads these
+          - label: "Xarxes socials"
+            name: "xarxes"
+            widget: "list"
+            label_singular: "xarxa"
+            collapsed: true
+            summary: "{{fields.nom}}"
+            hint: "Surten al peu de la web, en aquest ordre. La d'Instagram surt també a la portada i a Col·laboradors. Per afegir-ne una de nova (TikTok, Bluesky…), prem «Afegeix xarxa»."
+            fields:
+              - { label: "Nom", name: "nom", widget: "string", hint: "Tal com ha de sortir: Instagram, TikTok…" }
+              - { label: "Adreça", name: "url", widget: "string", hint: "L'adreça sencera, amb https://" }
           - { label: "Fotografia de capçalera", name: "capceleraImatge", widget: "image", required: false, hint: "La foto que fan servir totes les pàgines que no en tenen una de pròpia." }
           - { label: "Descripció general (SEO)", name: "descripcioGeneral", widget: "text", required: false, hint: "El text que surt sota l'enllaç quan es comparteix la web o quan surt a Google. Una o dues frases curtes." }
           - label: "URL d'inserció de Google Calendar"
@@ -580,6 +586,56 @@ collections:
       # the agenda's categories: how each shows and behaves on the site, and the
       # words that classify calendar events into it (src/lib/categories.ts). An
       # agenda entry stores a category's identificador, so the name can change
+      # src/lib/estructura.ts reads this
+      - name: "estructura"
+        label: "Estructura del web: menú i pàgines"
+        file: "src/content/configuracio/estructura.md"
+        fields:
+          - label: "Pàgines apagades"
+            name: "apagades"
+            widget: "object"
+            hint: "Marca una pàgina per apagar-la: desapareix de tots els menús i enllaços, i la seva adreça porta a la portada. El que hi ha escrit no s'esborra; desmarca-la i tornarà tal com era. Totes desmarcades vol dir que totes surten."
+            fields:
+              - { label: "Agenda", name: "agenda", widget: "boolean", default: false }
+              - { label: "Historial de castells", name: "castells", widget: "boolean", default: false }
+              - { label: "Galeria", name: "galeria", widget: "boolean", default: false }
+              - { label: "Notícies", name: "noticies", widget: "boolean", default: false }
+              - { label: "La colla (Qui som)", name: "la-colla", widget: "boolean", default: false }
+              - { label: "Xorimúsics", name: "xorimusics", widget: "boolean", default: false }
+              - { label: "Mallarengues", name: "mallarengues", widget: "boolean", default: false }
+              - { label: "Junta tècnica", name: "junta-tecnica", widget: "boolean", default: false }
+              - { label: "Junta directiva", name: "junta-directiva", widget: "boolean", default: false }
+              - { label: "Documents", name: "documents", widget: "boolean", default: false }
+              - { label: "Col·laboradors", name: "col-laboradors", widget: "boolean", default: false }
+              - { label: "Botiga", name: "merchandising", widget: "boolean", default: false }
+              - { label: "Uneix-te", name: "uneix-te", widget: "boolean", default: false }
+          - label: "Menú"
+            name: "menu"
+            widget: "list"
+            label_singular: "entrada"
+            collapsed: true
+            summary: "{{fields.nom}}"
+            hint: "Totes les entrades dels menús de dalt i del peu, en ordre: arrossega-les per canviar-lo. Una entrada que porta a una pàgina apagada no surt enlloc."
+            fields:
+              - { label: "Nom", name: "nom", widget: "string", hint: "El text que surt al menú." }
+              - { label: "On porta", name: "pagina", widget: "select", options: [{ label: "Portada", value: "inici" }, { label: "Agenda", value: "agenda" }, { label: "Historial de castells", value: "castells" }, { label: "Galeria", value: "galeria" }, { label: "Notícies", value: "noticies" }, { label: "La colla (Qui som)", value: "la-colla" }, { label: "Xorimúsics", value: "xorimusics" }, { label: "Mallarengues", value: "mallarengues" }, { label: "Junta tècnica", value: "junta-tecnica" }, { label: "Junta directiva", value: "junta-directiva" }, { label: "Documents", value: "documents" }, { label: "Col·laboradors", value: "col-laboradors" }, { label: "Botiga", value: "merchandising" }, { label: "Uneix-te", value: "uneix-te" }, { label: "Una altra adreça (escriu-la a sota)", value: "adreca" }] }
+              - { label: "Una altra adreça", name: "adreca", widget: "string", required: false, hint: "Només si a «On porta» has triat «Una altra adreça». Una adreça sencera (https://…) s'obre en una pestanya nova; una part de la web, com galeria/diada-de-primavera-2026, s'obre a la mateixa." }
+              - { label: "On surt a dalt", name: "lloc", widget: "select", default: "barra", options: [{ label: "A la barra", value: "barra" }, { label: "Al desplegable, primer grup", value: "colla" }, { label: "Al desplegable, segon grup", value: "organitzacio" }, { label: "Botó groc (només un)", value: "boto" }, { label: "No surt a dalt", value: "cap" }] }
+              - { label: "Columna del peu", name: "peu", widget: "select", default: "cap", options: [{ label: "Primera (La colla)", value: "colla" }, { label: "Segona (Castells)", value: "castells" }, { label: "Tercera (Organització)", value: "organitzacio" }, { label: "Quarta, sota les xarxes socials", value: "xarxes" }, { label: "No surt al peu", value: "cap" }] }
+              - { label: "Nom al peu", name: "nomPeu", widget: "string", required: false, hint: "Només si al peu ha de dir una altra cosa: «Historial de castells» en lloc de «Historial»." }
+          - label: "Noms dels grups"
+            name: "noms"
+            widget: "object"
+            collapsed: true
+            hint: "Els títols del desplegable de dalt i de les columnes del peu."
+            fields:
+              - { label: "Nom del desplegable", name: "desplegable", widget: "string", required: false }
+              - { label: "Primer grup del desplegable", name: "colla", widget: "string", required: false }
+              - { label: "Segon grup del desplegable", name: "organitzacio", widget: "string", required: false }
+              - { label: "Primera columna del peu", name: "peuColla", widget: "string", required: false }
+              - { label: "Segona columna del peu", name: "peuCastells", widget: "string", required: false }
+              - { label: "Tercera columna del peu", name: "peuOrganitzacio", widget: "string", required: false }
+              - { label: "Quarta columna del peu (xarxes)", name: "peuXarxes", widget: "string", required: false }
       - name: "calendari"
         label: "Calendari: categories"
         file: "src/content/configuracio/calendari.md"

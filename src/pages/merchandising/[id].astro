@@ -4,8 +4,11 @@ import { getCollection, getEntry } from 'astro:content';
 import { mediaUrl } from '../../lib/media';
 import { isRealUrl } from '../../lib/config';
 import { buildMailto } from '../../lib/mailto';
+import { paginaActiva } from '../../lib/carrega-estructura';
 
 export async function getStaticPaths() {
+  // switched off in Configuració → Estructura del web: none of them is built
+  if (!(await paginaActiva('merchandising'))) return [];
   const productes = await getCollection('productes');
   return productes.map((entry) => ({
     params: { id: entry.id },
