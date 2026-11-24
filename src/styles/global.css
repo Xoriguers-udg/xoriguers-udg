@@ -260,3 +260,23 @@ a.fila:hover .fila-titol { color: var(--color-accent-deep); }
 .dada-valor { margin-top: var(--space-xs); font-size: var(--text-lg); line-height: 1.4; white-space: pre-line; }
 
 .buit-text { font-size: var(--text-lead); color: var(--color-ink-2); }
+
+/* a section's head row: its heading, and the one link that leads on
+   (src/components/CapSeccio.astro); the link also stands alone below a text */
+.cap-seccio {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+.cap-enllac {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--color-rule-firm);
+}
+.cap-enllac:hover { text-decoration-color: currentColor; }

@@ -8,11 +8,13 @@ import { paginaRedireccio } from './redireccio';
 
 export async function carregaEstructura() {
   const dades = (await getEntry('configuracio', 'estructura'))?.data;
-  // Notícies is on, but nothing points at it while every item is a draft
+  // Notícies is on, but nothing points at it while every item is a draft;
+  // nor at a new page still in draft
   const hiHaNoticies = (await getCollection('noticies', ({ data }) => data.estat === 'publicat')).length > 0;
+  const esborranys = (await getCollection('paginesNoves', ({ data }) => data.estat !== 'publicat')).map((p) => p.id);
   return resolEstructura(dades, {
     base: import.meta.env.BASE_URL,
-    buides: hiHaNoticies ? new Set() : new Set(['noticies']),
+    buides: new Set([...(hiHaNoticies ? [] : ['noticies']), ...esborranys]),
   });
 }
 

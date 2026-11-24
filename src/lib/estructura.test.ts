@@ -69,10 +69,16 @@ describe('a menu edited in the CMS', () => {
       { nom: 'TikTok', pagina: 'adreca', adreca: 'https://www.tiktok.com/@xoriguers', lloc: 'barra', peu: 'xarxes' },
       { nom: 'Sense destinació', lloc: 'barra' },
       { nom: 'Fotos 2026', pagina: 'adreca', adreca: '/galeria/diada-de-primavera-2026', lloc: 'cap', peu: 'castells' },
+      { nom: 'Aniverfest', pagina: 'nova', paginaNova: 'aniverfest-2027', lloc: 'cap', peu: 'colla' },
+      { nom: 'Esborrany', pagina: 'nova', paginaNova: 'encara-no', lloc: 'cap', peu: 'colla' },
     ],
     noms: { desplegable: 'Nosaltres', peuXarxes: '' },
   };
-  const e = resolEstructura(dades, { base: '/x/' });
+  const e = resolEstructura(dades, { base: '/x/', buides: new Set(['encara-no']) });
+
+  it('links to a new page by its address, and not to one still in draft', () => {
+    expect(e.peu.colla.map((l) => l.href)).toEqual(['/x/la-colla', '/x/aniverfest-2027']);
+  });
 
   it('puts the dropdown where its first entry is', () => {
     expect(e.barra.map((p) => (p.tipus === 'desplegable' ? '▾' : p.enllac.text))).toEqual(['▾', 'Agenda', 'TikTok']);

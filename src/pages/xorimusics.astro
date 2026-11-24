@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import '../styles/pagines/xorimusics.css';
 import { getEntry, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
 import MapEmbed from '../components/MapEmbed.astro';
@@ -20,7 +21,7 @@ const partitures = pagina?.data.partitures ?? [];
 const assaigMusics = uneixTe?.data.assajos?.find((a) => a.clau === 'musics');
 ---
 <Base title={pagina!.data.titol ?? 'Xorimúsics'} heroImage={imatge}>
-  <div class="pagina">
+  <div class="pagina pg-xorimusics">
     <div class="obertura">
       <div class="pagina-intro lead">
         <Content />
@@ -72,22 +73,3 @@ const assaigMusics = uneixTe?.data.assajos?.find((a) => a.clau === 'musics');
   </div>
 </Base>
 
-<style>
-  .obertura { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-3xl); align-items: start; }
-  .lead { margin-bottom: 0; }
-  .dades.costat { margin-top: 0; grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
-  .dada-valor { margin-left: 0; overflow-wrap: anywhere; }
-  .partitures { margin-top: var(--section-gap-s); }
-  .partitures h2 { font-size: var(--text-section); }
-  .partitures-intro { margin: var(--space-sm) 0 var(--space-xl); color: var(--color-ink-2); }
-  .partitura { grid-template-columns: auto minmax(0, 1fr) auto auto; }
-  .partitura-icona { color: var(--color-accent); }
-  .partitura-obre { font-weight: 600; color: var(--color-accent-deep); }
-  @media (max-width: 40rem) {
-    .partitura { grid-template-columns: auto minmax(0, 1fr); }
-    .partitura .pill, .partitura-obre { grid-column: 2; justify-self: start; }
-  }
-  .map-section { margin-top: var(--section-gap-s); }
-  .map-section h2 { margin-bottom: var(--space-xl); }
-  @media (max-width: 60rem) { .obertura { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); } }
-</style>

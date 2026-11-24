@@ -11,6 +11,7 @@
  * `docs/cms.md`.
  */
 import { defineCollection, z } from 'astro:content';
+import { ambBlocsRenderitzats } from './lib/carrega-blocs';
 import { glob } from 'astro/loaders';
 import { COLORS, HISTORIAL } from './lib/categories.ts';
 
@@ -213,6 +214,23 @@ const documents = defineCollection({
   }),
 });
 
+/**
+ * Pàgines noves: pages the colla builds in the CMS from a few kinds of block
+ * (src/lib/blocs.ts), each at its own address. The loader renders each
+ * block's Markdown (src/lib/carrega-blocs.ts); the blocks are kept loose here
+ * and read through llegeixBlocs, which skips one it cannot use.
+ */
+const paginesNoves = defineCollection({
+  loader: ambBlocsRenderitzats(glob({ pattern: '**/*.md', base: './src/content/pagines-noves' })),
+  schema: z.object({
+    titol: z.string(),
+    estat,
+    imatge: z.preprocess(emptyToUndefined, z.string().optional()),
+    descripcio: z.preprocess(emptyToUndefined, z.string().optional()),
+    blocs: z.array(z.record(z.string(), z.unknown())).default([]),
+  }),
+});
+
 const configuracio = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/configuracio' }),
   schema: z.object({
@@ -262,6 +280,7 @@ const configuracio = defineCollection({
 });
 
 export const collections = {
+  paginesNoves,
   agenda,
   noticies,
   galeria,

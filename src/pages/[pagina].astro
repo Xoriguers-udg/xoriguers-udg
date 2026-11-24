@@ -1,0 +1,25 @@
+---
+/**
+ * A new page, built by the colla in the CMS (Pàgines noves) from blocks, at
+ * the address the CMS gave it from its title: /aniverfest-2027. A draft is not
+ * built; nor is a page whose address the site already uses (ADRECES_RESERVADES).
+ */
+import Base from '../layouts/Base.astro';
+import Blocs from '../components/Blocs.astro';
+import { getCollection } from 'astro:content';
+import { mediaUrl } from '../lib/media';
+import { ADRECES_RESERVADES, llegeixBlocs } from '../lib/blocs';
+
+export async function getStaticPaths() {
+  const pagines = await getCollection('paginesNoves', ({ id, data }) => data.estat === 'publicat' && !ADRECES_RESERVADES.has(id));
+  return pagines.map((pagina) => ({ params: { pagina: pagina.id }, props: { pagina } }));
+}
+
+const { pagina } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+<Base title={pagina.data.titol} description={pagina.data.descripcio} heroImage={mediaUrl(base, pagina.data.imatge)}>
+  <div class="pagina">
+    <Blocs blocs={llegeixBlocs(pagina.data.blocs)} />
+  </div>
+</Base>

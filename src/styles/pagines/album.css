@@ -1,0 +1,15 @@
+/*
+ * An album: the styles of src/pages/galeria/[id].astro, shared with the CMS preview
+ * (src/pages/admin/preview.css.ts loads this same file), so the preview draws
+ * the page as the site does and the two cannot drift apart.
+ * Every rule hangs from the page's root class, so nothing leaks elsewhere.
+ */
+
+.pg-album .photo-grid {
+  list-style: none; margin: var(--space-2xl) 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-md);
+}
+.pg-album .photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--space-xs); }
+.pg-album .placeholder { background: var(--color-paper-3); }
+.pg-album .empty { margin-top: var(--space-xl); }
+@media (max-width: 60rem) { .pg-album .photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

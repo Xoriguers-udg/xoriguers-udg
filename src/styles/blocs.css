@@ -1,0 +1,98 @@
+/*
+ * The blocks of a new page (src/components/Blocs.astro, src/lib/blocs.ts).
+ * Global, under the .blocs root, so the CMS preview loads this same file
+ * (src/pages/admin/preview.css.ts) and draws the blocks exactly as the site.
+ * Built only from the site's tokens: a page made of blocks looks like the rest.
+ */
+
+.blocs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xl);
+}
+
+/* ---------- text: the measure and rhythm of a page's own introduction ---------- */
+.blocs .bloc-text {
+  font-size: var(--text-lead);
+  line-height: 1.6;
+  color: var(--color-ink-2);
+  max-width: 62ch;
+}
+.blocs .bloc-text > :first-child { margin-top: 0; }
+.blocs .bloc-text > :last-child { margin-bottom: 0; }
+.blocs .bloc-text p,
+.blocs .bloc-text ul,
+.blocs .bloc-text ol { margin: 0 0 var(--space-md); max-width: none; }
+.blocs .bloc-text li + li { margin-top: var(--space-2xs); }
+.blocs .bloc-text h2,
+.blocs .bloc-text h3 { color: var(--color-ink); margin: var(--space-xl) 0 var(--space-sm); overflow-wrap: break-word; min-width: 0; }
+.blocs .bloc-text h2 { font-size: var(--text-2xl); }
+.blocs .bloc-text h3 { font-size: var(--text-xl); }
+.blocs .bloc-text strong { color: var(--color-ink); }
+.blocs .bloc-text img { border-radius: var(--radius-card); margin-block: var(--space-md); }
+
+/* the headings the blocks carry themselves */
+.blocs h2 { font-size: var(--text-title); overflow-wrap: break-word; min-width: 0; }
+
+/* ---------- a photo: the text's width, or the page's ---------- */
+.blocs .bloc-foto { margin: 0; max-width: 48rem; }
+.blocs .bloc-foto.ample { max-width: none; }
+/* never taller than the screen: a portrait photo keeps its shape and narrows */
+.blocs .bloc-foto img { display: block; width: auto; max-width: 100%; height: auto; max-height: 85svh; border-radius: var(--radius-card); }
+.blocs .bloc-foto figcaption { margin-top: var(--space-xs); font-size: var(--text-sm); color: var(--color-ink-2); }
+
+/* ---------- a photo beside a text ---------- */
+.blocs .bloc-foto-text {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-2xl) var(--gap-columns);
+  align-items: center;
+}
+.blocs .bloc-foto-text img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-card); }
+.blocs .bloc-foto-text.dreta { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.blocs .bloc-foto-text.dreta img { order: 2; }
+
+/* ---------- a button ---------- */
+.blocs .bloc-boto { margin: 0; }
+
+/* ---------- a map ---------- */
+.blocs .bloc-mapa { max-width: 48rem; }
+.blocs .bloc-mapa h2 { margin-bottom: var(--space-md); }
+
+/* ---------- an album's first photos ---------- */
+/* its head row is CapSeccio's (global.css) */
+.blocs .bloc-album ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /* one row for up to five photos, three to a row for six */
+  grid-template-columns: repeat(var(--columnes, 3), minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+.blocs .bloc-album img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--space-xs); display: block; }
+
+/* ---------- documents ---------- */
+.blocs .bloc-documents h2 { margin-bottom: var(--space-md); }
+.blocs .bloc-documents ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-rule); max-width: 48rem; }
+.blocs .bloc-documents li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2xs) var(--space-md);
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--color-rule);
+}
+.blocs .bloc-documents a { font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }
+.blocs .bloc-documents-data { font-size: var(--text-sm); color: var(--color-ink-2); }
+
+@media (max-width: 40rem) {
+  .blocs { gap: var(--space-2xl); }
+  .blocs .bloc-foto-text,
+  .blocs .bloc-foto-text.dreta { grid-template-columns: minmax(0, 1fr); }
+  .blocs .bloc-foto-text.dreta img { order: 0; }
+  .blocs .bloc-album ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* two to a row: an odd last photo would sit alone */
+  .blocs .bloc-album li:last-child:nth-child(odd) { display: none; }
+}

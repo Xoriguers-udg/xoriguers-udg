@@ -12,6 +12,7 @@ import { esPagina } from '../lib/estructura';
 import { carregaEstructura } from '../lib/carrega-estructura';
 import { blocsDe, llegeixSeccions } from '../lib/portada';
 import { instagramDe, llegeixXarxes } from '../lib/xarxes';
+import CapSeccio from '../components/CapSeccio.astro';
 
 const base = import.meta.env.BASE_URL;
 const config = await getEntry('configuracio', 'general');
@@ -288,10 +289,7 @@ const album = albums
   if (clau === 'noticies') return enllac('noticies') && ultimesNoticies.length > 0 && (
     <section class="noticies" aria-labelledby="noticies-titol">
       <div class="container">
-        <div class="cap">
-          <h2 id="noticies-titol">{titol}</h2>
-          <a class="cap-enllac" href={enllac('noticies')}>Veure-les totes</a>
-        </div>
+        <CapSeccio titol={titol!} id="noticies-titol" enllac={enllac('noticies')} text="Veure-les totes" />
         <ul class="noticies-llista">
           {ultimesNoticies.map((noticia) => (
             <li>
@@ -316,10 +314,7 @@ const album = albums
   if (clau === 'album') return enllac('galeria') && album && (
     <section class="album" aria-labelledby="album-titol">
       <div class="container">
-        <div class="cap">
-          <h2 id="album-titol">{titol ?? album.data.nom}</h2>
-          <a class="cap-enllac" href={`${base}galeria/${album.id}`}>Veure l’àlbum</a>
-        </div>
+        <CapSeccio titol={titol ?? album.data.nom} id="album-titol" enllac={`${base}galeria/${album.id}`} text="Veure l’àlbum" />
         <ul class="album-tira">
           {album.reals.slice(0, 5).map((f) => (
             <li><img src={mediaUrl(base, f)} alt="" width="600" height="800" loading="lazy" /></li>
@@ -386,24 +381,7 @@ const album = albums
     to { opacity: 1; transform: none; }
   }
 
-  /* ---------- the shared head row: a section head with its one link ---------- */
-  .cap {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-sm) var(--space-lg);
-    margin-bottom: var(--space-xl);
-  }
-  .cap-enllac {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    font-weight: 600;
-    text-decoration: underline;
-    text-decoration-color: var(--color-rule-firm);
-  }
-  .cap-enllac:hover { text-decoration-color: currentColor; }
+  /* the head rows (.cap-seccio, .cap-enllac) are global: src/components/CapSeccio.astro */
 
   /* ---------- qui som and pròximes: the colla in its own words, beside what is next ---------- */
   .qui-som { padding-top: var(--space-3xl); }

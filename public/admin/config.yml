@@ -213,6 +213,92 @@ collections:
         default: "publicat"
       - { label: "Cos", name: "body", widget: "markdown", hint: "El text sencer de la notícia." }
 
+  # src/pages/[pagina].astro builds these, src/components/Blocs.astro draws the blocks
+  - name: "pagines_noves"
+    label: "Pàgines noves"
+    label_singular: "pàgina"
+    description: "Pàgines que feu vosaltres, a base de blocs: text, fotos, un botó, un mapa, un àlbum, documents. Cada una té la seva adreça, feta del títol (Aniverfest 2027 → /aniverfest-2027). Perquè surti al menú, afegeix-la a «Configuració» → «Estructura del web»."
+    folder: "src/content/pagines-noves"
+    create: true
+    delete: true
+    identifier_field: "titol"
+    slug: "{{fields.titol}}"
+    preview_path: "{{slug}}"
+    summary: "{{titol}}"
+    fields:
+      - { label: "Títol", name: "titol", widget: "string", hint: "També fa l'adreça de la pàgina, i no canvia encara que després canviïs el títol. No pot ser el nom d'una pàgina que ja existeix (Agenda, Galeria…)." }
+      - label: "Estat"
+        name: "estat"
+        widget: "select"
+        hint: "Mentre és un esborrany no surt a la web ni als menús: la pots anar fent i publicar-la quan estigui llesta."
+        options:
+          - { label: "Publicat (es veu a la web)", value: "publicat" }
+          - { label: "Esborrany (no es publica)", value: "esborrany" }
+        default: "esborrany"
+      - { label: "Fotografia de capçalera", name: "imatge", widget: "image", required: false, hint: "Sense foto, la capçalera fa servir la de «Configuració»." }
+      - { label: "Descripció", name: "descripcio", widget: "text", required: false, hint: "Una frase: el que surt sota l'enllaç quan es comparteix la pàgina o surt a Google." }
+      - label: "Blocs"
+        name: "blocs"
+        widget: "list"
+        label_singular: "bloc"
+        collapsed: true
+        hint: "La pàgina, de dalt a baix. Prem «Afegeix bloc», tria'n el tipus, i arrossega'ls per canviar-ne l'ordre."
+        types:
+          - label: "Text"
+            name: "text"
+            widget: "object"
+            summary: "Text"
+            fields:
+              - { label: "Text", name: "text", widget: "markdown", hint: "Pots posar-hi títols, negretes, llistes i enllaços." }
+          - label: "Foto"
+            name: "foto"
+            widget: "object"
+            summary: "Foto: {{fields.peu}}"
+            fields:
+              - { label: "Foto", name: "imatge", widget: "image" }
+              - { label: "Peu de foto", name: "peu", widget: "string", required: false }
+              - { label: "Tota l'amplada de la pàgina", name: "ample", widget: "boolean", default: false, hint: "Si no, fa l'amplada del text." }
+          - label: "Foto i text"
+            name: "fotoText"
+            widget: "object"
+            summary: "Foto i text"
+            fields:
+              - { label: "Foto", name: "imatge", widget: "image" }
+              - { label: "Text", name: "text", widget: "markdown" }
+              - label: "On va la foto"
+                name: "costat"
+                widget: "select"
+                default: "esquerra"
+                options: [{ label: "A l'esquerra", value: "esquerra" }, { label: "A la dreta", value: "dreta" }]
+          - label: "Botó"
+            name: "boto"
+            widget: "object"
+            summary: "Botó: {{fields.text}}"
+            fields:
+              - { label: "Text del botó", name: "text", widget: "string" }
+              - { label: "On porta", name: "pagina", widget: "select", options: [{ label: "Portada", value: "inici" }, { label: "Agenda", value: "agenda" }, { label: "Historial de castells", value: "castells" }, { label: "Galeria", value: "galeria" }, { label: "Notícies", value: "noticies" }, { label: "La colla (Qui som)", value: "la-colla" }, { label: "Xorimúsics", value: "xorimusics" }, { label: "Mallarengues", value: "mallarengues" }, { label: "Junta tècnica", value: "junta-tecnica" }, { label: "Junta directiva", value: "junta-directiva" }, { label: "Documents", value: "documents" }, { label: "Col·laboradors", value: "col-laboradors" }, { label: "Botiga", value: "merchandising" }, { label: "Uneix-te", value: "uneix-te" }, { label: "Una altra adreça (escriu-la a sota)", value: "adreca" }] }
+              - { label: "Una altra adreça", name: "adreca", widget: "string", required: false, hint: "Només si a «On porta» has triat «Una altra adreça»: un formulari, una altra web (https://…), o una pàgina nova pel seu nom (aniverfest-2027)." }
+          - label: "Mapa"
+            name: "mapa"
+            widget: "object"
+            summary: "Mapa: {{fields.ubicacio}}"
+            fields:
+              - { label: "Títol", name: "titol", widget: "string", required: false }
+              - { label: "Lloc", name: "ubicacio", widget: "string", hint: "Com el buscaries al Google Maps: Plaça del Vi, Girona." }
+          - label: "Àlbum de fotos"
+            name: "album"
+            widget: "object"
+            summary: "Àlbum: {{fields.album}}"
+            fields:
+              - { label: "Àlbum", name: "album", widget: "relation", collection: "galeria", value_field: "{{slug}}", search_fields: ["nom"], display_fields: ["nom"], hint: "Surten les primeres fotos i un enllaç a l'àlbum sencer." }
+          - label: "Documents"
+            name: "documents"
+            widget: "object"
+            summary: "Documents"
+            fields:
+              - { label: "Títol", name: "titol", widget: "string", required: false }
+              - { label: "Categoria", name: "categoria", widget: "select", required: false, options: ["Estatuts", "Reglament", "Protocol", "Altres"], hint: "Buida: tots els documents." }
+
   - name: "pagines"
     label: "Pàgines"
     label_singular: "pàgina"
@@ -618,7 +704,8 @@ collections:
             hint: "Totes les entrades dels menús de dalt i del peu, en ordre: arrossega-les per canviar-lo. Una entrada que porta a una pàgina apagada no surt enlloc."
             fields:
               - { label: "Nom", name: "nom", widget: "string", hint: "El text que surt al menú." }
-              - { label: "On porta", name: "pagina", widget: "select", options: [{ label: "Portada", value: "inici" }, { label: "Agenda", value: "agenda" }, { label: "Historial de castells", value: "castells" }, { label: "Galeria", value: "galeria" }, { label: "Notícies", value: "noticies" }, { label: "La colla (Qui som)", value: "la-colla" }, { label: "Xorimúsics", value: "xorimusics" }, { label: "Mallarengues", value: "mallarengues" }, { label: "Junta tècnica", value: "junta-tecnica" }, { label: "Junta directiva", value: "junta-directiva" }, { label: "Documents", value: "documents" }, { label: "Col·laboradors", value: "col-laboradors" }, { label: "Botiga", value: "merchandising" }, { label: "Uneix-te", value: "uneix-te" }, { label: "Una altra adreça (escriu-la a sota)", value: "adreca" }] }
+              - { label: "On porta", name: "pagina", widget: "select", options: [{ label: "Portada", value: "inici" }, { label: "Agenda", value: "agenda" }, { label: "Historial de castells", value: "castells" }, { label: "Galeria", value: "galeria" }, { label: "Notícies", value: "noticies" }, { label: "La colla (Qui som)", value: "la-colla" }, { label: "Xorimúsics", value: "xorimusics" }, { label: "Mallarengues", value: "mallarengues" }, { label: "Junta tècnica", value: "junta-tecnica" }, { label: "Junta directiva", value: "junta-directiva" }, { label: "Documents", value: "documents" }, { label: "Col·laboradors", value: "col-laboradors" }, { label: "Botiga", value: "merchandising" }, { label: "Uneix-te", value: "uneix-te" }, { label: "Una pàgina nova (tria-la a sota)", value: "nova" }, { label: "Una altra adreça (escriu-la a sota)", value: "adreca" }] }
+              - { label: "Pàgina nova", name: "paginaNova", widget: "relation", collection: "pagines_noves", value_field: "{{slug}}", search_fields: ["titol"], display_fields: ["titol"], required: false, hint: "Només si a «On porta» has triat «Una pàgina nova». Mentre és un esborrany no surt al menú." }
               - { label: "Una altra adreça", name: "adreca", widget: "string", required: false, hint: "Només si a «On porta» has triat «Una altra adreça». Una adreça sencera (https://…) s'obre en una pestanya nova; una part de la web, com galeria/diada-de-primavera-2026, s'obre a la mateixa." }
               - { label: "On surt a dalt", name: "lloc", widget: "select", default: "barra", options: [{ label: "A la barra", value: "barra" }, { label: "Al desplegable, primer grup", value: "colla" }, { label: "Al desplegable, segon grup", value: "organitzacio" }, { label: "Botó groc (només un)", value: "boto" }, { label: "No surt a dalt", value: "cap" }] }
               - { label: "Columna del peu", name: "peu", widget: "select", default: "cap", options: [{ label: "Primera (La colla)", value: "colla" }, { label: "Segona (Castells)", value: "castells" }, { label: "Tercera (Organització)", value: "organitzacio" }, { label: "Quarta, sota les xarxes socials", value: "xarxes" }, { label: "No surt al peu", value: "cap" }] }

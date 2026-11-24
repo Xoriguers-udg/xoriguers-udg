@@ -26,6 +26,7 @@ const feines = [
   { id: 'categories', curt: 'Les categories' },
   { id: 'portada', curt: 'L’ordre de la portada' },
   { id: 'menu', curt: 'El menú i les pàgines' },
+  { id: 'nova', curt: 'Una pàgina nova' },
 ];
 ---
 <!doctype html>
@@ -201,6 +202,18 @@ const feines = [
         <li><strong>Noms dels grups:</strong> el títol del desplegable i de les columnes del peu.</li>
       </ul>
       <p class="nota">Les xarxes socials del peu es canvien a <span class="boto">Configuració general</span> → «Xarxes socials». Una de nova és una fila més.</p>
+    </section>
+
+    <section class="feina" id="nova" aria-labelledby="nova-titol">
+      <h2 id="nova-titol">Fer una pàgina nova</h2>
+      <ol class="passos">
+        <li>Ves a <span class="boto">Pàgines noves</span> i prem <span class="boto">Nova pàgina</span>.</li>
+        <li>Posa-hi el títol. També en fa l’adreça: «Aniverfest 2027» serà <span class="mono">/aniverfest-2027</span>.</li>
+        <li>A «Blocs», prem <span class="boto">Afegeix bloc</span> i tria’n el tipus: text, foto, foto i text, botó, mapa, àlbum de fotos o documents. Afegeix-ne tants com vulguis i arrossega’ls per ordenar-los.</li>
+        <li>Quan estigui llesta, canvia l’estat a «Publicat». <span class="boto">Publicar</span> i <span class="boto">Publicar ara</span>.</li>
+        <li>Perquè surti al menú, ves a <span class="boto">Estructura del web</span>, afegeix una entrada al «Menú» i a «On porta» tria «Una pàgina nova».</li>
+      </ol>
+      <p class="nota">Mentre és un esborrany, no surt a la web ni als menús: la pots anar fent a poc a poc.</p>
     </section>
 
     <section class="feina" id="notacio" aria-labelledby="notacio-titol">

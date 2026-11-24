@@ -12,6 +12,7 @@ import { alHistorial, categoriaDe } from '../lib/categories';
 import { carregaCategories } from '../lib/carrega-categories';
 import { enllacDiada } from '../lib/fitxa';
 import { carregaEstructura } from '../lib/carrega-estructura';
+import CapSeccio from './CapSeccio.astro';
 
 interface Props {
   quants?: number;
@@ -56,10 +57,7 @@ const escrit = (c: string) => c.replace(/^pd/, 'Pd');
 ---
 {llista.length > 0 && (
   <section class="millors" aria-labelledby="millors-titol">
-    <div class="millors-cap">
-      <h2 id="millors-titol">{titol}</h2>
-      {historial && <a class="millors-enllac" href={historial}>Tot l’historial</a>}
-    </div>
+    <CapSeccio titol={titol} id="millors-titol" enllac={historial} text="Tot l’historial" />
     <ol class="millors-llista">
       {llista.map((c) => (
         <li class={`millor${c.foto ? '' : ' sense-foto'}`}>
@@ -81,23 +79,8 @@ const escrit = (c: string) => c.replace(/^pd/, 'Pd');
 
 <style>
   .millors { margin-top: var(--section-gap-s); }
-  .millors-cap {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-sm) var(--space-lg);
-    margin-bottom: var(--space-xl);
-  }
-  .millors-cap h2 { font-size: var(--text-section); max-width: none; overflow-wrap: break-word; min-width: 0; }
-  .millors-enllac {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    font-weight: 600;
-    text-decoration-color: var(--color-rule-firm);
-  }
-  .millors-enllac:hover { text-decoration-color: currentColor; }
+  /* the head row is CapSeccio's (global.css); here its heading runs the full width */
+  .millors :global(.cap-seccio h2) { max-width: none; }
   .millors-llista {
     list-style: none;
     margin: 0;

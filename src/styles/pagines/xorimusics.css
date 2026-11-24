@@ -1,0 +1,24 @@
+/*
+ * Xorimúsics: the styles of src/pages/xorimusics.astro, shared with the CMS preview
+ * (src/pages/admin/preview.css.ts loads this same file), so the preview draws
+ * the page as the site does and the two cannot drift apart.
+ * Every rule hangs from the page's root class, so nothing leaks elsewhere.
+ */
+
+.pg-xorimusics .obertura { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-3xl); align-items: start; }
+.pg-xorimusics .lead { margin-bottom: 0; }
+.pg-xorimusics .dades.costat { margin-top: 0; grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
+.pg-xorimusics .dada-valor { margin-left: 0; overflow-wrap: anywhere; }
+.pg-xorimusics .partitures { margin-top: var(--section-gap-s); }
+.pg-xorimusics .partitures h2 { font-size: var(--text-section); }
+.pg-xorimusics .partitures-intro { margin: var(--space-sm) 0 var(--space-xl); color: var(--color-ink-2); }
+.pg-xorimusics .partitura { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+.pg-xorimusics .partitura-icona { color: var(--color-accent); }
+.pg-xorimusics .partitura-obre { font-weight: 600; color: var(--color-accent-deep); }
+@media (max-width: 40rem) {
+  .pg-xorimusics .partitura { grid-template-columns: auto minmax(0, 1fr); }
+  .pg-xorimusics .partitura .pill, .pg-xorimusics .partitura-obre { grid-column: 2; justify-self: start; }
+}
+.pg-xorimusics .map-section { margin-top: var(--section-gap-s); }
+.pg-xorimusics .map-section h2 { margin-bottom: var(--space-xl); }
+@media (max-width: 60rem) { .pg-xorimusics .obertura { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); } }

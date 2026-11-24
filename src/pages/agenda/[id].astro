@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import '../../styles/pagines/fitxa.css';
 import { getCollection, render } from 'astro:content';
 import { mediaUrl } from '../../lib/media';
 import { formatDate } from '../../lib/format';
@@ -73,7 +74,7 @@ const tornarText = jaPassada ? 'Historial de castells' : 'Agenda';
 const ambFotos = entry.data.castells.some((c) => c.foto);
 ---
 <Base title={entry.data.nom} description={descripcio} heroImage={mediaUrl(base, entry.data.cartell)} showHeader={false}>
-  <div class="pagina">
+  <div class="pagina pg-fitxa">
     {tornarA && <a class="tornar back" href={tornarA}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>{tornarText}</a>}
     <div class={`fitxa${mediaUrl(base, entry.data.cartell) ? ' amb-cartell' : ''}`}>
       <div class="fitxa-cos">
@@ -136,42 +137,3 @@ const ambFotos = entry.data.castells.some((c) => c.foto);
   </div>
 </Base>
 
-<style>
-  .fitxa { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2xl); align-items: start; }
-  .fitxa.amb-cartell { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
-  .etiquetes { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-lg); }
-  .temporada { text-decoration: none; }
-  .temporada:hover { background: var(--color-accent-wash); color: var(--color-accent-deep); }
-  .chips { display: flex; gap: var(--space-xs); flex-wrap: wrap; align-items: center; margin-top: var(--space-lg); }
-  .chips-etiqueta { font-size: var(--text-sm); color: var(--color-ink-2); margin-right: var(--space-2xs); }
-  .chip { border: 1px solid var(--color-rule-firm); border-radius: var(--radius-pill); padding: var(--space-2xs) var(--space-sm); font-size: var(--text-sm); }
-  .body { margin-top: var(--space-xl); font-size: var(--text-lead); line-height: 1.6; max-width: 60ch; }
-  .body :global(p) { margin: 0 0 var(--space-md); }
-  .observacio {
-    margin-top: var(--space-lg); padding: var(--space-md) var(--space-lg);
-    background: var(--color-signal-wash); color: var(--color-signal-text);
-    border-radius: var(--radius-card); font-weight: 600; max-width: 60ch;
-  }
-  .cartell { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius-card); }
-
-  .castells { margin-top: var(--section-gap-s); padding-top: var(--space-xl); border-top: 2px solid var(--color-ink); }
-  .castells-cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-xs) var(--space-lg); }
-  .castells h2 { text-wrap: balance; }
-  .compte { font-family: var(--font-body); font-size: var(--text-lead); font-weight: 600; color: var(--color-ink-2); }
-  .castells-row {
-    list-style: none; margin: var(--space-xl) 0 0; padding: 0;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: var(--gap-columns);
-  }
-  .castell { display: flex; flex-direction: column; gap: var(--space-xs); padding-top: var(--space-md); border-top: 1px solid var(--color-rule); }
-  .castells-row.amb-fotos { grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }
-  .castell-marc { display: block; width: 100%; aspect-ratio: 3 / 4; border-radius: var(--radius-card); margin-bottom: var(--space-xs); background: var(--color-accent-wash); }
-  .castell-foto { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius-card); margin-bottom: var(--space-xs); }
-  .notation { font-size: var(--text-3xl); line-height: 1; overflow-wrap: anywhere; min-width: 0; }
-  .castell-peu { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
-  .ronda { font-size: var(--text-sm); color: var(--color-ink-2); }
-  .registre { margin-top: var(--space-xl); font-size: var(--text-sm); color: var(--color-ink-2); }
-  @media (max-width: 60rem) {
-    .fitxa.amb-cartell { grid-template-columns: minmax(0, 1fr); }
-    .cartell { max-width: 26rem; }
-  }
-</style>

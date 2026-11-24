@@ -104,6 +104,7 @@ reading and the rendering; the libraries hold anything worth testing.
 | `estructura.ts` | The site's structure from Configuració → Estructura del web: which pages are on, and the one menu list the bar, its dropdown, the phone menu and the footer are drawn from. See *Structure* below. |
 | `portada.ts` | The homepage's sections from Pàgines → Inici: order, checkbox and heading per section, and which ones share a row. |
 | `xarxes.ts` | The social networks, a list of name and URL; finds Instagram among them. |
+| `blocs.ts`, `carrega-blocs.ts` | The new pages' blocks, read leniently; the loader that renders their Markdown. See *New pages*. |
 
 ## The calendar importer
 
@@ -225,8 +226,30 @@ missing or half-filled form never breaks the build.
 - **Social networks** (`general.md`, `xarxes`). A list; the footer shows them
   in order. The four fixed URL fields they replaced are still read.
 
-The only fixed points are the page templates themselves: new kinds of page
-still need code.
+Beyond these, new pages need no code either (below); only a new *kind* of
+page, or a new kind of block, does.
+
+## New pages
+
+Pàgines noves (`src/content/pagines-noves/`) are pages the colla builds in the
+CMS: a title, a banner photo, a description, and a list of blocks of seven
+kinds, defined in `src/lib/blocs.ts` and drawn by `src/components/Blocs.astro`
+with `src/styles/blocs.css`. `src/pages/[pagina].astro` builds each published
+one at `/<id>`, the id being the file name Decap made from the title; an id
+the site already answers at (`ADRECES_RESERVADES`) is not built. A draft is
+not built, and menus and buttons pointing at it are dropped
+(`carregaEstructura` passes drafts as *empty*).
+
+A block's text is Markdown. The collection's loader (`src/lib/carrega-blocs.ts`)
+wraps the glob loader and renders each block's `text` to `html` with Astro's
+own Markdown pipeline (`context.renderMarkdown`) as entries are stored, so it
+also re-renders when a file changes under `astro dev`.
+
+**Adding a kind of block:** its case in `llegeixBlocs` (and a test), its
+markup in `Blocs.astro`, its styles in `blocs.css` under `.blocs`, its type in
+the collection's `types` in `public/admin/config.yml`, and its case in the
+`PaginaNova` preview template. Keep the kinds few: each one is another choice
+in the editor's «Afegeix bloc» menu.
 
 ## The arbre de xoriguers
 

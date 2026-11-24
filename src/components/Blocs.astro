@@ -1,0 +1,109 @@
+---
+/**
+ * Draws a new page's blocks (src/lib/blocs.ts). The styles are global, in
+ * src/styles/blocs.css, under the .blocs root, so the CMS preview loads the
+ * very same file (src/pages/admin/preview.css.ts) instead of a copy.
+ */
+import '../styles/blocs.css';
+import { getCollection, getEntry } from 'astro:content';
+import type { Bloc } from '../lib/blocs';
+import { mediaUrl, isUploadedPath } from '../lib/media';
+import { formatDate } from '../lib/format';
+import { carregaEstructura } from '../lib/carrega-estructura';
+import MapEmbed from './MapEmbed.astro';
+import CapSeccio from './CapSeccio.astro';
+
+interface Props {
+  blocs: Bloc[];
+}
+const { blocs } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const { adreca, enllac } = await carregaEstructura();
+
+// an image written into a text block's Markdown is stored as /images/…, without
+// the base the site is served under
+const ambBase = (html: string) => html.replace(/(src|href)="\/(images\/)/g, `$1="${base}$2`);
+
+// what the album and documents blocks need, looked up once
+const albums = new Map(
+  await Promise.all(
+    blocs
+      .filter((b): b is Extract<Bloc, { tipus: 'album' }> => b.tipus === 'album')
+      .map(async (b) => [b.album, await getEntry('galeria', b.album)] as const)
+  )
+);
+const documents = blocs.some((b) => b.tipus === 'documents')
+  ? (await getCollection('documents')).sort((a, b) => a.data.titol.localeCompare(b.data.titol, 'ca'))
+  : [];
+---
+<div class="blocs">
+  {blocs.map((b) => {
+    if (b.tipus === 'text') return <div class="bloc-text" set:html={ambBase(b.html)} />;
+
+    if (b.tipus === 'foto') return (
+      <figure class={`bloc-foto${b.ample ? ' ample' : ''}`}>
+        <img src={mediaUrl(base, b.imatge)} alt={b.peu ?? ''} width="1600" height="1067" loading="lazy" />
+        {b.peu && <figcaption>{b.peu}</figcaption>}
+      </figure>
+    );
+
+    if (b.tipus === 'fotoText') return (
+      <div class={`bloc-foto-text ${b.costat}`}>
+        <img src={mediaUrl(base, b.imatge)} alt="" width="1200" height="900" loading="lazy" />
+        <div class="bloc-text" set:html={ambBase(b.html)} />
+      </div>
+    );
+
+    if (b.tipus === 'boto') {
+      // a page switched off, or a new page still in draft, leaves no button
+      const a = adreca(b.desti);
+      return a && (
+        <p class="bloc-boto">
+          <a class="btn btn-accent" href={a.href} target={a.extern ? '_blank' : undefined} rel={a.extern ? 'noreferrer' : undefined}>{b.text}</a>
+        </p>
+      );
+    }
+
+    if (b.tipus === 'mapa') return (
+      <section class="bloc-mapa">
+        {b.titol && <h2>{b.titol}</h2>}
+        <MapEmbed ubicacio={b.ubicacio} label={b.titol ?? `Mapa: ${b.ubicacio}`} />
+      </section>
+    );
+
+    if (b.tipus === 'album') {
+      const album = albums.get(b.album);
+      const fotos = album && album.data.estat === 'publicat' ? album.data.fotos.filter(isUploadedPath) : [];
+      const veure = enllac('galeria') && `${enllac('galeria')}/${b.album}`;
+      // a whole row: up to five side by side, or six in two rows of three
+      const mostrades = fotos.length >= 6 ? fotos.slice(0, 6) : fotos;
+      return fotos.length > 0 && (
+        <section class="bloc-album">
+          <CapSeccio titol={album!.data.nom} enllac={veure || undefined} text="Veure l’àlbum" />
+          <ul style={`--columnes: ${mostrades.length >= 6 ? 3 : mostrades.length}`}>
+            {mostrades.map((f) => (
+              <li><img src={mediaUrl(base, f)} alt="" width="600" height="450" loading="lazy" /></li>
+            ))}
+          </ul>
+        </section>
+      );
+    }
+
+    if (b.tipus === 'documents') {
+      const llista = documents.filter((d) => !b.categoria || d.data.categoria === b.categoria);
+      return llista.length > 0 && (
+        <section class="bloc-documents">
+          {b.titol && <h2>{b.titol}</h2>}
+          <ul>
+            {llista.map((d) => (
+              <li>
+                <a href={mediaUrl(base, d.data.fitxer)} target="_blank" rel="noreferrer">{d.data.titol}</a>
+                {d.data.data && <span class="bloc-documents-data">{formatDate(d.data.data)}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      );
+    }
+  })}
+</div>

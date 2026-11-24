@@ -30,14 +30,20 @@ entry out of the build entirely.
   its locale first. Both Decap scripts must stay `is:inline`: without it Astro
   turns the CDN script into a deferred module and the merge runs before `CMS`
   exists.
-- **A styled preview pane** on Agenda, Galeria, Notícies, Pàgines and the
-  banners. [`public/admin/preview.js`](../public/admin/preview.js) registers a
-  template per form, written with Decap's `h` so it needs no build, and
-  [`src/pages/admin/preview.css.ts`](../src/pages/admin/preview.css.ts) serves
-  the pane one stylesheet: the site's tokens, base and global CSS plus
-  [`src/styles/preview.css`](../src/styles/preview.css), the few page styles
-  that live in scoped `<style>` blocks. When a page's scoped styles change,
-  change their copy in `preview.css` too. Decap matches a template by the
+- **A styled preview pane** on Agenda, Galeria, Notícies, Pàgines noves,
+  Pàgines and the banners. [`public/admin/preview.js`](../public/admin/preview.js)
+  registers a template per form, written with Decap's `h` so it needs no
+  build, and [`src/pages/admin/preview.css.ts`](../src/pages/admin/preview.css.ts)
+  serves the pane the site's own stylesheets: tokens, base, global, the banner
+  (`src/styles/capcalera.css`), every page that has a preview
+  (`src/styles/pagines/*.css`), the new pages' blocks (`src/styles/blocs.css`),
+  and last [`src/styles/preview.css`](../src/styles/preview.css), which holds
+  only what belongs to the preview (its notes, the simplified homepage). **There
+  is no copy to keep in step:** a page with a preview keeps its styles in
+  `src/styles/pagines/<page>.css`, every rule under the page's root class
+  (`.pg-fitxa`, `.pg-noticia`…), imported by the page and served to the pane
+  alike; its template in `preview.js` uses the page's own markup and classes.
+  A new previewed page follows the same pattern. Decap matches a template by the
   collection's name for a folder and by the file's name for a file, which is
   why the banners' files are called `capcalera_*`: plain `agenda` would take
   the diada template. The other forms keep `editor: { preview: false }`;
@@ -130,7 +136,8 @@ way, or give up.
 | **Agenda** | `src/content/agenda/` | Every event, past and future. The one collection editors spend real time in. |
 | **Notícies** | `src/content/noticies/` | The two most recent show on the homepage. With none published, Notícies is unlinked everywhere (nav, footer, homepage). |
 | **Galeria** | `src/content/galeria/` | Albums. An album is listed once it has one uploaded photo; the newest with three or more goes on the homepage. |
-| **Pàgines** | `src/content/pagines/` | A *file* collection, not a folder: one fixed form per page, so editors cannot create or delete pages. |
+| **Pàgines noves** | `src/content/pagines-noves/` | Pages the colla builds itself from blocks (text, photo, photo and text, button, map, album, documents), each at `/<address>`, the address made from the title. Drafts are not built. See [architecture.md](architecture.md#new-pages). |
+| **Pàgines** | `src/content/pagines/` | A *file* collection, not a folder: one fixed form per page, so editors cannot create or delete these. |
 | **Capçaleres de les llistes** | `src/content/pagines/` too | The banner photo and intro of the list pages (Agenda, Historial, Galeria…). Same folder as Pàgines; a second file collection only so the sidebar separates real pages from banners. |
 | **Junta Directiva / Tècnica** | `src/content/junta-*/` | One entry per season, numbered; the number is rendered as a Roman ordinal. |
 | **Botiga: productes** | `src/content/productes/` | Sizes and stock per product. Reservations go to Configuració's contact email. |

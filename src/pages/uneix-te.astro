@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import '../styles/pagines/uneix-te.css';
 import { getEntry, render } from 'astro:content';
 import { isRealUrl } from '../lib/config';
 import { mediaUrl } from '../lib/media';
@@ -25,7 +26,7 @@ const assajos = pagina?.data.assajos ?? [];
 const curs = pagina?.data.curs;
 ---
 <Base title={pagina!.data.titol ?? 'Uneix-te'} heroImage={imatge}>
-  <div class="pagina">
+  <div class="pagina pg-uneix-te">
     <div class="obertura">
       <div class="pagina-intro lead">
         <Content />
@@ -98,65 +99,3 @@ const curs = pagina?.data.curs;
   </div>
 </Base>
 
-<style>
-  .lead { margin-bottom: 0; }
-  .lead :global(p) { margin: 0 0 var(--space-md); }
-
-  /* the intro and the credits sit side by side */
-  .obertura {
-    display: grid;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: var(--space-3xl);
-    align-items: start;
-  }
-
-  /* the credits are the strongest argument on the page, so they get the yellow */
-  .curs {
-    padding: var(--space-xl);
-    border-radius: var(--radius-card);
-    background: var(--color-signal-wash);
-  }
-  .curs-titol { font-size: var(--text-2xl); color: var(--color-ink); }
-  .curs-text { margin-top: var(--space-sm); color: var(--color-ink-2); }
-  .curs-dades {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-    gap: var(--space-md) var(--space-lg);
-    margin: var(--space-lg) 0 0;
-    padding-top: var(--space-md);
-    border-top: 1px solid color-mix(in oklab, var(--color-signal) 45%, transparent);
-  }
-  .curs-dada dt { font-size: var(--text-sm); font-weight: 600; color: var(--color-signal-text); }
-  .curs-dada dd { margin: var(--space-2xs) 0 0; font-size: var(--text-lg); font-weight: 600; }
-
-  .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-xl); }
-
-  /* the three assajos side by side, each above its own map */
-  .assajos-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-3xl) var(--gap-columns);
-    margin-top: var(--section-gap-s);
-  }
-  .assaig { display: flex; flex-direction: column; padding-top: var(--space-lg); border-top: 2px solid var(--color-ink); }
-  .assaig-titol { font-size: var(--text-2xl); margin-bottom: var(--space-sm); }
-  /* the text can hold more than one line, as the rain fallback does */
-  .assaig-text p { font-size: var(--text-lg); line-height: 1.5; color: var(--color-ink-2); white-space: pre-line; }
-  .assaig-link { display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 44px; margin-top: var(--space-xs); font-weight: 600; }
-  .assaig-link svg { flex-shrink: 0; }
-  /* the maps line up along the bottom, however long each text above them runs */
-  .assaig-mapa { margin-top: auto; padding-top: var(--space-lg); }
-  .assaig-fotos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-    gap: var(--space-sm);
-    margin-top: var(--space-lg);
-  }
-  .assaig-fotos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--space-xs); }
-  .sense-mapa { color: var(--color-ink-2); }
-
-  @media (max-width: 60rem) {
-    .obertura { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); }
-    .assajos-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-2xl); }
-      }
-</style>

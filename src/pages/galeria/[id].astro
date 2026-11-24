@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import '../../styles/pagines/album.css';
 import { getCollection } from 'astro:content';
 import { mediaUrl, isUploadedPath } from '../../lib/media';
 import { formatDate } from '../../lib/format';
@@ -20,7 +21,7 @@ const base = import.meta.env.BASE_URL;
 const descripcio = `${entry.data.fotos.length} fotografies, ${formatDate(entry.data.data)}`;
 ---
 <Base title={entry.data.nom} description={descripcio} heroImage={mediaUrl(base, entry.data.portada)} showHeader={false}>
-  <div class="pagina">
+  <div class="pagina pg-album">
     <a class="tornar back" href={`${base}galeria`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Galeria</a>
     <h1 class="fitxa-titol">{entry.data.nom}</h1>
     <p class="fitxa-meta"><time datetime={entry.data.data.toISOString().slice(0, 10)}>{formatDate(entry.data.data)}</time><span>{entry.data.fotos.length} fotografies</span></p>
@@ -42,13 +43,3 @@ const descripcio = `${entry.data.fotos.length} fotografies, ${formatDate(entry.d
   </div>
 </Base>
 
-<style>
-  .photo-grid {
-    list-style: none; margin: var(--space-2xl) 0 0; padding: 0;
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-md);
-  }
-  .photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--space-xs); }
-  .placeholder { background: var(--color-paper-3); }
-  .empty { margin-top: var(--space-xl); }
-  @media (max-width: 60rem) { .photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-</style>

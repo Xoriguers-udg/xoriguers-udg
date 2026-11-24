@@ -1,0 +1,67 @@
+/*
+ * Uneix-te: the styles of src/pages/uneix-te.astro, shared with the CMS preview
+ * (src/pages/admin/preview.css.ts loads this same file), so the preview draws
+ * the page as the site does and the two cannot drift apart.
+ * Every rule hangs from the page's root class, so nothing leaks elsewhere.
+ */
+
+.pg-uneix-te .lead { margin-bottom: 0; }
+.pg-uneix-te .lead p { margin: 0 0 var(--space-md); }
+
+/* the intro and the credits sit side by side */
+.pg-uneix-te .obertura {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--space-3xl);
+  align-items: start;
+}
+
+/* the credits are the strongest argument on the page, so they get the yellow */
+.pg-uneix-te .curs {
+  padding: var(--space-xl);
+  border-radius: var(--radius-card);
+  background: var(--color-signal-wash);
+}
+.pg-uneix-te .curs-titol { font-size: var(--text-2xl); color: var(--color-ink); }
+.pg-uneix-te .curs-text { margin-top: var(--space-sm); color: var(--color-ink-2); }
+.pg-uneix-te .curs-dades {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-md) var(--space-lg);
+  margin: var(--space-lg) 0 0;
+  padding-top: var(--space-md);
+  border-top: 1px solid color-mix(in oklab, var(--color-signal) 45%, transparent);
+}
+.pg-uneix-te .curs-dada dt { font-size: var(--text-sm); font-weight: 600; color: var(--color-signal-text); }
+.pg-uneix-te .curs-dada dd { margin: var(--space-2xs) 0 0; font-size: var(--text-lg); font-weight: 600; }
+
+.pg-uneix-te .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-xl); }
+
+/* the three assajos side by side, each above its own map */
+.pg-uneix-te .assajos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3xl) var(--gap-columns);
+  margin-top: var(--section-gap-s);
+}
+.pg-uneix-te .assaig { display: flex; flex-direction: column; padding-top: var(--space-lg); border-top: 2px solid var(--color-ink); }
+.pg-uneix-te .assaig-titol { font-size: var(--text-2xl); margin-bottom: var(--space-sm); }
+/* the text can hold more than one line, as the rain fallback does */
+.pg-uneix-te .assaig-text p { font-size: var(--text-lg); line-height: 1.5; color: var(--color-ink-2); white-space: pre-line; }
+.pg-uneix-te .assaig-link { display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 44px; margin-top: var(--space-xs); font-weight: 600; }
+.pg-uneix-te .assaig-link svg { flex-shrink: 0; }
+/* the maps line up along the bottom, however long each text above them runs */
+.pg-uneix-te .assaig-mapa { margin-top: auto; padding-top: var(--space-lg); }
+.pg-uneix-te .assaig-fotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+.pg-uneix-te .assaig-fotos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--space-xs); }
+.pg-uneix-te .sense-mapa { color: var(--color-ink-2); }
+
+@media (max-width: 60rem) {
+  .pg-uneix-te .obertura { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); }
+  .pg-uneix-te .assajos-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-2xl); }
+    }

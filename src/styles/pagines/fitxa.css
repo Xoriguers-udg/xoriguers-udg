@@ -1,0 +1,44 @@
+/*
+ * A diada: the styles of src/pages/agenda/[id].astro, shared with the CMS preview
+ * (src/pages/admin/preview.css.ts loads this same file), so the preview draws
+ * the page as the site does and the two cannot drift apart.
+ * Every rule hangs from the page's root class, so nothing leaks elsewhere.
+ */
+
+.pg-fitxa .fitxa { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2xl); align-items: start; }
+.pg-fitxa .fitxa.amb-cartell { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.pg-fitxa .etiquetes { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-lg); }
+.pg-fitxa .temporada { text-decoration: none; }
+.pg-fitxa .temporada:hover { background: var(--color-accent-wash); color: var(--color-accent-deep); }
+.pg-fitxa .chips { display: flex; gap: var(--space-xs); flex-wrap: wrap; align-items: center; margin-top: var(--space-lg); }
+.pg-fitxa .chips-etiqueta { font-size: var(--text-sm); color: var(--color-ink-2); margin-right: var(--space-2xs); }
+.pg-fitxa .chip { border: 1px solid var(--color-rule-firm); border-radius: var(--radius-pill); padding: var(--space-2xs) var(--space-sm); font-size: var(--text-sm); }
+.pg-fitxa .body { margin-top: var(--space-xl); font-size: var(--text-lead); line-height: 1.6; max-width: 60ch; }
+.pg-fitxa .body p { margin: 0 0 var(--space-md); }
+.pg-fitxa .observacio {
+  margin-top: var(--space-lg); padding: var(--space-md) var(--space-lg);
+  background: var(--color-signal-wash); color: var(--color-signal-text);
+  border-radius: var(--radius-card); font-weight: 600; max-width: 60ch;
+}
+.pg-fitxa .cartell { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius-card); }
+
+.pg-fitxa .castells { margin-top: var(--section-gap-s); padding-top: var(--space-xl); border-top: 2px solid var(--color-ink); }
+.pg-fitxa .castells-cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-xs) var(--space-lg); }
+.pg-fitxa .castells h2 { text-wrap: balance; }
+.pg-fitxa .compte { font-family: var(--font-body); font-size: var(--text-lead); font-weight: 600; color: var(--color-ink-2); }
+.pg-fitxa .castells-row {
+  list-style: none; margin: var(--space-xl) 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: var(--gap-columns);
+}
+.pg-fitxa .castell { display: flex; flex-direction: column; gap: var(--space-xs); padding-top: var(--space-md); border-top: 1px solid var(--color-rule); }
+.pg-fitxa .castells-row.amb-fotos { grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }
+.pg-fitxa .castell-marc { display: block; width: 100%; aspect-ratio: 3 / 4; border-radius: var(--radius-card); margin-bottom: var(--space-xs); background: var(--color-accent-wash); }
+.pg-fitxa .castell-foto { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius-card); margin-bottom: var(--space-xs); }
+.pg-fitxa .notation { font-size: var(--text-3xl); line-height: 1; overflow-wrap: anywhere; min-width: 0; }
+.pg-fitxa .castell-peu { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+.pg-fitxa .ronda { font-size: var(--text-sm); color: var(--color-ink-2); }
+.pg-fitxa .registre { margin-top: var(--space-xl); font-size: var(--text-sm); color: var(--color-ink-2); }
+@media (max-width: 60rem) {
+  .pg-fitxa .fitxa.amb-cartell { grid-template-columns: minmax(0, 1fr); }
+  .pg-fitxa .cartell { max-width: 26rem; }
+}

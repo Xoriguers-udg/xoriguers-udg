@@ -41,7 +41,7 @@ export interface EntradaMenu {
   nom: string;
   /** the footer's wording, when it says more than the bar («Historial de castells») */
   nomPeu?: string;
-  /** 'inici', a page's key, or any other address: a path on the site or a full URL */
+  /** 'inici', a page's key, a new page's address, or any other: a path on the site or a full URL */
   desti: string;
   lloc: Lloc;
   peu: Columna;
@@ -117,8 +117,10 @@ export function llegeixMenu(dades: unknown): { menu: EntradaMenu[]; avisos: stri
   const menu: EntradaMenu[] = [];
   for (const e of d.menu) {
     const nom = text(e?.nom);
+    // «On porta» is a select: a page, «Una pàgina nova» (then `paginaNova`, the
+    // address of one of Pàgines noves) or «Una altra adreça» (then `adreca`)
     const pagina = text(e?.pagina);
-    const desti = pagina && pagina !== 'adreca' ? pagina : text(e?.adreca);
+    const desti = pagina === 'nova' ? text(e?.paginaNova) : pagina && pagina !== 'adreca' ? pagina : text(e?.adreca);
     if (!nom || !desti) {
       avisos.push(`una entrada del menú sense ${nom ? 'destinació' : 'nom'}`);
       continue;
@@ -150,8 +152,8 @@ export interface Enllac {
 
 /**
  * Resolves the structure into what the layout draws. `buides` are pages that
- * are on but have nothing to show yet (Notícies with every item a draft): they
- * still build, but no menu points at them.
+ * are on but have nothing to show yet (Notícies with every item a draft), and
+ * new pages still in draft: no menu or link points at them.
  */
 export function resolEstructura(dades: unknown, { base, buides = new Set<string>() }: { base: string; buides?: Set<string> }) {
   const apagades = paginesApagades(dades);
@@ -169,7 +171,7 @@ export function resolEstructura(dades: unknown, { base, buides = new Set<string>
     if (/^(https?:|mailto:|tel:)/i.test(desti)) return { href: desti, extern: /^https?:/i.test(desti) };
     const cami = desti.replace(/^\/+/, '');
     const primer = cami.split(/[/#?]/)[0];
-    if (esPagina(primer) && !enllac(primer)) return undefined;
+    if ((esPagina(primer) && !enllac(primer)) || buides.has(primer)) return undefined;
     return { href: `${base}${cami}`, extern: false };
   };
 
@@ -203,6 +205,6 @@ export function resolEstructura(dades: unknown, { base, buides = new Set<string>
     xarxes: columna('xarxes'),
   };
 
-  return { activa, enllac, barra, colla, organitzacio, boto, peu, noms, avisos };
+  return { activa, enllac, adreca, barra, colla, organitzacio, boto, peu, noms, avisos };
 }
 export type Estructura = ReturnType<typeof resolEstructura>;

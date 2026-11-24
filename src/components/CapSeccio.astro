@@ -1,0 +1,20 @@
+---
+/**
+ * A section's head row: its heading, and at the far end the one link that
+ * leads on ("Veure-les totes", "Tot l'historial"). Used by the homepage, the
+ * best castells and the new pages' album block; styled in global.css
+ * (.cap-seccio, .cap-enllac), so a change to it changes every one.
+ */
+interface Props {
+  titol: string;
+  /** the heading's id, for the section's aria-labelledby */
+  id?: string;
+  enllac?: string;
+  text?: string;
+}
+const { titol, id, enllac, text } = Astro.props;
+---
+<div class="cap-seccio">
+  <h2 id={id}>{titol}</h2>
+  {enllac && text && <a class="cap-enllac" href={enllac}>{text}</a>}
+</div>

@@ -1,0 +1,13 @@
+/*
+ * A notícia: the styles of src/pages/noticies/[id].astro, shared with the CMS preview
+ * (src/pages/admin/preview.css.ts loads this same file), so the preview draws
+ * the page as the site does and the two cannot drift apart.
+ * Every rule hangs from the page's root class, so nothing leaks elsewhere.
+ */
+
+.pg-noticia .hero-img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-card); margin-top: var(--space-xl); }
+.pg-noticia .body { margin-top: var(--space-xl); font-size: var(--text-lead); line-height: 1.7; max-width: 65ch; }
+.pg-noticia .body p { margin: 0 0 var(--space-md); }
+.pg-noticia .body h2 { font-size: var(--text-2xl); margin: var(--space-xl) 0 var(--space-md); }
+.pg-noticia .body h3 { margin: var(--space-lg) 0 var(--space-sm); }
+.pg-noticia .body img { border-radius: var(--radius-card); margin-block: var(--space-lg); }
