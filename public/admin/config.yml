@@ -229,6 +229,20 @@ collections:
           - { label: "Títol de la presentació", name: "presentacioTitol", widget: "string", required: false, hint: "Per defecte: «Qui som»." }
           - { label: "Text de presentació", name: "body", widget: "markdown", required: false, hint: "Qui som, en un parell de frases. Surt a l'esquerra, al costat de les pròximes actuacions." }
           - { label: "Títol de les pròximes actuacions", name: "properesTitol", widget: "string", required: false, hint: "Per defecte: «Pròximes actuacions»." }
+          # src/pages/index.astro reads these; a section left out of the file shows
+          - label: "Seccions de la portada"
+            name: "seccions"
+            widget: "object"
+            hint: "Treu la marca d'una secció per amagar-la de la portada. No s'esborra res: torna-la a marcar i tornarà a sortir."
+            fields:
+              - { label: "Qui som (la presentació)", name: "presentacio", widget: "boolean", default: true, required: false }
+              - { label: "Pròximes actuacions", name: "properes", widget: "boolean", default: true, required: false, hint: "Si no n'hi ha cap de programada, surten els horaris d'assaig." }
+              - { label: "Últims castells", name: "ultimsCastells", widget: "boolean", default: true, required: false, hint: "Els castells de l'última actuació que en té d'apuntats." }
+              - { label: "No només fem castells (activitats)", name: "activitats", widget: "boolean", default: true, required: false }
+              - { label: "Uneix-te (la franja groga)", name: "uneix", widget: "boolean", default: true, required: false }
+              - { label: "Notícies", name: "noticies", widget: "boolean", default: true, required: false, hint: "Només surt quan hi ha alguna notícia publicada." }
+              - { label: "Últim àlbum de fotos", name: "album", widget: "boolean", default: true, required: false, hint: "Només surt quan hi ha un àlbum amb tres fotos o més." }
+              - { label: "Instagram", name: "instagram", widget: "boolean", default: true, required: false }
       - name: "la_colla"
         label: "La colla (Qui som)"
         file: "src/content/pagines/la-colla.md"

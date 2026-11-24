@@ -115,6 +115,25 @@ const pagines = defineCollection({
     /** Headings on the homepage's two columns, both editable. */
     presentacioTitol: z.preprocess(emptyToUndefined, z.string().optional()),
     properesTitol: z.preprocess(emptyToUndefined, z.string().optional()),
+    /**
+     * Inici: which sections the homepage shows, each switched in the CMS. A
+     * missing key means shown, so the page reads the same before anyone
+     * touches this. Some sections also hide themselves when they have nothing
+     * to show (no notícia published, no album with three photos…).
+     */
+    seccions: z
+      .object({
+        presentacio: z.boolean(),
+        properes: z.boolean(),
+        ultimsCastells: z.boolean(),
+        activitats: z.boolean(),
+        uneix: z.boolean(),
+        noticies: z.boolean(),
+        album: z.boolean(),
+        instagram: z.boolean(),
+      })
+      .partial()
+      .optional(),
     assajos: z.array(assaig).default([]),
     contacteInstagram: z.string().optional(),
     /** Xorimúsics: the sheet music for the tocs, one PDF each. */

@@ -23,6 +23,13 @@ const { Content: Presentacio } = await render(inici!);
 const presentacioTitol = inici?.data.presentacioTitol || 'Qui som';
 const properesTitol = inici?.data.properesTitol || 'Pròximes actuacions';
 
+// each section below the hero can be switched off in the CMS (Pàgines → Inici →
+// Seccions de la portada); a section not mentioned there is shown
+type Seccio = keyof NonNullable<NonNullable<typeof inici>['data']['seccions']>;
+const mostra = (seccio: Seccio) => inici?.data.seccions?.[seccio] !== false;
+const ambPresentacio = mostra('presentacio');
+const ambProperes = mostra('properes');
+
 // the hero's one sentence is when to come: the first line of the castellers'
 // assaig on Uneix-te, so it changes when the colla edits that page
 const uneixte = await getEntry('pagines', 'uneix-te');
@@ -119,9 +126,12 @@ const album = albums
     </div>
   </section>
 
-  {/* who we are on the left, what is coming up on the right */}
-  <section class="qui-som" aria-labelledby="qui-som-titol">
-    <div class="container qui-som-grid">
+  {/* who we are on the left, what is coming up on the right; either can be
+      switched off, and the other then takes the row */}
+  {(ambPresentacio || ambProperes) && (
+  <section class="qui-som" aria-labelledby={ambPresentacio ? 'qui-som-titol' : 'properes-titol'}>
+    <div class={`container qui-som-grid${ambPresentacio && ambProperes ? '' : ' sola'}`}>
+      {ambPresentacio && (
       <div class="presentacio">
         <h2 id="qui-som-titol">{presentacioTitol}</h2>
         <div class="presentacio-text">
@@ -129,7 +139,9 @@ const album = albums
         </div>
         <a class="cap-enllac" href={`${base}la-colla`}>Més sobre la colla</a>
       </div>
+      )}
 
+      {ambProperes && (
       <div class={`properes${properes.length === 0 ? ' buida' : ''}`}>
       <div class="properes-cap">
         <h2 id="properes-titol">{properesTitol}</h2>
@@ -172,10 +184,12 @@ const album = albums
         </div>
       )}
       </div>
+      )}
     </div>
   </section>
+  )}
 
-  {ultimsCastells.length > 0 && (
+  {mostra('ultimsCastells') && ultimsCastells.length > 0 && (
     <section class="castells" aria-labelledby="castells-titol">
       <div class={`castells-grid${castellAmbFoto ? ' amb-foto' : ''}`}>
         <div class="castells-cos">
@@ -205,7 +219,7 @@ const album = albums
     </section>
   )}
 
-  {activitatsAmbText.length > 0 && (
+  {mostra('activitats') && activitatsAmbText.length > 0 && (
     <section class="activitats" aria-labelledby="activitats-titol">
       <div class="container">
         <h2 id="activitats-titol">No només fem castells</h2>
@@ -225,6 +239,7 @@ const album = albums
     </section>
   )}
 
+  {mostra('uneix') && (
   <section class="uneix" aria-labelledby="uneix-titol">
     <div class={`uneix-grid${fotoColla ? ' amb-foto' : ''}`}>
       {fotoColla && (
@@ -249,8 +264,9 @@ const album = albums
       </div>
     </div>
   </section>
+  )}
 
-  {ultimesNoticies.length > 0 && (
+  {mostra('noticies') && ultimesNoticies.length > 0 && (
     <section class="noticies" aria-labelledby="noticies-titol">
       <div class="container">
         <div class="cap">
@@ -277,7 +293,7 @@ const album = albums
     </section>
   )}
 
-  {album && (
+  {mostra('album') && album && (
     <section class="album" aria-labelledby="album-titol">
       <div class="container">
         <div class="cap">
@@ -293,6 +309,7 @@ const album = albums
     </section>
   )}
 
+  {mostra('instagram') && (
   <section class="insta" aria-labelledby="insta-titol">
     <div class="container insta-grid">
       <p class="insta-crida">Segueix-nos a Instagram</p>
@@ -302,6 +319,7 @@ const album = albums
       <a class="btn btn-outline insta-btn" href={instagramUrl ?? `${base}la-colla`} target={instagramUrl ? '_blank' : undefined} rel={instagramUrl ? 'noreferrer' : undefined}>Veure Instagram</a>
     </div>
   </section>
+  )}
 </Base>
 
 <style>
@@ -375,6 +393,9 @@ const album = albums
     padding-top: var(--space-xl);
     border-top: 2px solid var(--color-ink);
   }
+  /* one of the two switched off in the CMS: the other has the row to itself */
+  .qui-som-grid.sola { grid-template-columns: minmax(0, 1fr); }
+  .qui-som-grid.sola .properes { max-width: 48rem; }
   .presentacio { display: flex; flex-direction: column; gap: var(--space-lg); }
   .presentacio-text {
     font-size: clamp(1.375rem, 1.1vw + 1rem, 2rem);

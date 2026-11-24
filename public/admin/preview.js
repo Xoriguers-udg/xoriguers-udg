@@ -54,19 +54,29 @@
       h('div', { className: 'pagina' }, h('div', { className: 'cos' }, widgetFor('body'))));
   };
 
+  // the homepage's sections, as «Seccions de la portada» names them
+  const SECCIONS = [
+    ['presentacio', 'Qui som'], ['properes', 'Pròximes actuacions'], ['ultimsCastells', 'Últims castells'],
+    ['activitats', 'No només fem castells'], ['uneix', 'Uneix-te'], ['noticies', 'Notícies'],
+    ['album', 'Últim àlbum'], ['instagram', 'Instagram'],
+  ];
+
   const Inici = ({ entry, widgetFor, getAsset }) => {
     const foto = imatge(getAsset, dada(entry, 'imatge'));
+    const mostra = (clau) => dada(entry, 'seccions', clau) !== false;
+    const amagades = SECCIONS.filter(([clau]) => !mostra(clau)).map(([, nom]) => nom);
     return h('div', { className: 'previa' },
+      amagades.length > 0 && nota(`Amagades de la portada: ${amagades.join(', ')}.`),
       h('section', { className: 'inici-hero' },
         h('div', { className: 'inici-hero-text' },
           h('h1', { className: 'display' }, dada(entry, 'titol')),
           h('span', { className: 'btn btn-accent' }, dada(entry, 'ctaText') || 'Vine a assajar')),
         foto && h('div', { className: 'inici-hero-foto' }, h('img', { src: foto, alt: '' }))),
       h('div', { className: 'pagina' },
-        h('section', null,
+        mostra('presentacio') && h('section', null,
           h('h2', { className: 'seccio' }, dada(entry, 'presentacioTitol') || 'Qui som'),
           h('div', { className: 'cos' }, widgetFor('body'))),
-        h('section', null,
+        mostra('properes') && h('section', null,
           h('h2', { className: 'seccio' }, dada(entry, 'properesTitol') || 'Pròximes actuacions'),
           nota('Aquí surten les pròximes actuacions de l’Agenda.'))));
   };
