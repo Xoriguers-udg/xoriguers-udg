@@ -6,8 +6,8 @@ presentacioTitol: Qui som
 properesTitol: Pròximes actuacions
 seccions:
   presentacio: true
-  properes: false
-  ultimsCastells: true
+  properes: true
+  ultimsCastells: false
   activitats: true
   uneix: true
   noticies: true
