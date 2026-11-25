@@ -361,5 +361,6 @@
   for (const [nom, plantilla] of Object.entries(plantilles)) CMS.registerPreviewTemplate(nom, plantilla);
 
   CMS.registerPreviewStyle(`${BASE}/admin/preview.css`);
-  CMS.registerPreviewStyle('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&display=swap');
+  // the site's own copy of its two faces (public/fonts), not Google's
+  CMS.registerPreviewStyle(`${BASE}/fonts/fonts.css`);
 })();

@@ -42,10 +42,12 @@ const dinsDesplegable = [...colla, ...organitzacio].some((l) => actual(l.href));
   <link rel="icon" type="image/png" href={escut} />
   <link rel="apple-touch-icon" href={escut} />
   <link rel="canonical" href={canonicalUrl} />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  {/* the same two faces, at the same weights, as the arbre de xoriguers */}
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&display=swap">
+  {/* the same two faces, at the same weights, as the arbre de xoriguers, served
+      from the site itself (public/fonts/fonts.css); the two every page uses
+      start loading at once rather than after the stylesheet is read */}
+  <link rel="preload" href={`${base}fonts/figtree-latin.woff2`} as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href={`${base}fonts/bricolage-grotesque-latin.woff2`} as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href={`${base}fonts/fonts.css`} />
   <title>{pageTitle}</title>
   {metaDescription && <meta name="description" content={metaDescription} />}
   <meta property="og:type" content="website" />

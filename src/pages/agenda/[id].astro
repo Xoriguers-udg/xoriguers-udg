@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import '../../styles/pagines/fitxa.css';
 import { getCollection, render } from 'astro:content';
 import { mediaUrl } from '../../lib/media';
-import { formatDate } from '../../lib/format';
+import { avuiUTC, formatDate } from '../../lib/format';
 import { detallsEsdeveniment, llocComplet, temporadaDe } from '../../lib/esdeveniment';
 import { llegeixCastellsRegistrats, notacioAmbEstat } from '../../lib/historial';
 import { alHistorial, CLASSE_PILL, categoriaDe } from '../../lib/categories';
@@ -30,9 +30,7 @@ const categoria = categoriaDe(entry.data.tipus, (await carregaCategories()).cate
 
 // a past diada belongs to the historial; the agenda only lists what is still to
 // come, so sending someone back there would be a dead end
-const avui = new Date();
-avui.setHours(0, 0, 0, 0);
-const jaPassada = entry.data.data < avui;
+const jaPassada = entry.data.data < avuiUTC();
 
 // Every entry keeps its address, but only one with something more than its row
 // has a page there (src/lib/fitxa.ts). The rest send the visitor to their row,

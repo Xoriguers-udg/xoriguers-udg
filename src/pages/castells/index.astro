@@ -4,7 +4,7 @@ import { getCollection, getEntry, render } from 'astro:content';
 import { alHistorial, categoriaDe } from '../../lib/categories';
 import { carregaCategories } from '../../lib/carrega-categories';
 import { mediaUrl } from '../../lib/media';
-import { formatDateNumeric } from '../../lib/format';
+import { avuiUTC, formatDateNumeric } from '../../lib/format';
 import { temporadaDe } from '../../lib/esdeveniment';
 import { ancoraHistorial, teFitxa } from '../../lib/fitxa';
 import {
@@ -47,7 +47,8 @@ const { Content: IntroContent } = await render(capcalera!);
 // castells were actually recorded at one — then they are part of what the colla
 // has built, whatever the event was called.
 const { categories } = await carregaCategories();
-const ara = new Date();
+// today in Girona, in the stored dates' terms (src/lib/format.ts)
+const ara = avuiUTC();
 const temporadaActual = temporadaDe(ara);
 const passat = await getCollection(
   'agenda',

@@ -7,7 +7,7 @@
 import { getCollection } from 'astro:content';
 import { llegeixCastellsRegistrats, valorBase } from '../lib/historial';
 import { mediaUrl } from '../lib/media';
-import { formatDate } from '../lib/format';
+import { avuiUTC, formatDate } from '../lib/format';
 import { alHistorial, categoriaDe } from '../lib/categories';
 import { carregaCategories } from '../lib/carrega-categories';
 import { enllacDiada } from '../lib/fitxa';
@@ -22,7 +22,7 @@ const { quants = 4, titol = 'Els nostres millors castells' } = Astro.props;
 const base = import.meta.env.BASE_URL;
 // the historial may be switched off (Configuració → Estructura del web)
 const historial = (await carregaEstructura()).enllac('castells');
-const ara = new Date();
+const ara = avuiUTC();
 
 // the same entries the historial shows, so a castell counted here is one the
 // historial lists

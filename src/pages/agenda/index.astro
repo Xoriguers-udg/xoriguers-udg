@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
-import { formatDate, formatDiaSetmana } from '../../lib/format';
+import { avuiUTC, formatDate, formatDiaSetmana } from '../../lib/format';
 import NovaPestanya from '../../components/NovaPestanya.astro';
 import { mediaUrl } from '../../lib/media';
 import { detallsEsdeveniment } from '../../lib/esdeveniment';
@@ -19,8 +19,7 @@ const { enllac } = await carregaEstructura();
 // only what is still to come, of the categories the colla lists here (Configuració
 // → Calendari); everything past belongs to the historial
 const { categories } = await carregaCategories();
-const avui = new Date();
-avui.setHours(0, 0, 0, 0);
+const avui = avuiUTC();
 const agenda = await getCollection(
   'agenda',
   ({ data }) => data.estat === 'publicat' && data.data >= avui && categoriaDe(data.tipus, categories).agenda
@@ -103,7 +102,10 @@ const { Content: IntroContent } = await render(capcalera!);
 </Base>
 
 <style>
-  .fila { grid-template-columns: minmax(0, 3fr) minmax(0, 7fr) auto; }
+  /* the pills' column is one fixed width, so the names line up from row to row
+     whichever pill each carries (it was sized to its content, and «Actuació»
+     and «Diada» pushed the names to different places) */
+  .fila { grid-template-columns: minmax(0, 3fr) minmax(0, 7fr) 11rem; }
   .date { display: flex; flex-direction: column; font-size: var(--text-md); font-weight: 600; color: var(--color-accent-deep); font-variant-numeric: tabular-nums; }
   .date .dia { font-size: var(--text-sm); font-weight: 500; color: var(--color-ink-2); }
   .info { display: flex; flex-direction: column; gap: var(--space-2xs); min-width: 0; }

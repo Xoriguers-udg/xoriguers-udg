@@ -24,6 +24,7 @@ const { parseIcal } = await import('../src/lib/ical.ts');
 const { separaLloc } = await import('../src/lib/esdeveniment.ts');
 const { alHistorial, categoriaDe, llegeixCategories, tipusSincronitzat } = await import('../src/lib/categories.ts');
 const { urlFeedIcal } = await import('../src/lib/calendari.ts');
+const { diaAvui } = await import('../src/lib/format.ts');
 
 const DEST = 'src/content/agenda';
 const CONFIG = 'src/content/configuracio/general.md';
@@ -237,7 +238,8 @@ for (const e of puntuals) {
 /* ---------- events that left the calendar ---------- */
 // only upcoming ones: a past actuació keeps its record even if someone tidies
 // the calendar up afterwards
-const avui = new Date().toISOString().slice(0, 10);
+// today in Girona: the job runs on UTC, which is still yesterday there before 1 or 2am
+const avui = diaAvui();
 const alCalendari = new Set(esdeveniments.map((e) => e.uid));
 let cancellats = 0;
 for (const [uid, fitxer] of perUid) {

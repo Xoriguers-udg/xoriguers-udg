@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { getCollection, getEntry, render } from 'astro:content';
 import { mediaUrl } from '../lib/media';
-import { formatDateShort } from '../lib/format';
+import { avuiUTC, formatDateShort, formatMesCurt } from '../lib/format';
 import { detallsEsdeveniment } from '../lib/esdeveniment';
 import { isUploadedPath, fotosAlbum } from '../lib/media';
 import { alHistorial, categoriaDe } from '../lib/categories';
@@ -68,11 +68,9 @@ const fotoColla = fotoUneix && fotoUneix !== mediaUrl(base, inici?.data.imatge)
   ? fotoUneix
   : mediaUrl(base, laColla?.data.fotoColla);
 
-const now = new Date();
 // an event happening today is still the next one up, so measure from midnight
 // rather than from this moment
-const avui = new Date();
-avui.setHours(0, 0, 0, 0);
+const avui = avuiUTC();
 
 const agenda = await getCollection('agenda', ({ data }) => data.estat === 'publicat');
 // each category says whether it is listed as upcoming and whether it belongs
@@ -88,7 +86,7 @@ const featured = upcoming.filter((e) => e.data.mostrarPortada);
 const properes = [...featured, ...upcoming.filter((e) => !e.data.mostrarPortada)].slice(0, 3);
 
 const pastAmbCastells = agenda
-  .filter((e) => e.data.data <= now && e.data.castells.length > 0 && alHistorial(categoria(e), e.data.castells.length))
+  .filter((e) => e.data.data <= avui && e.data.castells.length > 0 && alHistorial(categoria(e), e.data.castells.length))
   .sort((a, b) => b.data.data.getTime() - a.data.data.getTime());
 
 const ultimaActuacio = pastAmbCastells[0];
@@ -109,7 +107,6 @@ const ultimesNoticies = noticies.sort((a, b) => b.data.data.getTime() - a.data.d
 
 const pillLabel = { descarregat: 'Descarregat', carregat: 'Carregat', intent: 'Intent' } as const;
 
-const mes = new Intl.DateTimeFormat('ca-ES', { month: 'short' });
 
 const heroImatge = mediaUrl(base, inici?.data.imatge);
 
@@ -173,8 +170,8 @@ const album = albums
             <li>
               <Rengle class={`properes-row${i === 0 ? ' primera' : ''}`} href={Rengle === 'a' ? `${base}agenda/${e.id}` : undefined}>
                 <time class="properes-data" datetime={e.data.data.toISOString().slice(0, 10)}>
-                  <span class="properes-dia display">{e.data.data.getDate()}</span>
-                  <span class="properes-mes">{mes.format(e.data.data)}</span>
+                  <span class="properes-dia display">{e.data.data.getUTCDate()}</span>
+                  <span class="properes-mes">{formatMesCurt(e.data.data)}</span>
                 </time>
                 <span class="properes-nom">{e.data.nom}</span>
                 {detallsEsdeveniment(e.data.hora, e.data.lloc, e.data.poblacio) && (
@@ -392,7 +389,10 @@ const album = albums
     gap: var(--space-3xl);
     align-items: start;
     padding-top: var(--space-xl);
-    border-top: 2px solid var(--color-ink);
+    /* the rule spans the text's width, as every other section's edge does: a
+       border on the container would also run under its gutters, to the edges
+       of the screen */
+    background: linear-gradient(var(--color-ink) 0 0) 50% 0 / calc(100% - 2 * var(--gutter)) 2px no-repeat;
   }
   /* one of the two switched off in the CMS: the other has the row to itself */
   .qui-som-grid.sola { grid-template-columns: minmax(0, 1fr); }
